@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>JBRETAS — Painel de Precos</title>
-<link rel="icon" type="image/png" href="data:image/png;base64,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">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -129,7 +128,6 @@ body::before{content:'';position:fixed;inset:0;
 .regrow{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--bd);font-size:.68rem}
 .regrow:last-child{border:none}
 .regpnome{color:var(--tx2)}.regpval{color:var(--inf);font-family:var(--mono)}
-/* AMOSTRA-TESTEMUNHA */
 .at-item{padding:8px 0;border-bottom:1px solid var(--bd)}
 .at-item:last-child{border:none}
 .at-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
@@ -146,7 +144,6 @@ body::before{content:'';position:fixed;inset:0;
 .at-field label{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:2px;font-family:var(--mono)}
 .at-field input,.at-field select{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx);font-family:var(--mono);font-size:.82rem;padding:6px 8px;outline:none;transition:border-color .2s}
 .at-field input:focus,.at-field select:focus{border-color:var(--ac)}
-/* NOTIFICAÇÕES */
 .nitem{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);align-items:flex-start}
 .nitem:last-child{border:none}
 .nico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
@@ -156,7 +153,6 @@ body::before{content:'';position:fixed;inset:0;
 .ntempo{font-size:.6rem;color:var(--tx3);font-family:var(--mono);flex-shrink:0;margin-top:2px}
 .nbadge{display:inline-block;font-size:.6rem;font-family:var(--mono);padding:1px 6px;border-radius:10px;margin-top:2px}
 .nbadge.up{background:rgba(255,77,109,.1);color:var(--dg)}.nbadge.down{background:rgba(0,229,160,.1);color:var(--ok)}
-/* DISTRIBUIDOR */
 .dgrid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:.75rem}
 .dbox2{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.75rem}
 .dnome2{font-size:.7rem;font-weight:700;font-family:var(--mono);margin-bottom:5px}
@@ -170,7 +166,6 @@ body::before{content:'';position:fixed;inset:0;
 .lbbg{background:var(--bd);border-radius:2px;height:5px;overflow:hidden}
 .lbar{height:100%;border-radius:2px}
 .lpct{font-size:.68rem;font-family:var(--mono);color:var(--tx3);flex-shrink:0;width:40px;text-align:right}
-/* SIMULADOR */
 .sim{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.85rem;margin-bottom:.75rem}
 .simtitle{font-size:.72rem;font-weight:700;color:var(--tx);font-family:var(--mono);margin-bottom:.65rem}
 .simrow{display:flex;align-items:center;gap:8px;margin-bottom:.5rem}
@@ -180,7 +175,6 @@ body::before{content:'';position:fixed;inset:0;
 .simres{border-radius:var(--r);padding:.75rem;margin-top:.5rem;border:1px solid rgba(0,229,160,.2);background:rgba(0,229,160,.06)}
 .simreslbl{font-size:.65rem;color:var(--tx3);font-family:var(--mono);margin-bottom:3px}
 .simresval{font-size:1rem;font-weight:700;font-family:var(--mono);color:var(--ac)}
-/* RELATÓRIOS */
 .rcard{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.85rem;margin-bottom:.65rem;cursor:pointer;transition:border-color .15s}
 .rcard:hover{border-color:var(--ac)}
 .rcardtop{display:flex;align-items:center;gap:10px;margin-bottom:6px}
@@ -190,7 +184,6 @@ body::before{content:'';position:fixed;inset:0;
 .rrows{display:flex;flex-direction:column;gap:3px}
 .rrow{display:flex;justify-content:space-between;font-size:.7rem;font-family:var(--mono)}
 .rrow span:first-child{color:var(--tx3)}.rrow span:last-child{color:var(--tx);font-weight:700}
-/* TABELA MERCADO */
 .blgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:.75rem}
 .bloco{border-radius:8px;padding:.65rem .4rem;text-align:center;border:1px solid var(--bd);cursor:pointer}
 .blocnome{font-size:.58rem;font-family:var(--mono);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -207,7 +200,6 @@ body::before{content:'';position:fixed;inset:0;
 .desbarbg{background:var(--bd);border-radius:2px;height:3px;overflow:hidden}
 .desbar{height:100%;border-radius:2px}
 .desval{font-size:.72rem;font-family:var(--mono);font-weight:700;width:55px;text-align:right;flex-shrink:0}
-/* LANCAMENTO */
 .lfgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:.75rem}
 .lffield label{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:2px;font-family:var(--mono)}
 .lffield input{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx);font-family:var(--mono);font-size:.88rem;padding:6px 8px;outline:none;text-align:right;transition:border-color .2s}
@@ -228,21 +220,49 @@ body::before{content:'';position:fixed;inset:0;
 .hhi{background:rgba(255,77,109,.15);border:1px solid rgba(255,77,109,.2)}
 .hmid{background:rgba(249,199,79,.1);border:1px solid rgba(249,199,79,.15)}
 .hlo{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.2)}
-/* FILTRO POSTO */
 .filtro-row{display:flex;gap:5px;margin-bottom:.6rem;flex-wrap:wrap}
 .ftag{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx3);cursor:pointer;transition:all .15s;flex-shrink:0}
 .ftag.active{background:var(--ac);border-color:var(--ac);color:#0a0d0f}
+
+/* MAPA */
+.map-wrap{position:relative;background:#0d1117;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:.75rem}
+.map-ctrl{display:flex;gap:6px;margin-bottom:.6rem;flex-wrap:wrap;align-items:center}
+.map-sel{background:var(--sf2);border:1px solid var(--bd);border-radius:20px;color:var(--tx2);font-size:.62rem;font-family:var(--mono);padding:4px 10px;outline:none;cursor:pointer}
+.map-sel:focus{border-color:var(--ac)}
+.map-ftag{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx3);cursor:pointer}
+.map-ftag.on{background:var(--ac);border-color:var(--ac);color:#0a0d0f}
+#mapa-svg{display:block;width:100%;cursor:grab}
+#mapa-svg:active{cursor:grabbing}
+.map-dot{cursor:pointer;transition:r .1s}
+.map-dot:hover{r:7}
+.map-label{font-family:var(--mono);font-size:7px;pointer-events:none;dominant-baseline:central}
+.map-price-label{font-family:var(--mono);font-size:7.5px;font-weight:700;pointer-events:none}
+.map-legend{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
+.map-leg-item{display:flex;align-items:center;gap:5px;font-size:.62rem;color:var(--tx3);font-family:var(--mono)}
+.map-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.map-detail{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.75rem;margin-bottom:.75rem}
+.map-detail-nome{font-size:.82rem;font-weight:700;color:var(--tx);font-family:var(--mono);margin-bottom:4px}
+.map-detail-sub{font-size:.65rem;color:var(--tx3);margin-bottom:8px}
+.map-detail-prices{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.map-price-box{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:6px 8px}
+.map-price-box-label{font-size:.58rem;color:var(--tx3);font-family:var(--mono);margin-bottom:2px}
+.map-price-box-val{font-size:.88rem;font-weight:700;font-family:var(--mono)}
+.map-concs{margin-top:8px}
+.map-conc-title{font-size:.6rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.map-conc-list{display:flex;flex-wrap:wrap;gap:4px}
+.map-conc-chip{font-size:.6rem;font-family:var(--mono);padding:2px 7px;border-radius:10px;background:var(--sf);border:1px solid var(--bd);color:var(--tx3)}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:9px">
-    <img src="data:image/png;base64,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" alt="JB" style="width:34px;height:34px;border-radius:8px;flex-shrink:0">
+    <div style="width:34px;height:34px;border-radius:8px;background:rgba(0,229,160,.15);border:1px solid rgba(0,229,160,.3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:var(--ac);font-size:.75rem;flex-shrink:0">JB</div>
     <div><div class="tbbrand">JBRETAS</div><div class="tbsub">// Painel de Precos</div></div>
   </div>
   <div class="live"><span class="ldot"></span>ao vivo</div>
 </div>
+
 <div class="main" id="main">
   <!-- 1: COMPARATIVO -->
   <div class="scr active" id="s-comp">
@@ -277,6 +297,7 @@ body::before{content:'';position:fixed;inset:0;
       </div>
     </div>
   </div>
+
   <!-- 2: RANKING -->
   <div class="scr" id="s-ranking">
     <div class="sdiv">Filtrar por supervisor</div>
@@ -297,6 +318,7 @@ body::before{content:'';position:fixed;inset:0;
     <div class="sdiv">Mais deslocados da media regional</div>
     <div class="card"><div class="chdr"><div class="ctitle">Alerta de deslocamento</div></div><div class="cbody" id="deslocado-body"></div></div>
   </div>
+
   <!-- 3: BANDEIRA/REGIONAL -->
   <div class="scr" id="s-regional">
     <div class="sdiv">Por bandeira do concorrente</div>
@@ -306,11 +328,13 @@ body::before{content:'';position:fixed;inset:0;
     <div class="sdiv">Por supervisor</div>
     <div class="card"><div class="cbody" id="reg-body"></div></div>
   </div>
+
   <!-- 4: MAIS -->
   <div class="scr" id="s-mais">
     <div id="mais-conteudo"><div class="empty">Selecione uma opcao no menu Mais+</div></div>
   </div>
 </div>
+
 <nav class="bnav">
   <button class="nbtn active" onclick="setTab(this,'comp')">
     <span class="ni">⚖️</span><span class="nl">Compara</span>
@@ -325,26 +349,26 @@ body::before{content:'';position:fixed;inset:0;
     <span class="ni">⊕</span><span class="nl">Mais</span>
   </button>
 </nav>
+
 <div class="moverlay" id="modal-mais" onclick="fecharMais(event)">
   <div class="msheet">
     <button class="mclose" onclick="fecharMaisBtn()">X</button>
     <div class="mtitle">Mais funcoes</div>
-    <div class="mgrid">
+    <div class="mgrid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="mitem" onclick="irPara('mapa')"><span class="mic">🗺️</span><div class="mlbl">Mapa de Precos</div><div class="mbadge">novo</div></div>
       <div class="mitem" onclick="irPara('amostra')"><span class="mic">🧪</span><div class="mlbl">Amostra-Testemunha</div><div class="mbadge">importante</div></div>
-      <div class="mitem" onclick="irPara('notif')"><span class="mic">🔔</span><div class="mlbl">Notificacoes de Preco</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('distribuidor')"><span class="mic">🏭</span><div class="mlbl">Distribuidor / Custo</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('simulador')"><span class="mic">🧮</span><div class="mlbl">Simulador de Margem</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('notif')"><span class="mic">🔔</span><div class="mlbl">Notificacoes</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('distribuidor')"><span class="mic">🏭</span><div class="mlbl">Distribuidor</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('simulador')"><span class="mic">🧮</span><div class="mlbl">Simulador</div><div class="mbadge">ativo</div></div>
       <div class="mitem" onclick="irPara('lancamento')"><span class="mic">✏️</span><div class="mlbl">Lancar Preco</div><div class="mbadge">ativo</div></div>
       <div class="mitem" onclick="irPara('relatorios')"><span class="mic">📊</span><div class="mlbl">Relatorios Comerciais</div><div class="mbadge">ativo</div></div>
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"><div class="ttitle" id="t-title"></div><div id="t-msg"></div></div>
 
 <script>
-// ================================================================
-// DADOS REAIS — planilhas jun/2026
-// ================================================================
 const POSTOS_DADOS = {
   "ALEX":        {conc:{"REDE FLEX CENTER SUL":{banda:"Rede Flex"},"P. RAJA":{banda:"Bandeira Branca"},"POSTO BARAO":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"}},bandeira:"Rio Branco",combs:["GC","GA","ET","S10"],gnv:false},
   "ANA LUCIA":   {conc:{"BANDEIRA BRANCA":{banda:"Bandeira Branca"},"MARIANA":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","GA","S10"],gnv:false},
@@ -380,67 +404,35 @@ const POSTOS_DADOS = {
   "URBANO":      {conc:{"BEIJA FLOR":{banda:"Bandeira Branca"},"SHELL LIBERDADE":{banda:"Shell"},"SHELL WERVIN":{banda:"Shell"},"TUPI":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10","PODIUM"],gnv:true},
   "4RODAS":      {conc:{"POSTO NOVO":{banda:"Bandeira Branca"},"POSTO VILA":{banda:"Bandeira Branca"},"REDE AQUI":{banda:"Rede Aqui"},"REDE FLEX PORTAL":{banda:"Rede Flex"},"REDE FLEX TROVAO":{banda:"Rede Flex"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10"],gnv:true},
 };
-// Supervisores REAIS da planilha
+
 const REGIONAIS = {
   "Fabricio": ["GLORIA","BRUNA","SANTA MARIA","RODRIGO","MIRAGEM","LEANDRO","4RODAS","COLIBRI","BIANCA","DUDU"],
   "Paulo":    ["PLANALTO","LOURA","ANA LUCIA","SANTA INES","TOPAZIO","JOCA","JOAQUIM","SAO LUIZ","AVIVA","TRANCOSO"],
   "Mauricio": ["JA","ITAPOA","URBANO","DIFERENCIAL","MANGABEIRAS","ARAPONGA","TUNEL","ALEX","BERNARDO"],
   "Rodrigo":  ["BEATRIZ","ESPACO REAL","FELIPAO"],
 };
+
 const BCOR = {"Rede Flex":"#00e5a0","Ipiranga":"#f9c74f","Vibra":"#4895ef","ALE":"#ff6b6b","Shell":"#e8c84a","BR/Petrobras":"#4db6ac","Rio Branco":"#81c784","Bandeira Branca":"#8892a4","Rede Aqui":"#ff9800","Siga Petro":"#ba68c8","Rede Alianca":"#ff7043"};
 const CL = {GC:"G.C",GA:"G.A",ET:"ET",S10:"S10",S500:"S500",OCT:"G.OCT",PODIUM:"PODIUM"};
 const CC = {GC:"gc",GA:"ga",ET:"et",S10:"s10",S500:"s500",OCT:"gc",PODIUM:"ga"};
 const LANCADOS = {};
 const MEU = {};
 const CONC = {};
-// Dados reais de precos (placeholder — substituir por coleta real do Sheets)
-// Precos referencia: planilha 11-07 (primeira aba com dados)
-const PRECOS_REF = {
-  "J A":{"GC":6.59,"GA":6.89,"ET":4.59,"S10":6.19},
-  "REDE FLEX CENTER SUL":{"GC":6.59,"GA":6.89,"ET":4.59,"S10":6.29},
-  "P. RAJA":{"GC":6.49,"GA":6.69,"ET":4.59,"S10":6.39},
-  "POSTO BARAO":{"GC":6.39,"GA":6.79,"ET":4.49,"S10":5.99},
-  "POSTO WR":{"GC":6.59,"GA":6.69,"ET":4.59,"S10":5.99},
-  "MANGABEIRAS":{"GC":6.59,"GA":6.89,"ET":4.59,"S10":5.99},
-  "VILA":{"GC":6.59,"GA":6.69,"ET":4.59,"S10":5.99},
-  "OURO":{"GC":6.39,"GA":6.49,"ET":4.49},
-  "REDE FLEX SIGMA":{"GC":6.59,"GA":6.89,"ET":4.59,"S10":5.99},
-  "ALTO SION":{"GC":6.56,"GA":6.86,"ET":4.56,"S10":6.49},
-  "PIAZZA":{"GC":6.49,"GA":6.89,"ET":4.59},
-  "CORUJAO":{"GC":6.16,"GA":6.26,"ET":4.46,"S10":6.69},
-  "URBANO":{"GC":6.59,"GA":6.89,"ET":4.49,"S10":null},
-  "SHELL LIBERDADE":{"GC":6.49,"GA":6.89,"ET":4.49},
-  "TUPI":{"GC":6.39,"GA":null,"ET":4.39},
-  "BEIJA FLOR":{"GC":6.49,"GA":null,"ET":4.49},
-  "SHELL WERVIN":{"GC":6.49,"GA":6.89,"ET":4.49},
-  "DIFERENCIAL":{"GC":6.39,"GA":6.69,"ET":4.49,"S10":5.77},
-  "ARAPONGA":{"GC":6.39,"GA":6.69,"ET":4.49,"S10":5.89},
-  "ITAPOA":{"GC":6.39,"GA":6.59,"ET":4.49},
-  "PHOENIX AMAZONAS":{"GC":6.39,"GA":null,"ET":4.49},
-  "REDE FLEX S. AGOSTINHO":{"GC":6.39,"GA":null,"ET":4.49},
-  "POSTO WAP":{"GC":6.39,"GA":6.59,"ET":4.49},
-  "P. ALEX":{"GC":6.59,"GA":6.79,"ET":4.29,"S10":6.39},
-  "DUAS PATRIAS":{"GC":6.29,"GA":6.49,"ET":4.39,"S10":5.79},
-  "BOMBOM":{"GC":6.39,"GA":6.39,"ET":4.49},
-  "TIGRES":{"GC":6.39,"GA":null,"ET":4.49},
-  "SKY 2":{"GC":6.39,"GA":6.79,"ET":4.49},
-  "REDE FLEX JUPITER":{"GC":6.39,"GA":null,"ET":4.49,"S10":5.68},
-};
+
 function gp(b,v){v=v||0.12;return Math.round((b+(Math.random()-.5)*v)*1000)/1000}
 Object.keys(POSTOS_DADOS).forEach(function(p){
   MEU[p]={GC:gp(5.81),GA:gp(6.09),ET:gp(3.89),S10:gp(6.45),S500:gp(6.35),OCT:gp(6.29),PODIUM:gp(6.49)};
   var concs=POSTOS_DADOS[p].conc;
   Object.keys(concs).forEach(function(c){
-    if(!CONC[c]){
-      var ref=PRECOS_REF[c];
-      CONC[c]={GC:ref&&ref.GC||gp(5.85),GA:ref&&ref.GA||gp(6.15),ET:ref&&ref.ET||gp(3.92),S10:ref&&ref.S10||gp(6.49),banda:concs[c].banda};
-    }
+    if(!CONC[c]){CONC[c]={GC:gp(5.85),GA:gp(6.15),ET:gp(3.92),S10:gp(6.49),banda:concs[c].banda}}
   });
 });
+
 function gb(n){return(CONC[n]&&CONC[n].banda)||"Bandeira Branca"}
 function fmt(v){if(!v&&v!==0)return"—";return"R$"+v.toFixed(3).replace(".",",")}
 function med(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null}
-var filtroSupAtual = "todos";
+var filtroSupAtual="todos";
+
 function initSelects(){
   var postos=Object.keys(POSTOS_DADOS).sort();
   ["posto-comp","posto-lanc"].forEach(function(id){
@@ -448,6 +440,7 @@ function initSelects(){
     postos.forEach(function(p){var o=document.createElement("option");o.value=p;o.textContent="P. "+p;s.appendChild(o)});
   });
 }
+
 function setTab(btn,id){
   document.querySelectorAll(".nbtn").forEach(function(b){b.classList.remove("active")});
   btn.classList.add("active");
@@ -457,24 +450,26 @@ function setTab(btn,id){
   if(id==="ranking")renderRanking();
   if(id==="regional")renderRegional();
 }
+
 function abrirMais(){document.getElementById("modal-mais").classList.add("open")}
 function fecharMaisBtn(){document.getElementById("modal-mais").classList.remove("open")}
 function fecharMais(e){if(e.target===document.getElementById("modal-mais"))fecharMaisBtn()}
+
 function irPara(sub){
   fecharMaisBtn();
   document.querySelectorAll(".nbtn").forEach(function(b){b.classList.remove("active")});
   document.querySelectorAll(".scr").forEach(function(s){s.classList.remove("active")});
   document.getElementById("s-mais").classList.add("active");
   document.getElementById("main").scrollTop=0;
-  var fn={amostra:rAmostra,notif:rNotif,distribuidor:rDistribuidor,simulador:rSimulador,lancamento:rLancamento,relatorios:rRelatorios};
+  var fn={mapa:rMapa,amostra:rAmostra,notif:rNotif,distribuidor:rDistribuidor,simulador:rSimulador,lancamento:rLancamento,relatorios:rRelatorios};
   if(fn[sub])fn[sub]();
 }
+
 function setFiltroSup(btn,sup){
   document.querySelectorAll("#filtro-sup .ftag").forEach(function(b){b.classList.remove("active")});
-  btn.classList.add("active");
-  filtroSupAtual=sup;
-  renderRanking();
+  btn.classList.add("active");filtroSupAtual=sup;renderRanking();
 }
+
 function getConcsFiltrados(){
   var todos=Object.keys(CONC);
   if(filtroSupAtual==="todos")return todos;
@@ -486,6 +481,7 @@ function getConcsFiltrados(){
   });
   return Object.keys(concsSet).filter(function(c){return CONC[c]});
 }
+
 function renderComp(){
   var posto=document.getElementById("posto-comp").value;
   var body=document.getElementById("comp-body");
@@ -497,8 +493,8 @@ function renderComp(){
   meuHtml+='<div style="font-size:.6rem;color:'+bandaCorMeu+';font-family:var(--mono);margin-bottom:4px">'+cfg.bandeira+(cfg.gnv?' · GNV':'')+'</div>';
   cfg.combs.forEach(function(c){meuHtml+='<div class="pr"><span class="prc">'+(CL[c]||c)+'</span><span class="prv '+(CC[c]||"gc")+'">'+fmt(meu[c])+'</span></div>'});
   meuHtml+='</div>';
-  var concHtml='<div style="display:flex;flex-direction:column;gap:6px">';
   var concNomes=Object.keys(cfg.conc);
+  var concHtml='<div style="display:flex;flex-direction:column;gap:6px">';
   if(!concNomes.length){concHtml+='<div class="empty" style="padding:.75rem">Sem concorrentes</div>'}
   else concNomes.slice(0,2).forEach(function(cc){
     var cv=CONC[cc]||{};var banda=cfg.conc[cc].banda;var cor=BCOR[banda]||"#8892a4";
@@ -529,6 +525,7 @@ function renderComp(){
   }
   body.innerHTML='<div class="cpair">'+meuHtml+concHtml+"</div>"+diffHtml;
 }
+
 function renderRanking(){
   var concsKey=getConcsFiltrados();
   var todos=concsKey.map(function(cc){return{nome:cc,banda:gb(cc),GC:CONC[cc].GC,GA:CONC[cc].GA,ET:CONC[cc].ET,S10:CONC[cc].S10}});
@@ -553,8 +550,7 @@ function renderRanking(){
     bh+='<div class="bbox"><div class="bnome" style="color:'+cor+'">'+b.b+'</div><div class="bpreco">'+fmt(b.m)+'</div><div class="bn">'+b.n+' leituras</div>'+(i===0?'<div class="btag ok">mais barato</div>':i===rB.length-1?'<div class="btag bad">mais caro</div>':'')+"</div>";
   });
   document.getElementById("band-rank-body").innerHTML=bh;
-  var tot=todos.reduce(function(a,c){return a+c.GC},0);
-  var media=tot/todos.length;
+  var tot=todos.reduce(function(a,c){return a+c.GC},0);var media=tot/todos.length;
   var srt=todos.slice().sort(function(a,b){return Math.abs(b.GC-media)-Math.abs(a.GC-media)});
   var dh="";
   srt.slice(0,5).forEach(function(c){
@@ -563,6 +559,7 @@ function renderRanking(){
   });
   document.getElementById("deslocado-body").innerHTML=dh;
 }
+
 function renderRegional(){
   var porBConc={};
   Object.keys(CONC).forEach(function(cc){
@@ -599,87 +596,253 @@ function renderRegional(){
   });
   document.getElementById("reg-body").innerHTML=rh;
 }
-// ── AMOSTRA-TESTEMUNHA ──
-var AMOSTRAS = [
+
+/* ===== MAPA ===== */
+const MAP_POSTOS = [
+  {k:"JA",n:"P. JA",lat:-19.958,lng:-43.957,x:236.3,y:65.4,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"MANGABEIRAS",n:"MANGA.",lat:-19.96,lng:-43.961,x:234.1,y:65.9,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"URBANO",n:"URBANO",lat:-19.963,lng:-43.954,x:237.9,y:66.6,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"DIFERENCIAL",n:"DIFER.",lat:-19.918,lng:-43.937,x:246.9,y:55.2,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"ARAPONGA",n:"ARAPON.",lat:-19.962,lng:-43.95,x:240.0,y:66.4,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"ITAPOA",n:"ITAPOA",lat:-19.92,lng:-43.981,x:223.5,y:55.7,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"ALEX",n:"ALEX",lat:-19.956,lng:-43.959,x:235.2,y:64.9,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"BERNARDO",n:"BERNARDO",lat:-19.966,lng:-43.941,x:244.8,y:67.4,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"TUNEL",n:"TUNEL",lat:-19.905,lng:-43.947,x:241.6,y:51.9,sup:"Fabricio",banda:"Ipiranga"},
+  {k:"ANA LUCIA",n:"ANA L.",lat:-19.869,lng:-43.969,x:229.9,y:42.8,sup:"Paulo",banda:"Vibra"},
+  {k:"TRANCOSO",n:"TRANC.",lat:-19.905,lng:-43.93,x:250.7,y:51.9,sup:"Fabricio",banda:"Vibra"},
+  {k:"SANTA INES",n:"STA.IN.",lat:-19.935,lng:-44.063,x:179.7,y:59.5,sup:"Paulo",banda:"Vibra"},
+  {k:"JOAQUIM",n:"JOAQUIM",lat:-19.938,lng:-44.065,x:178.7,y:60.3,sup:"Paulo",banda:"Vibra"},
+  {k:"JOCA",n:"JOCA",lat:-19.929,lng:-43.973,x:227.7,y:58.0,sup:"Paulo",banda:"Vibra"},
+  {k:"TOPAZIO",n:"TOPAZIO",lat:-19.774,lng:-44.053,x:185.1,y:18.7,sup:"Paulo",banda:"Vibra"},
+  {k:"PLANALTO",n:"PLANALTO",lat:-19.827,lng:-44.007,x:209.6,y:32.2,sup:"Paulo",banda:"Ipiranga"},
+  {k:"LOURA",n:"LOURA",lat:-19.938,lng:-44.09,x:165.3,y:60.3,sup:"Paulo",banda:"Ipiranga"},
+  {k:"AVIVA",n:"AVIVA",lat:-19.782,lng:-44.075,x:173.3,y:20.8,sup:"Paulo",banda:"Ipiranga"},
+  {k:"SAO LUIZ",n:"SAO LZ",lat:-19.817,lng:-44.058,x:182.4,y:29.6,sup:"Paulo",banda:"Ipiranga"},
+  {k:"COLIBRI",n:"COLIBRI",lat:-19.814,lng:-44.065,x:178.7,y:28.9,sup:"Fabricio",banda:"Vibra"},
+  {k:"GLORIA",n:"GLORIA",lat:-19.937,lng:-43.91,x:261.3,y:60.0,sup:"Fabricio",banda:"Ipiranga"},
+  {k:"BRUNA",n:"BRUNA",lat:-19.895,lng:-43.955,x:237.3,y:49.4,sup:"Fabricio",banda:"Vibra"},
+  {k:"MIRAGEM",n:"MIRAGEM",lat:-19.782,lng:-43.885,x:274.7,y:20.8,sup:"Fabricio",banda:"Vibra"},
+  {k:"LEANDRO",n:"LEANDRO",lat:-19.782,lng:-44.075,x:173.3,y:20.8,sup:"Fabricio",banda:"Vibra"},
+  {k:"4RODAS",n:"4RODAS",lat:-19.867,lng:-43.918,x:257.1,y:42.3,sup:"Fabricio",banda:"Ipiranga"},
+  {k:"RODRIGO",n:"RODRIGO",lat:-19.957,lng:-43.929,x:251.2,y:65.1,sup:"Fabricio",banda:"Ipiranga"},
+  {k:"SANTA MARIA",n:"STA.MA.",lat:-19.8,lng:-44.075,x:173.3,y:25.3,sup:"Fabricio",banda:"Vibra"},
+  {k:"CEASA",n:"CEASA",lat:-19.895,lng:-43.969,x:229.9,y:49.4,sup:"Paulo",banda:"Vibra"},
+  {k:"BEATRIZ",n:"BEATRIZ",lat:-20.025,lng:-44.108,x:155.7,y:82.3,sup:"Rodrigo",banda:"Rio Branco"},
+  {k:"ESPACO REAL",n:"ESP.R.",lat:-21.095,lng:-44.229,x:91.2,y:353.4,sup:"Rodrigo",banda:"Ipiranga"},
+  {k:"FELIPAO",n:"FELIPAO",lat:-19.923,lng:-43.99,x:218.7,y:56.5,sup:"Rodrigo",banda:"Vibra"},
+  {k:"BIANCA",n:"BIANCA",lat:-20.04,lng:-44.15,x:133.3,y:86.1,sup:"Rodrigo",banda:"Vibra"},
+  {k:"DUDU",n:"DUDU",lat:-19.933,lng:-44.003,x:211.7,y:59.0,sup:"Fabricio",banda:"ALE"},
+];
+
+var mapaFuel = "GC";
+var mapaFiltroSup = "todos";
+var mapaSelected = null;
+var mapaShowPrices = false;
+
+const SUP_COLORS = {Mauricio:"#00e5a0",Paulo:"#4895ef",Fabricio:"#f9c74f",Rodrigo:"#c77dff"};
+const FUEL_LABEL = {GC:"Gasolina Comum",GA:"Gasolina Aditivada",ET:"Etanol",S10:"Diesel S-10",S500:"Diesel S-500"};
+
+function rMapa(){
+  var c=document.getElementById("mais-conteudo");
+  c.innerHTML=
+    '<div class="sdiv">Mapa de precos — BH / Grande BH</div>'+
+    '<div class="map-ctrl">'+
+    '<select class="map-sel" id="mapa-fuel-sel" onchange="mapaFuelChange(this.value)">'+
+    '<option value="GC">G. Comum</option><option value="GA">G. Aditivada</option>'+
+    '<option value="ET">Etanol</option><option value="S10">Diesel S10</option><option value="S500">Diesel S500</option>'+
+    '</select>'+
+    '<button class="map-ftag" id="btn-prices" onclick="togglePrecos()">Precos</button>'+
+    '<button class="map-ftag on" id="btn-todos" onclick="mapaSetSup(this,\'todos\')">Todos</button>'+
+    '<button class="map-ftag" id="btn-Mauricio" onclick="mapaSetSup(this,\'Mauricio\')">Mauricio</button>'+
+    '<button class="map-ftag" id="btn-Paulo" onclick="mapaSetSup(this,\'Paulo\')">Paulo</button>'+
+    '<button class="map-ftag" id="btn-Fabricio" onclick="mapaSetSup(this,\'Fabricio\')">Fabricio</button>'+
+    '<button class="map-ftag" id="btn-Rodrigo" onclick="mapaSetSup(this,\'Rodrigo\')">Rodrigo</button>'+
+    '</div>'+
+    '<div class="map-wrap">'+
+    '<svg id="mapa-svg" viewBox="80 10 220 110" preserveAspectRatio="xMidYMid meet" height="260" role="img" aria-label="Mapa dos postos JBRETAS em Belo Horizonte">'+
+    '<title>Mapa dos postos JBRETAS</title>'+
+    '<rect x="80" y="10" width="220" height="110" fill="#0d1117"/>'+
+    '<g id="map-dots"></g>'+
+    '<g id="map-prices"></g>'+
+    '</svg>'+
+    '</div>'+
+    '<div class="map-legend">'+
+    '<span class="map-leg-item"><span class="map-leg-dot" style="background:#00e5a0"></span>Mauricio</span>'+
+    '<span class="map-leg-item"><span class="map-leg-dot" style="background:#4895ef"></span>Paulo</span>'+
+    '<span class="map-leg-item"><span class="map-leg-dot" style="background:#f9c74f"></span>Fabricio</span>'+
+    '<span class="map-leg-item"><span class="map-leg-dot" style="background:#c77dff"></span>Rodrigo</span>'+
+    '<span class="map-leg-item"><span class="map-leg-dot" style="background:#3a4355"></span>Sem dados</span>'+
+    '</div>'+
+    '<div id="mapa-detail"></div>';
+
+  mapaFuel="GC"; mapaFiltroSup="todos"; mapaSelected=null; mapaShowPrices=false;
+  renderMapaDots();
+}
+
+function renderMapaDots(){
+  var dotsG=document.getElementById("map-dots");
+  var pricesG=document.getElementById("map-prices");
+  if(!dotsG||!pricesG)return;
+  dotsG.innerHTML="";
+  pricesG.innerHTML="";
+
+  var postosFiltrados=MAP_POSTOS.filter(function(p){
+    if(mapaFiltroSup==="todos")return true;
+    return p.sup===mapaFiltroSup;
+  });
+
+  postosFiltrados.forEach(function(p){
+    if(p.k==="ESPACO REAL")return;
+    var meu=LANCADOS[p.k]||MEU[p.k];
+    var preco=meu&&meu[mapaFuel];
+    var cor=SUP_COLORS[p.sup]||"#3a4355";
+    var isSelected=mapaSelected===p.k;
+
+    var circle=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circle.setAttribute("cx",p.x);
+    circle.setAttribute("cy",p.y);
+    circle.setAttribute("r",isSelected?"6":"4.5");
+    circle.setAttribute("fill",cor);
+    circle.setAttribute("stroke",isSelected?"#fff":"rgba(0,0,0,.4)");
+    circle.setAttribute("stroke-width",isSelected?"1.5":"0.8");
+    circle.setAttribute("class","map-dot");
+    circle.setAttribute("data-k",p.k);
+    circle.onclick=function(){mapaClick(p.k)};
+    dotsG.appendChild(circle);
+
+    if(mapaShowPrices&&preco){
+      var txt=document.createElementNS("http://www.w3.org/2000/svg","text");
+      txt.setAttribute("x",p.x);
+      txt.setAttribute("y",p.y-7);
+      txt.setAttribute("text-anchor","middle");
+      txt.setAttribute("fill",cor);
+      txt.setAttribute("class","map-price-label");
+      txt.textContent=preco.toFixed(2).replace(".",",");
+      pricesG.appendChild(txt);
+    }else{
+      var lbl=document.createElementNS("http://www.w3.org/2000/svg","text");
+      lbl.setAttribute("x",p.x);
+      lbl.setAttribute("y",p.y+11);
+      lbl.setAttribute("text-anchor","middle");
+      lbl.setAttribute("fill","#5a6478");
+      lbl.setAttribute("class","map-label");
+      lbl.textContent=p.n;
+      pricesG.appendChild(lbl);
+    }
+  });
+}
+
+function mapaClick(k){
+  mapaSelected=k;
+  renderMapaDots();
+  var p=MAP_POSTOS.find(function(x){return x.k===k});
+  if(!p)return;
+  var meu=LANCADOS[k]||MEU[k];
+  var cfg=POSTOS_DADOS[k];
+  var cor=SUP_COLORS[p.sup]||"#8892a4";
+  var bandaCor=BCOR[p.banda]||"#8892a4";
+
+  var priceBoxes="";
+  if(meu&&cfg){
+    var fuels=cfg.combs.filter(function(f){return["GC","GA","ET","S10"].includes(f)});
+    var fuelColors={GC:"#4895ef",GA:"#f9c74f",ET:"#00e5a0",S10:"#ff4d6d"};
+    priceBoxes='<div class="map-detail-prices">';
+    fuels.forEach(function(f){
+      var v=meu[f];
+      priceBoxes+='<div class="map-price-box"><div class="map-price-box-label">'+(CL[f]||f)+'</div>'+
+        '<div class="map-price-box-val" style="color:'+(fuelColors[f]||"#eef0f4")+'">'+(v?fmt(v):"—")+'</div></div>';
+    });
+    priceBoxes+='</div>';
+  }
+
+  var concsHtml="";
+  if(cfg&&Object.keys(cfg.conc).length){
+    var concsArr=Object.keys(cfg.conc);
+    concsHtml='<div class="map-concs"><div class="map-conc-title">'+concsArr.length+' concorrentes monitorados</div><div class="map-conc-list">';
+    concsArr.forEach(function(cc){
+      var banda=cfg.conc[cc].banda;var bcor=BCOR[banda]||"#8892a4";
+      var cv=CONC[cc];var gcStr=cv&&cv.GC?(' '+cv.GC.toFixed(2).replace('.',',')):'';
+      concsHtml+='<span class="map-conc-chip" style="border-color:'+bcor+'20;color:'+bcor+'">'+cc+gcStr+'</span>';
+    });
+    concsHtml+='</div></div>';
+  }
+
+  document.getElementById("mapa-detail").innerHTML=
+    '<div class="map-detail">'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'+
+    '<div><div class="map-detail-nome">P. '+k+'</div>'+
+    '<div class="map-detail-sub">'+
+    '<span style="color:'+cor+'">Sup. '+p.sup+'</span> · '+
+    '<span style="color:'+bandaCor+'">'+p.banda+'</span>'+
+    (cfg&&cfg.gnv?' · <span style="color:#c77dff">GNV</span>':'')+'</div></div>'+
+    '<button style="background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);border-radius:6px;color:#00e5a0;font-family:var(--mono);font-size:.6rem;padding:4px 8px;cursor:pointer" onclick="irPara(\'lancamento\')">Lancar</button>'+
+    '</div>'+
+    priceBoxes+
+    concsHtml+
+    '</div>';
+}
+
+function mapaFuelChange(f){
+  mapaFuel=f;
+  renderMapaDots();
+}
+
+function mapaSetSup(btn,sup){
+  document.querySelectorAll(".map-ftag[id^='btn-']").forEach(function(b){b.classList.remove("on")});
+  btn.classList.add("on");
+  mapaFiltroSup=sup;
+  renderMapaDots();
+}
+
+function togglePrecos(){
+  mapaShowPrices=!mapaShowPrices;
+  var btn=document.getElementById("btn-prices");
+  if(btn)btn.classList.toggle("on",mapaShowPrices);
+  renderMapaDots();
+}
+
+/* AMOSTRA */
+var AMOSTRAS=[
   {posto:"JA",comb:"GC",coleta:"10/06/2026",prazo:"10/09/2026",resultado:"Conforme",obs:"Amostra 001-26",dias:92,diasRestantes:89},
   {posto:"ITAPOA",comb:"ET",coleta:"05/05/2026",prazo:"05/08/2026",resultado:"Aguardando",obs:"Amostra 002-26",dias:92,diasRestantes:54},
   {posto:"URBANO",comb:"S10",coleta:"01/04/2026",prazo:"01/07/2026",resultado:"Aguardando",obs:"Amostra 003-26",dias:92,diasRestantes:19},
   {posto:"MANGABEIRAS",comb:"GC",coleta:"20/03/2026",prazo:"20/06/2026",resultado:"Conforme",obs:"Amostra 004-26",dias:92,diasRestantes:-8},
   {posto:"ALEX",comb:"GA",coleta:"15/05/2026",prazo:"15/08/2026",resultado:"Aguardando",obs:"Amostra 005-26",dias:92,diasRestantes:64},
-  {posto:"BRUNA",comb:"S500",coleta:"02/06/2026",prazo:"02/09/2026",resultado:"Aguardando",obs:"Amostra 006-26",dias:92,diasRestantes:82},
 ];
 function rAmostra(){
-  var c=document.getElementById("mais-conteudo");
   var lista=AMOSTRAS.map(function(a){
     var pct=Math.max(0,Math.min(100,((a.dias-a.diasRestantes)/a.dias)*100));
-    var status=a.diasRestantes<0?"Vencido":a.diasRestantes<=15?"Alerta":"OK";
     var statusCls=a.diasRestantes<0?"vence":a.diasRestantes<=15?"alerta":"ok";
-    var statusTxt=a.diasRestantes<0?"VENCIDO "+Math.abs(a.diasRestantes)+"d":a.diasRestantes<=15?"ALERTA "+a.diasRestantes+"d":"OK — "+a.diasRestantes+"d restantes";
+    var statusTxt=a.diasRestantes<0?"VENCIDO "+Math.abs(a.diasRestantes)+"d":a.diasRestantes<=15?"ALERTA "+a.diasRestantes+"d":"OK — "+a.diasRestantes+"d";
     var barCor=a.diasRestantes<0?"var(--dg)":a.diasRestantes<=15?"var(--wn)":"var(--ok)";
-    return'<div class="at-item"><div class="at-header"><span class="at-posto">P. '+a.posto+' — '+( CL[a.comb]||a.comb)+'</span><span class="at-status '+statusCls+'">'+statusTxt+'</span></div>'+
+    return'<div class="at-item"><div class="at-header"><span class="at-posto">P. '+a.posto+' — '+(CL[a.comb]||a.comb)+'</span><span class="at-status '+statusCls+'">'+statusTxt+'</span></div>'+
     '<div class="at-meta">'+a.obs+' · Coleta: '+a.coleta+' · Prazo: '+a.prazo+'</div>'+
     '<div class="at-prog-bg"><div class="at-prog" style="width:'+pct+'%;background:'+barCor+'"></div></div>'+
     '<div class="at-prazo" style="color:'+barCor+'">'+a.resultado+'</div></div>';
   }).join("");
-  var novaForm='<div class="card" style="margin-top:.75rem"><div class="chdr"><div class="ctitle">Registrar nova amostra</div></div><div class="cbody">'+
-    '<div class="at-form">'+
-    '<div class="at-field"><label>Posto</label><select id="at-posto" class="sel" style="margin-bottom:0"><option value="">Selecione...</option>'+
-    Object.keys(POSTOS_DADOS).map(function(p){return'<option value="'+p+'">P. '+p+'</option>'}).join('')+
-    '</select></div>'+
-    '<div class="at-field"><label>Combustivel</label><select id="at-comb" class="sel" style="margin-bottom:0"><option value="GC">G. Comum</option><option value="GA">G. Aditivada</option><option value="ET">Etanol</option><option value="S10">Diesel S10</option><option value="S500">Diesel S500</option></select></div>'+
-    '<div class="at-field"><label>Data coleta</label><input type="date" id="at-data" style="color:var(--tx)"></div>'+
-    '<div class="at-field"><label>Observacoes</label><input type="text" id="at-obs" placeholder="Amostra XXX-26"></div>'+
-    '</div>'+
-    '<button class="btn" onclick="salvarAmostra()">Registrar Amostra-Testemunha</button>'+
-    '</div></div>';
-  c.innerHTML='<div class="sdiv">Controle de amostras-testemunha</div>'+
-    '<div style="padding:6px 8px;background:rgba(249,199,79,.08);border:1px solid rgba(249,199,79,.2);border-radius:8px;font-size:.68rem;color:var(--wn);font-family:var(--mono);margin-bottom:.75rem">'+
-    'Prazo legal: 90 dias apos coleta — obrigatorio reter amostra para defesa em caso de reclamacao ANP</div>'+
-    '<div class="card"><div class="chdr"><div class="ctitle">Amostras ativas</div><div class="csub">'+AMOSTRAS.length+' amostras registradas</div></div>'+
-    '<div class="cbody">'+lista+'</div></div>'+novaForm;
+  document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Controle de amostras-testemunha</div>'+
+    '<div style="padding:6px 8px;background:rgba(249,199,79,.08);border:1px solid rgba(249,199,79,.2);border-radius:8px;font-size:.68rem;color:var(--wn);font-family:var(--mono);margin-bottom:.75rem">Prazo legal: 90 dias — obrigatorio reter amostra para defesa ANP</div>'+
+    '<div class="card"><div class="chdr"><div class="ctitle">Amostras ativas</div><div class="csub">'+AMOSTRAS.length+' amostras registradas</div></div><div class="cbody">'+lista+'</div></div>';
 }
-function salvarAmostra(){
-  var posto=document.getElementById("at-posto").value;
-  var comb=document.getElementById("at-comb").value;
-  var data=document.getElementById("at-data").value;
-  var obs=document.getElementById("at-obs").value;
-  if(!posto||!data){showToast("Atenção","Preencha posto e data");return}
-  var d=new Date(data);
-  var prazo=new Date(d.getTime()+90*24*60*60*1000);
-  var hoje=new Date();
-  var diasRestantes=Math.round((prazo-hoje)/(24*60*60*1000));
-  var fmt2=function(dt){return dt.getDate().toString().padStart(2,"0")+"/"+(dt.getMonth()+1).toString().padStart(2,"0")+"/"+dt.getFullYear()};
-  AMOSTRAS.unshift({posto:posto,comb:comb,coleta:fmt2(d),prazo:fmt2(prazo),resultado:"Aguardando",obs:obs||"Amostra nova",dias:90,diasRestantes:diasRestantes});
-  rAmostra();
-  showToast("Amostra registrada!","P. "+posto+" — prazo ate "+fmt2(prazo));
-}
+
 function rNotif(){
-  document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Notificacoes de preco</div><div class="card"><div class="chdr"><div class="ctitle">Alertas recentes</div><div class="csub">Mudancas detectadas nas coletas</div></div><div class="cbody">'+
+  document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Notificacoes de preco</div><div class="card"><div class="chdr"><div class="ctitle">Alertas recentes</div></div><div class="cbody">'+
   '<div class="nitem"><div class="nico" style="background:rgba(255,77,109,.1)">📈</div><div class="ntxt"><div class="ntitulo">SHELL SUPER LUNA subiu G.C</div><div class="nsub">P. BIANCA — de R$5,990 para R$6,090</div><span class="nbadge up">+R$0,100</span></div><div class="ntempo">hoje 09:32</div></div>'+
   '<div class="nitem"><div class="nico" style="background:rgba(0,229,160,.12)">📷</div><div class="ntxt"><div class="ntitulo">Coleta confirmada — P. RODRIGO</div><div class="nsub">Foto enviada — ALE MILLENIUM</div><span class="nbadge down">confirmado</span></div><div class="ntempo">08:15</div></div>'+
   '<div class="nitem"><div class="nico" style="background:rgba(249,199,79,.12)">⚠️</div><div class="ntxt"><div class="ntitulo">TIGRES baixou G.C — regiao P. JA</div><div class="nsub">R$5,650 — R$0,140 abaixo da media</div><span class="nbadge down">-R$0,140</span></div><div class="ntempo">07:50</div></div>'+
-  '<div class="nitem"><div class="nico" style="background:rgba(72,149,239,.15)">📉</div><div class="ntxt"><div class="ntitulo">REDE FLEX CENTER SUL baixou G.A</div><div class="nsub">P. ALEX — de R$6,150 para R$6,090</div><span class="nbadge down">-R$0,060</span></div><div class="ntempo">ontem</div></div>'+
   '</div></div>';
 }
+
 function rDistribuidor(){
   document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Custo por distribuidora</div>'+
-  '<div class="card"><div class="cbody">'+
-  '<div class="dgrid2">'+
-  '<div class="dbox2"><div class="dnome2" style="color:#f9c74f">Ipiranga</div><div class="drow2"><span>G.C</span><span>R$5,320</span></div><div class="drow2"><span>G.A</span><span>R$5,620</span></div><div class="drow2"><span>ET</span><span>R$3,180</span></div><div class="drow2"><span>S10</span><span>R$5,990</span></div></div>'+
-  '<div class="dbox2"><div class="dnome2" style="color:#4895ef">Vibra</div><div class="drow2"><span>G.C</span><span>R$5,290</span></div><div class="drow2"><span>G.A</span><span>R$5,590</span></div><div class="drow2"><span>ET</span><span>R$3,150</span></div><div class="drow2"><span>S10</span><span>R$5,960</span></div></div>'+
-  '<div class="dbox2"><div class="dnome2" style="color:#81c784">Rio Branco</div><div class="drow2"><span>G.C</span><span style="color:#00e5a0">R$5,260</span></div><div class="drow2"><span>G.A</span><span style="color:#00e5a0">R$5,560</span></div><div class="drow2"><span>ET</span><span style="color:#00e5a0">R$3,120</span></div><div class="drow2"><span>S10</span><span style="color:#00e5a0">R$5,930</span></div></div>'+
-  '<div class="dbox2"><div class="dnome2" style="color:#ff6b6b">ALE</div><div class="drow2"><span>G.C</span><span>R$5,310</span></div><div class="drow2"><span>G.A</span><span>R$5,610</span></div><div class="drow2"><span>ET</span><span>R$3,160</span></div><div class="drow2"><span>S10</span><span>R$5,980</span></div></div>'+
-  '</div>'+
-  '<div style="padding:6px 8px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:8px;font-size:.68rem;color:var(--ac);font-family:var(--mono);margin-top:8px">Menor custo G.C: Rio Branco R$5,260 — economia R$0,060 vs Ipiranga</div>'+
-  '</div></div>'+
-  '<div class="sdiv">Limite de compra mensal</div>'+
-  '<div class="card"><div class="cbody">'+
-  '<div class="lrow"><span class="lnome">G. Comum</span><div class="lbw"><div class="lbbg"><div class="lbar" style="width:72%;background:#f9c74f"></div></div></div><span class="lpct" style="color:#f9c74f">72%</span></div>'+
-  '<div class="lrow"><span class="lnome">Etanol</span><div class="lbw"><div class="lbbg"><div class="lbar" style="width:45%;background:#00e5a0"></div></div></div><span class="lpct" style="color:#00e5a0">45%</span></div>'+
-  '<div class="lrow"><span class="lnome">Diesel S10</span><div class="lbw"><div class="lbbg"><div class="lbar" style="width:88%;background:#ff4d6d"></div></div></div><span class="lpct" style="color:#ff4d6d">88% ⚠</span></div>'+
-  '<div class="lrow"><span class="lnome">Diesel S500</span><div class="lbw"><div class="lbbg"><div class="lbar" style="width:31%;background:#00e5a0"></div></div></div><span class="lpct" style="color:#00e5a0">31%</span></div>'+
-  '</div></div>';
+  '<div class="card"><div class="cbody"><div class="dgrid2">'+
+  '<div class="dbox2"><div class="dnome2" style="color:#f9c74f">Ipiranga</div><div class="drow2"><span>G.C</span><span>R$5,320</span></div><div class="drow2"><span>ET</span><span>R$3,180</span></div><div class="drow2"><span>S10</span><span>R$5,990</span></div></div>'+
+  '<div class="dbox2"><div class="dnome2" style="color:#4895ef">Vibra</div><div class="drow2"><span>G.C</span><span>R$5,290</span></div><div class="drow2"><span>ET</span><span>R$3,150</span></div><div class="drow2"><span>S10</span><span>R$5,960</span></div></div>'+
+  '<div class="dbox2"><div class="dnome2" style="color:#81c784">Rio Branco</div><div class="drow2"><span>G.C</span><span style="color:#00e5a0">R$5,260</span></div><div class="drow2"><span>ET</span><span style="color:#00e5a0">R$3,120</span></div><div class="drow2"><span>S10</span><span style="color:#00e5a0">R$5,930</span></div></div>'+
+  '<div class="dbox2"><div class="dnome2" style="color:#ff6b6b">ALE</div><div class="drow2"><span>G.C</span><span>R$5,310</span></div><div class="drow2"><span>ET</span><span>R$3,160</span></div><div class="drow2"><span>S10</span><span>R$5,980</span></div></div>'+
+  '</div><div style="padding:6px 8px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:8px;font-size:.68rem;color:var(--ac);font-family:var(--mono);margin-top:8px">Menor custo G.C: Rio Branco R$5,260</div></div></div>';
 }
+
 function rSimulador(){
   document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Simulador — se eu abaixar, compensa?</div>'+
   '<div class="sim"><div class="simtitle">Simulacao G. Comum</div>'+
@@ -688,27 +851,22 @@ function rSimulador(){
   '<div class="simrow"><span class="simlbl">Volume diario (L)</span><input class="siminput" type="number" id="sim-vol" value="5000" step="100" oninput="calcSim()"></div>'+
   '<div class="simrow"><span class="simlbl">Custo (R$/L)</span><input class="siminput" type="number" id="sim-custo" value="5.260" step="0.010" oninput="calcSim()"></div>'+
   '<div class="simres" id="simres"><div class="simreslbl">Impacto na margem diaria</div><div class="simresval" id="simresval">calculando...</div></div>'+
-  '</div>'+
-  '<div class="card"><div class="chdr"><div class="ctitle">Cruzamento custo x venda x margem</div></div><div class="cbody">'+
-  '<div class="pr"><span class="prc">Custo medio atual</span><span style="font-family:var(--mono);font-weight:700">R$5,260</span></div>'+
-  '<div class="pr"><span class="prc">Preco venda medio G.C</span><span style="color:#4895ef;font-family:var(--mono);font-weight:700">R$5,784</span></div>'+
-  '<div class="pr"><span class="prc">Margem bruta G.C</span><span style="color:#00e5a0;font-family:var(--mono);font-weight:700">R$0,524/L (9,06%)</span></div>'+
-  '<div class="pr" style="border:none"><span class="prc">Margem bruta diaria estimada</span><span style="color:#f9c74f;font-family:var(--mono);font-weight:700">~R$96.940</span></div>'+
-  '</div></div>';
+  '</div>';
   calcSim();
 }
+
 function calcSim(){
   var a=parseFloat(document.getElementById("sim-atual")&&document.getElementById("sim-atual").value||0);
   var n=parseFloat(document.getElementById("sim-novo")&&document.getElementById("sim-novo").value||0);
   var v=parseFloat(document.getElementById("sim-vol")&&document.getElementById("sim-vol").value||0);
-  var c=parseFloat(document.getElementById("sim-custo")&&document.getElementById("sim-custo").value||0);
   var el=document.getElementById("simresval");var box=document.getElementById("simres");
-  if(!a||!n||!v||!c||!el)return;
+  if(!a||!n||!v||!el)return;
   var imp=(n-a)*v;
   el.textContent=(imp>=0?"+":"")+"R$"+imp.toFixed(2).replace(".",",")+"/dia";
   el.style.color=imp>=0?"var(--ok)":"var(--dg)";
   if(box){box.style.borderColor=imp>=0?"rgba(0,229,160,.2)":"rgba(255,77,109,.2)";box.style.background=imp>=0?"rgba(0,229,160,.06)":"rgba(255,77,109,.06)"}
 }
+
 function rLancamento(){
   var postos=Object.keys(POSTOS_DADOS).sort();
   var opts=postos.map(function(p){return'<option value="'+p+'">P. '+p+"</option>"}).join("");
@@ -717,8 +875,9 @@ function rLancamento(){
   '<select class="sel" id="posto-lanc" onchange="atualizarLanc()"><option value="">Selecione...</option>'+opts+'</select>'+
   '<div id="lanc-campos"><div class="empty">Selecione o posto</div></div>'+
   '</div></div>'+
-  '<div class="card" id="lanc-comp-card" style="display:none"><div class="chdr"><div class="ctitle">Comparativo pos-lancamento</div></div><div class="cbody" id="lanc-comp-body"></div></div>';
+  '<div class="card" id="lanc-comp-card" style="display:none"><div class="chdr"><div class="ctitle">Comparativo</div></div><div class="cbody" id="lanc-comp-body"></div></div>';
 }
+
 function atualizarLanc(){
   var posto=document.getElementById("posto-lanc")&&document.getElementById("posto-lanc").value;
   var campos=document.getElementById("lanc-campos");
@@ -730,14 +889,15 @@ function atualizarLanc(){
   html+='<div class="ulast">P. '+posto+' — preco informado hoje</div>';
   campos.innerHTML=html;
 }
+
 function salvarLanc(posto){
   var cfg=POSTOS_DADOS[posto];var vals={};
   cfg.combs.forEach(function(c){var el=document.getElementById("lanc-"+c);if(el&&el.value)vals[c]=parseFloat(el.value)});
-  LANCADOS[posto]=vals;var k=Object.keys(vals);k.forEach(function(c){MEU[posto][c]=vals[c]});
+  LANCADOS[posto]=vals;var k=Object.keys(vals);k.forEach(function(c){if(MEU[posto])MEU[posto][c]=vals[c]});
   var card=document.getElementById("lanc-comp-card");var body=document.getElementById("lanc-comp-body");
   if(!card||!body)return;
   card.style.display="block";var html="";
-  Object.keys(cfg.conc).forEach(function(cc){
+  Object.keys(cfg.conc).slice(0,4).forEach(function(cc){
     var cv=CONC[cc]||{};var banda=cfg.conc[cc].banda;var cor=BCOR[banda]||"#8892a4";
     html+='<div style="margin-bottom:7px;padding:8px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px"><div style="font-size:.7rem;font-weight:700;color:'+cor+';font-family:var(--mono);margin-bottom:5px">'+cc+'</div>';
     cfg.combs.filter(function(cb){return["GC","GA","ET","S10"].includes(cb)}).forEach(function(cb){
@@ -751,6 +911,7 @@ function salvarLanc(posto){
   body.innerHTML=html||'<div class="empty">Sem concorrentes</div>';
   showToast("Precos salvos!","Comparativo atualizado para P. "+posto);
 }
+
 function rRelatorios(){
   document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Relatorios comerciais</div>'+
   '<div class="rcard"><div class="rcardtop"><div class="rcardico" style="background:rgba(72,149,239,.15)">📈</div><div><div class="rcardtitle">Mix Gasolina Aditivada</div><div class="rcardsub">% sobre total de gasolinas — rede JBRETAS</div></div></div><div class="rrows"><div class="rrow"><span>P. JA (Octapro)</span><span>38,2%</span></div><div class="rrow"><span>P. URBANO (Podium)</span><span>29,7%</span></div><div class="rrow"><span>Media da rede</span><span style="color:var(--ac)">24,1%</span></div></div></div>'+
@@ -758,16 +919,17 @@ function rRelatorios(){
   '<div class="rcard"><div class="rcardtop"><div class="rcardico" style="background:rgba(0,229,160,.1)">👥</div><div><div class="rcardtitle">Produtividade por gerente</div><div class="rcardsub">Litros x produto x mix — semana</div></div></div><div class="rrows"><div class="rrow"><span>P. BERNARDO</span><span>29.402 L</span></div><div class="rrow"><span>P. FELIPAO</span><span>18.320 L</span></div><div class="rrow"><span>P. MANGABEIRAS</span><span>44.189 L</span></div><div class="rrow"><span>Media da rede</span><span style="color:var(--wn)">27.840 L</span></div></div></div>'+
   '<div class="rcard"><div class="rcardtop"><div class="rcardico" style="background:rgba(199,125,255,.12)">📦</div><div><div class="rcardtitle">Volume por produto</div><div class="rcardsub">Estimativa mensal jun/2026</div></div></div><div class="rrows"><div class="rrow"><span>G. Comum</span><span>1.284.000 L</span></div><div class="rrow"><span>Etanol</span><span>492.000 L</span></div><div class="rrow"><span>Diesel S10</span><span>386.000 L</span></div><div class="rrow"><span>G. Aditivada</span><span>318.000 L</span></div></div></div>';
 }
+
 function showToast(title,msg){
   var t=document.getElementById("toast");
   document.getElementById("t-title").textContent=title;
   document.getElementById("t-msg").textContent=msg;
   t.classList.add("show");setTimeout(function(){t.classList.remove("show")},3000);
 }
+
 initSelects();
 renderRanking();
 renderRegional();
 </script>
-
 </body>
 </html>
