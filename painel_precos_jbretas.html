@@ -600,39 +600,42 @@ function renderRegional(){
 
 /* ===== MAPA ===== */
 const MAP_POSTOS = [
-  {k:"JA",n:"P. JA",lat:-19.958,lng:-43.957,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"MANGABEIRAS",n:"MANGA.",lat:-19.960,lng:-43.961,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"URBANO",n:"URBANO",lat:-19.963,lng:-43.954,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"DIFERENCIAL",n:"DIFER.",lat:-19.918,lng:-43.937,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"ARAPONGA",n:"ARAPON.",lat:-19.962,lng:-43.950,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"ITAPOA",n:"ITAPOA",lat:-19.920,lng:-43.981,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"ALEX",n:"ALEX",lat:-19.956,lng:-43.959,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"BERNARDO",n:"BERNARDO",lat:-19.966,lng:-43.941,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"TUNEL",n:"TUNEL",lat:-19.905,lng:-43.947,sup:"Fabricio",banda:"Ipiranga"},
-  {k:"ANA LUCIA",n:"ANA L.",lat:-19.869,lng:-43.969,sup:"Paulo",banda:"Vibra"},
-  {k:"TRANCOSO",n:"TRANC.",lat:-19.905,lng:-43.930,sup:"Fabricio",banda:"Vibra"},
-  {k:"SANTA INES",n:"STA.IN.",lat:-19.935,lng:-44.063,sup:"Paulo",banda:"Vibra"},
-  {k:"JOAQUIM",n:"JOAQUIM",lat:-19.938,lng:-44.065,sup:"Paulo",banda:"Vibra"},
-  {k:"JOCA",n:"JOCA",lat:-19.929,lng:-43.973,sup:"Paulo",banda:"Vibra"},
-  {k:"TOPAZIO",n:"TOPAZIO",lat:-19.774,lng:-44.053,sup:"Paulo",banda:"Vibra"},
-  {k:"PLANALTO",n:"PLANALTO",lat:-19.827,lng:-44.007,sup:"Paulo",banda:"Ipiranga"},
-  {k:"LOURA",n:"LOURA",lat:-19.938,lng:-44.090,sup:"Paulo",banda:"Ipiranga"},
-  {k:"AVIVA",n:"AVIVA",lat:-19.782,lng:-44.075,sup:"Paulo",banda:"Ipiranga"},
-  {k:"SAO LUIZ",n:"SAO LZ",lat:-19.817,lng:-44.058,sup:"Paulo",banda:"Ipiranga"},
-  {k:"COLIBRI",n:"COLIBRI",lat:-19.814,lng:-44.065,sup:"Fabricio",banda:"Vibra"},
-  {k:"GLORIA",n:"GLORIA",lat:-19.937,lng:-43.910,sup:"Fabricio",banda:"Ipiranga"},
-  {k:"BRUNA",n:"BRUNA",lat:-19.895,lng:-43.955,sup:"Fabricio",banda:"Vibra"},
-  {k:"MIRAGEM",n:"MIRAGEM",lat:-19.782,lng:-43.885,sup:"Fabricio",banda:"Vibra"},
-  {k:"LEANDRO",n:"LEANDRO",lat:-19.782,lng:-44.075,sup:"Fabricio",banda:"Vibra"},
-  {k:"4RODAS",n:"4RODAS",lat:-19.867,lng:-43.918,sup:"Fabricio",banda:"Ipiranga"},
-  {k:"RODRIGO",n:"RODRIGO",lat:-19.957,lng:-43.929,sup:"Fabricio",banda:"Ipiranga"},
-  {k:"SANTA MARIA",n:"STA.MA.",lat:-19.800,lng:-44.075,sup:"Fabricio",banda:"Vibra"},
-  {k:"CEASA",n:"CEASA",lat:-19.895,lng:-43.969,sup:"Paulo",banda:"Vibra"},
-  {k:"BEATRIZ",n:"BEATRIZ",lat:-20.025,lng:-44.108,sup:"Rodrigo",banda:"Rio Branco"},
-  {k:"ESPACO REAL",n:"ESP.R.",lat:-21.095,lng:-44.229,sup:"Rodrigo",banda:"Ipiranga"},
-  {k:"FELIPAO",n:"FELIPAO",lat:-19.923,lng:-43.990,sup:"Rodrigo",banda:"Vibra"},
-  {k:"BIANCA",n:"BIANCA",lat:-20.040,lng:-44.150,sup:"Rodrigo",banda:"Vibra"},
-  {k:"DUDU",n:"DUDU",lat:-19.933,lng:-44.003,sup:"Fabricio",banda:"ALE"},
+  {k:"JA",         n:"P. JA",         lat:-19.9581, lng:-43.9571, sup:"Mauricio", banda:"Ipiranga",   addr:"Av. Raja Gabaglia, 2461 – São Bento"},
+  {k:"ITAPOA",     n:"P. ITAPOA",     lat:-19.9198, lng:-43.9814, sup:"Mauricio", banda:"Ipiranga",   addr:"Av. Amazonas, 2994 – Barroca"},
+  {k:"MANGABEIRAS", n:"P. MANGA.",    lat:-19.9600, lng:-43.9610, sup:"Mauricio", banda:"Ipiranga",   addr:"Av. Afonso Pena, 4321 – Mangabeiras"},
+  {k:"DIFERENCIAL", n:"P. DIFER.",    lat:-19.9182, lng:-43.9368, sup:"Mauricio", banda:"Ipiranga",   addr:"Av. do Contorno, 3347 – Santa Efigênia"},
+  {k:"ARAPONGA",   n:"P. ARAPON.",    lat:-19.9620, lng:-43.9500, sup:"Mauricio", banda:"Ipiranga",   addr:"Av. Brasil, 909 – Santa Efigênia"},
+  {k:"TUNEL",      n:"P. TUNEL",      lat:-19.9050, lng:-43.9470, sup:"Fabricio", banda:"Ipiranga",   addr:"Av. Cristiano Machado, 71 – Lagoinha"},
+  {k:"URBANO",     n:"P. URBANO",     lat:-19.9300, lng:-43.9540, sup:"Mauricio", banda:"Ipiranga",   addr:"Av. Álvares Cabral, 780 – Centro"},
+  {k:"BERNARDO",   n:"P. BERNARDO",   lat:-19.9900, lng:-43.9000, sup:"Mauricio", banda:"Ipiranga",   addr:"Rodovia BR-040, Km 564 – Nova Lima"},
+  {k:"TRANCOSO",   n:"P. TRANC.",     lat:-19.9050, lng:-43.9300, sup:"Fabricio", banda:"Vibra",      addr:"Rua José Cleto, 1232 – Santa Cruz"},
+  {k:"GLORIA",     n:"P. GLORIA",     lat:-19.9370, lng:-43.9100, sup:"Fabricio", banda:"Ipiranga",   addr:"Rua Dep. Cláudio Pinheiro Lima, 957 – Glória"},
+  {k:"BRUNA",      n:"P. BRUNA",      lat:-19.8954, lng:-43.9550, sup:"Fabricio", banda:"Vibra",      addr:"Av. Anel Rodoviário, 11333"},
+  {k:"BAHAMAS",    n:"P. BAHAMAS",    lat:-19.9150, lng:-43.9300, sup:"Fabricio", banda:"Ipiranga",   addr:"Av. Silviano Brandão, 796 – Floresta"},
+  {k:"BOMBOM MATRIZ",n:"BOMBOM M.",   lat:-19.9200, lng:-43.9380, sup:"Mauricio", banda:"Ipiranga",   addr:"Av. do Contorno, 2694 – Santa Efigênia"},
+  {k:"BOMBOM FILIAL",n:"BOMBOM F.",   lat:-19.8760, lng:-43.9180, sup:"Paulo",    banda:"Ipiranga",   addr:"Rua Padre Pedro Pinto, 6400 – Maria Helena"},
+  {k:"SAO BERNARDO",n:"P. SÃO BERN.", lat:-19.8700, lng:-43.9290, sup:"Fabricio", banda:"Ipiranga",   addr:"Av. Cristiano Machado, 9505 – Dona Clara"},
+  {k:"JOCA",       n:"P. JOCA",       lat:-19.9290, lng:-43.9730, sup:"Paulo",    banda:"Vibra",      addr:"Rua Antonio José dos Santos, 609 – Céu Azul"},
+  {k:"FELIPAO",    n:"P. FELIPAO",    lat:-19.9230, lng:-43.9900, sup:"Rodrigo",  banda:"Vibra",      addr:"Av. Leite de Castro, 2090"},
+  {k:"DUDU",       n:"P. DUDU",       lat:-19.9330, lng:-44.0030, sup:"Fabricio", banda:"ALE",        addr:"Região Gameleira/Caiçara"},
+  {k:"PLANALTO",   n:"P. PLANALTO",   lat:-19.8272, lng:-44.0072, sup:"Paulo",    banda:"Ipiranga",   addr:"Av. Dr. Cristiano Guimarães, 2329 – Planalto"},
+  {k:"LOURA",      n:"P. LOURA",      lat:-19.9384, lng:-44.0901, sup:"Paulo",    banda:"Ipiranga",   addr:"Av. João Soares, 1024 – Xangri-lá, Contagem"},
+  {k:"SANTA INES", n:"P. STA.INES",   lat:-19.9350, lng:-44.0630, sup:"Paulo",    banda:"Vibra",      addr:"Rod. BR-040, KM 688 – Guanabara, Contagem"},
+  {k:"JOAQUIM",    n:"P. JOAQUIM",    lat:-19.9380, lng:-44.0650, sup:"Paulo",    banda:"Vibra",      addr:"Contagem – MG"},
+  {k:"COLIBRI",    n:"P. COLIBRI",    lat:-19.8140, lng:-44.0650, sup:"Fabricio", banda:"Vibra",      addr:"Av. Pres. Antonio Carlos, 8311 – São Luiz"},
+  {k:"TOPAZIO",    n:"P. TOPAZIO",    lat:-19.7740, lng:-44.0530, sup:"Paulo",    banda:"Vibra",      addr:"Av. Denise Cristina Rocha, 1660 – Justinópolis"},
+  {k:"4RODAS",     n:"P. 4RODAS",     lat:-19.8670, lng:-44.0580, sup:"Fabricio", banda:"Ipiranga",   addr:"Av. Tito Fulgêncio, 950 – Jd. Industrial, Contagem"},
+  {k:"SAO LUIZ",   n:"P. SAO LUIZ",   lat:-19.7470, lng:-44.0830, sup:"Paulo",    banda:"Ipiranga",   addr:"Av. Eduardo Farnese Brandão – Ribeirão das Neves"},
+  {k:"AVIVA",      n:"P. AVIVA",      lat:-19.7820, lng:-44.0750, sup:"Paulo",    banda:"Ipiranga",   addr:"Rua Alzira Menezes Nogueira, 2292 – Ribeirão das Neves"},
+  {k:"LEANDRO",    n:"P. LEANDRO",    lat:-19.7820, lng:-44.0750, sup:"Fabricio", banda:"Vibra",      addr:"Av. Abílio Machado, 330 – Inconfidência"},
+  {k:"SANTA MARIA",n:"P. STA.MARIA",  lat:-19.8000, lng:-44.0750, sup:"Fabricio", banda:"Vibra",      addr:"Av. Presid. Tancredo Neves, 3574 – Paquetá"},
+  {k:"MIRAGEM",    n:"P. MIRAGEM",    lat:-19.7820, lng:-43.8850, sup:"Fabricio", banda:"Vibra",      addr:"Av. Pres. Antonio Carlos, 638 – Caiçara"},
+  {k:"ANA LUCIA",  n:"P. ANA LUCIA",  lat:-19.8900, lng:-43.8260, sup:"Paulo",    banda:"Vibra",      addr:"Av. Contagem, 1354 – Ana Lúcia, Sabará"},
+  {k:"SANTA INES MINAS",n:"STA.I.MG", lat:-19.8880, lng:-43.8230, sup:"Paulo",    banda:"Vibra",      addr:"Av. Contagem, 1980 – Ana Lúcia, Sabará"},
+  {k:"RODRIGO",    n:"P. RODRIGO",    lat:-19.9480, lng:-44.1980, sup:"Fabricio", banda:"Ipiranga",   addr:"Av. Arthur da Silva, 355 – Ingá, Betim"},
+  {k:"BEATRIZ",    n:"P. BEATRIZ",    lat:-20.0250, lng:-44.1080, sup:"Rodrigo",  banda:"Rio Branco", addr:"Região São João Del Rei"},
+  {k:"BIANCA",     n:"P. BIANCA",     lat:-20.0400, lng:-44.1500, sup:"Rodrigo",  banda:"Vibra",      addr:"Região Sarzedo – MG"},
+  {k:"ESPACO REAL",n:"P. ESP.REAL",   lat:-21.1300, lng:-44.2570, sup:"Rodrigo",  banda:"Ipiranga",   addr:"Av. 31 de Marco, 3000 – São João Del Rei"},
 ];
 
 var mapaFuel = "GC";
@@ -689,8 +692,8 @@ function initLeaflet(){
   if(!mapEl)return;
 
   leafletMap = L.map('leaflet-map',{
-    center:[-19.920,-43.975],
-    zoom:13,
+    center:[-19.917,-43.960],
+    zoom:12,
     zoomControl:true
   });
 
@@ -699,6 +702,15 @@ function initLeaflet(){
     subdomains:'abcd',
     maxZoom:19
   }).addTo(leafletMap);
+
+  var concorrentes = {};
+  Object.keys(POSTOS_DADOS).forEach(function(posto){
+    Object.keys(POSTOS_DADOS[posto].conc).forEach(function(cc){
+      if(!concorrentes[cc]) concorrentes[cc] = {banda: POSTOS_DADOS[posto].conc[cc].banda, postos:[]};
+      concorrentes[cc].postos.push(posto);
+    });
+  });
+  leafletMap._jbConcorrentes = concorrentes;
 
   renderLeafletMarkers();
 }
@@ -721,35 +733,36 @@ function renderLeafletMarkers(){
       className:'',
       html:'<div style="'+
         'background:'+cor+';'+
-        'border:2px solid rgba(0,0,0,.4);'+
+        'border:2px solid #fff;'+
         'border-radius:50%;'+
-        'width:14px;height:14px;'+
+        'width:16px;height:16px;'+
         'cursor:pointer;'+
-        'box-shadow:0 0 0 3px '+cor+'30'+
+        'box-shadow:0 0 0 3px '+cor+'50,0 2px 6px rgba(0,0,0,.5)'+
       '"></div>',
-      iconSize:[14,14],
-      iconAnchor:[7,7],
-      popupAnchor:[0,-10]
+      iconSize:[16,16],
+      iconAnchor:[8,8],
+      popupAnchor:[0,-12]
     });
 
     var precoStr = preco ? 'R$'+preco.toFixed(2).replace('.',',') : '—';
     var cfg=POSTOS_DADOS[p.k];
     var concCount=cfg?Object.keys(cfg.conc).length:0;
+    var addrStr = p.addr || '';
 
-    var marker=L.marker([p.lat,p.lng],{icon:icon});
-    marker.bindPopup(
-      '<div style="font-family:monospace;min-width:130px">'+
-      '<div style="font-weight:700;color:#00e5a0;margin-bottom:4px">'+p.n+'</div>'+
-      '<div style="color:#8892a4;font-size:10px;margin-bottom:4px">Sup. '+p.sup+' · '+p.banda+'</div>'+
-      '<div style="display:flex;justify-content:space-between;border-top:1px solid #2a3040;padding-top:4px">'+
-      '<span style="color:#8892a4">'+(FUEL_LABEL[mapaFuel]||mapaFuel)+'</span>'+
-      '<span style="font-weight:700;color:'+cor+'">'+precoStr+'</span>'+
+    var popup =
+      '<div style="font-family:monospace;min-width:150px">'+
+      '<div style="font-weight:700;color:'+cor+';font-size:12px;margin-bottom:3px">'+p.n+'</div>'+
+      '<div style="color:#8892a4;font-size:10px;margin-bottom:2px">Sup. '+p.sup+' · '+p.banda+'</div>'+
+      (addrStr?'<div style="color:#5a6478;font-size:9px;margin-bottom:4px;line-height:1.3">📍 '+addrStr+'</div>':'')+
+      '<div style="display:flex;justify-content:space-between;border-top:1px solid #2a3040;padding-top:4px;margin-top:2px">'+
+      '<span style="color:#8892a4;font-size:10px">'+(FUEL_LABEL[mapaFuel]||mapaFuel)+'</span>'+
+      '<span style="font-weight:700;color:'+cor+';font-size:12px">'+precoStr+'</span>'+
       '</div>'+
-      '<div style="color:#5a6478;font-size:10px;margin-top:4px">'+concCount+' concorrentes monitorados</div>'+
-      '<div style="margin-top:6px"><button onclick="mapaClickLeaflet(\''+p.k+'\')" style="background:rgba(0,229,160,.15);border:1px solid rgba(0,229,160,.4);border-radius:5px;color:#00e5a0;font-family:monospace;font-size:10px;padding:3px 8px;cursor:pointer;width:100%">Ver detalhes</button></div>'+
-      '</div>',
-      {className:''}
-    );
+      '<div style="color:#5a6478;font-size:9px;margin-top:3px">'+concCount+' concorrentes monitorados</div>'+
+      '<button onclick="mapaClickLeaflet(\''+p.k+'\')" style="margin-top:6px;background:rgba(0,229,160,.15);border:1px solid rgba(0,229,160,.4);border-radius:5px;color:#00e5a0;font-family:monospace;font-size:10px;padding:4px 10px;cursor:pointer;width:100%">Ver detalhes ↓</button>'+
+      '</div>';
+    var marker=L.marker([p.lat,p.lng],{icon:icon});
+    marker.bindPopup(popup,{maxWidth:220});
     marker.addTo(leafletMap);
     leafletMarkers.push(marker);
   });
@@ -825,7 +838,7 @@ function mapaSetSup(btn,sup){
       leafletMap.fitBounds(bounds,{padding:[20,20]});
     }
   } else if(leafletMap){
-    leafletMap.setView([-19.920,-43.975],13);
+    leafletMap.setView([-19.917,-43.960],12);
   }
 }
 
