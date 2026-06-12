@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>JBRETAS — Painel de Precos</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f12;--sf:#161920;--sf2:#1e2229;--sf3:#252b35;
+  --bd:#2a3040;--bd2:#3a4355;
+  --ac:#00e5a0;--ac2:#00c488;--acd:rgba(0,229,160,0.12);
+  --tx:#eef0f4;--tx2:#8892a4;--tx3:#5a6478;
+  --dg:#ff4d6d;--wn:#f9c74f;--inf:#4895ef;--ok:#00e5a0;--pu:#c77dff;
+  --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
+  --r:10px;--rl:16px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);display:flex;flex-direction:column;position:relative}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,229,160,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0}
+.topbar{background:var(--sf);border-bottom:1px solid var(--bd);padding:0 1rem;height:54px;
+  display:flex;align-items:center;justify-content:space-between;position:relative;z-index:10;flex-shrink:0}
+.tbbrand{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--ac);letter-spacing:.06em}
+.tbsub{font-size:.6rem;color:var(--tx3);letter-spacing:.15em;text-transform:uppercase}
+.live{display:inline-flex;align-items:center;gap:5px;background:var(--acd);border:1px solid rgba(0,229,160,.2);
+  border-radius:20px;color:var(--ac);font-size:.62rem;font-family:var(--mono);padding:3px 9px}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--ac);animation:pu 2s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:1;padding-bottom:70px}
+.main::-webkit-scrollbar{width:3px}
+.main::-webkit-scrollbar-thumb{background:var(--bd2)}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bd);
+  display:flex;z-index:100;height:62px}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;background:transparent;border:none;border-top:2px solid transparent;transition:all .15s;padding:6px 4px}
+.nbtn.active{border-top-color:var(--ac)}
+.nbtn .ni{font-size:20px;transition:color .15s;line-height:1}
+.nbtn .nl{font-size:.62rem;font-family:var(--mono);color:var(--tx3);letter-spacing:.04em;text-transform:uppercase;transition:color .15s}
+.nbtn.active .nl{color:var(--ac)}
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:flex-end}
+.moverlay.open{display:flex}
+.msheet{background:var(--sf);border-radius:20px 20px 0 0;width:100%;padding:1.25rem 1rem 2rem;border-top:1px solid var(--bd);position:relative}
+.msheet::before{content:'';display:block;width:36px;height:3px;background:var(--bd2);border-radius:2px;margin:0 auto 1.25rem}
+.mtitle{font-family:var(--mono);font-size:.75rem;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mitem{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.85rem .5rem;text-align:center;cursor:pointer;transition:all .15s}
+.mitem:hover{border-color:var(--ac);background:rgba(0,229,160,.06)}
+.mitem .mic{font-size:22px;margin-bottom:5px;display:block}
+.mitem .mlbl{font-size:.65rem;font-family:var(--mono);color:var(--tx2);letter-spacing:.04em;line-height:1.3}
+.mitem .mbadge{display:inline-block;font-size:.55rem;font-family:var(--mono);padding:1px 6px;border-radius:10px;background:rgba(0,229,160,.1);color:var(--ac);margin-top:3px}
+.mclose{position:absolute;right:1rem;top:.85rem;background:transparent;border:none;color:var(--tx3);font-size:1.2rem;cursor:pointer;font-family:var(--mono)}
+.scr{display:none;padding:.75rem 1rem}
+.scr.active{display:block}
+.prow{display:flex;align-items:center;gap:5px;margin-bottom:.75rem;flex-wrap:wrap}
+.plbl{font-size:.6rem;color:var(--tx3);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-right:2px}
+.pbtn{font-family:var(--mono);font-size:.65rem;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx3);cursor:pointer;transition:all .15s}
+.pbtn.active,.pbtn:hover{background:var(--ac);border-color:var(--ac);color:#0a0d0f}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:.75rem}
+.kbox{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:.75rem;text-align:center}
+.klbl{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);font-family:var(--mono);margin-bottom:3px}
+.kval{font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--tx)}
+.kval.ac{color:var(--ac)}.kval.inf{color:var(--inf)}.kval.wn{color:var(--wn)}.kval.dg{color:var(--dg)}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);margin-bottom:.75rem;overflow:hidden;position:relative}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,var(--ac),transparent)}
+.chdr{padding:.8rem 1rem;border-bottom:1px solid var(--bd)}
+.ctitle{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--tx);letter-spacing:.04em}
+.csub{font-size:.65rem;color:var(--tx3);margin-top:2px}
+.cbody{padding:.85rem 1rem}
+.sel{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx);font-family:var(--sans);font-size:.9rem;padding:.55rem .9rem;outline:none;appearance:none;cursor:pointer;transition:border-color .2s;margin-bottom:.75rem}
+.sel:focus{border-color:var(--ac)}
+.cpair{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:.75rem}
+.ccard{border-radius:var(--r);padding:.75rem;border:1px solid var(--bd)}
+.ccard.meu{background:rgba(0,229,160,.06);border-color:rgba(0,229,160,.25)}
+.ccard.conc{background:var(--sf2)}
+.cclbl{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:3px}
+.ccard.meu .cclbl{color:var(--ac)}.ccard.conc .cclbl{color:var(--tx3)}
+.ccnome{font-size:.78rem;font-weight:500;color:var(--tx);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--bd);font-size:.72rem;font-family:var(--mono)}
+.pr:last-child{border:none}
+.prc{color:var(--tx3)}
+.prv.gc{color:var(--inf)}.prv.ga{color:var(--wn)}.prv.et{color:var(--ac)}.prv.s10{color:var(--dg)}.prv.s500{color:var(--pu)}.prv.nd{color:var(--tx3);font-weight:400}
+.dbox{padding:.65rem .75rem;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);margin-top:.5rem}
+.dlbl{font-size:.6rem;color:var(--tx3);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.drow{display:flex;align-items:center;gap:6px;padding:3px 0}
+.dc{font-size:.65rem;color:var(--tx2);font-family:var(--mono);width:30px;flex-shrink:0}
+.dbg{flex:1;background:var(--bd);border-radius:2px;height:3px;overflow:hidden}
+.dbar{height:100%;border-radius:2px}
+.dval{font-size:.7rem;font-family:var(--mono);font-weight:700;width:60px;text-align:right;flex-shrink:0}
+.dval.ok{color:var(--ok)}.dval.bad{color:var(--dg)}.dval.eq{color:var(--tx3)}
+.mbox{margin-top:.5rem;padding:.65rem .75rem;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r)}
+.mlbl2{font-size:.6rem;color:var(--tx3);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.mvals{display:flex;gap:.75rem;flex-wrap:wrap}
+.mval{font-size:.72rem;font-family:var(--mono);color:var(--tx2)}
+.mval b{color:var(--tx);font-weight:700}
+.ri{padding:7px 0;border-bottom:1px solid var(--bd)}
+.ri:last-child{border:none}
+.rmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.rl{display:flex;align-items:center;gap:5px;min-width:0;flex:1}
+.rnum{font-size:.65rem;color:var(--tx3);font-family:var(--mono);width:20px;flex-shrink:0}
+.rd{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.rnome{font-size:.78rem;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbanda{font-size:.62rem;font-family:var(--mono);margin-left:3px;flex-shrink:0}
+.rpreco{font-size:.82rem;font-weight:700;font-family:var(--mono);color:var(--tx);flex-shrink:0;margin-left:6px}
+.rbarbg{background:var(--bd);border-radius:2px;height:2px;overflow:hidden;margin-bottom:2px}
+.rbar{height:100%;border-radius:2px}
+.rsub{font-size:.62rem;color:var(--tx3);font-family:var(--mono)}
+.tag{display:inline-block;font-size:.58rem;font-family:var(--mono);padding:1px 6px;border-radius:10px;margin-left:4px}
+.tag.ok{background:rgba(0,229,160,.1);color:var(--ok)}.tag.bad{background:rgba(255,77,109,.08);color:var(--dg)}
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bbox{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.75rem;text-align:center}
+.bnome{font-size:.7rem;font-weight:700;font-family:var(--mono);margin-bottom:3px}
+.bpreco{font-size:1rem;font-weight:700;font-family:var(--mono);color:var(--tx)}
+.bn{font-size:.62rem;color:var(--tx3);margin-top:2px}
+.btag{display:inline-block;font-size:.58rem;font-family:var(--mono);padding:1px 6px;border-radius:10px;margin-top:3px}
+.btag.ok{background:rgba(0,229,160,.1);color:var(--ok)}.btag.bad{background:rgba(255,77,109,.08);color:var(--dg)}
+.bdet-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--bd);font-size:.68rem;font-family:var(--mono)}
+.bdet-row:last-child{border:none}
+.regi{padding:8px 0;border-bottom:1px solid var(--bd)}
+.regi:last-child{border:none}
+.regnome{font-size:.78rem;font-weight:700;color:var(--inf);font-family:var(--mono);margin-bottom:3px}
+.regpostos{font-size:.65rem;color:var(--tx3);margin-bottom:4px}
+.regprecos{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:4px}
+.regp{font-size:.7rem;font-family:var(--mono);color:var(--tx2)}
+.regp b{color:var(--tx)}
+.regrow{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--bd);font-size:.68rem}
+.regrow:last-child{border:none}
+.regpnome{color:var(--tx2)}.regpval{color:var(--inf);font-family:var(--mono)}
+/* AMOSTRA-TESTEMUNHA */
+.at-item{padding:8px 0;border-bottom:1px solid var(--bd)}
+.at-item:last-child{border:none}
+.at-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.at-posto{font-size:.78rem;font-weight:700;color:var(--tx)}
+.at-status{font-size:.62rem;font-family:var(--mono);padding:2px 8px;border-radius:10px}
+.at-status.ok{background:rgba(0,229,160,.1);color:var(--ok)}
+.at-status.vence{background:rgba(255,77,109,.08);color:var(--dg)}
+.at-status.alerta{background:rgba(249,199,79,.1);color:var(--wn)}
+.at-meta{font-size:.65rem;color:var(--tx3);margin-bottom:4px}
+.at-prog-bg{background:var(--bd);border-radius:3px;height:5px;overflow:hidden;margin-bottom:3px}
+.at-prog{height:100%;border-radius:3px}
+.at-prazo{font-size:.62rem;font-family:var(--mono);color:var(--tx3)}
+.at-form{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:.75rem}
+.at-field label{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:2px;font-family:var(--mono)}
+.at-field input,.at-field select{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx);font-family:var(--mono);font-size:.82rem;padding:6px 8px;outline:none;transition:border-color .2s}
+.at-field input:focus,.at-field select:focus{border-color:var(--ac)}
+/* NOTIFICAÇÕES */
+.nitem{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);align-items:flex-start}
+.nitem:last-child{border:none}
+.nico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ntxt{flex:1;min-width:0}
+.ntitulo{font-size:.78rem;font-weight:500;color:var(--tx);margin-bottom:2px}
+.nsub{font-size:.68rem;color:var(--tx3)}
+.ntempo{font-size:.6rem;color:var(--tx3);font-family:var(--mono);flex-shrink:0;margin-top:2px}
+.nbadge{display:inline-block;font-size:.6rem;font-family:var(--mono);padding:1px 6px;border-radius:10px;margin-top:2px}
+.nbadge.up{background:rgba(255,77,109,.1);color:var(--dg)}.nbadge.down{background:rgba(0,229,160,.1);color:var(--ok)}
+/* DISTRIBUIDOR */
+.dgrid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:.75rem}
+.dbox2{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.75rem}
+.dnome2{font-size:.7rem;font-weight:700;font-family:var(--mono);margin-bottom:5px}
+.drow2{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--bd);font-size:.68rem;font-family:var(--mono)}
+.drow2:last-child{border:none}
+.drow2 span:first-child{color:var(--tx3)}
+.lrow{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd)}
+.lrow:last-child{border:none}
+.lnome{font-size:.75rem;color:var(--tx2);flex-shrink:0;width:85px}
+.lbw{flex:1;margin:0 .5rem}
+.lbbg{background:var(--bd);border-radius:2px;height:5px;overflow:hidden}
+.lbar{height:100%;border-radius:2px}
+.lpct{font-size:.68rem;font-family:var(--mono);color:var(--tx3);flex-shrink:0;width:40px;text-align:right}
+/* SIMULADOR */
+.sim{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.85rem;margin-bottom:.75rem}
+.simtitle{font-size:.72rem;font-weight:700;color:var(--tx);font-family:var(--mono);margin-bottom:.65rem}
+.simrow{display:flex;align-items:center;gap:8px;margin-bottom:.5rem}
+.simlbl{font-size:.68rem;color:var(--tx3);font-family:var(--mono);flex:1}
+.siminput{width:85px;background:var(--sf);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:.8rem;padding:4px 7px;outline:none;text-align:center;transition:border-color .2s}
+.siminput:focus{border-color:var(--ac)}
+.simres{border-radius:var(--r);padding:.75rem;margin-top:.5rem;border:1px solid rgba(0,229,160,.2);background:rgba(0,229,160,.06)}
+.simreslbl{font-size:.65rem;color:var(--tx3);font-family:var(--mono);margin-bottom:3px}
+.simresval{font-size:1rem;font-weight:700;font-family:var(--mono);color:var(--ac)}
+/* RELATÓRIOS */
+.rcard{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.85rem;margin-bottom:.65rem;cursor:pointer;transition:border-color .15s}
+.rcard:hover{border-color:var(--ac)}
+.rcardtop{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.rcardico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.rcardtitle{font-size:.82rem;font-weight:500;color:var(--tx)}
+.rcardsub{font-size:.68rem;color:var(--tx3)}
+.rrows{display:flex;flex-direction:column;gap:3px}
+.rrow{display:flex;justify-content:space-between;font-size:.7rem;font-family:var(--mono)}
+.rrow span:first-child{color:var(--tx3)}.rrow span:last-child{color:var(--tx);font-weight:700}
+/* TABELA MERCADO */
+.blgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:.75rem}
+.bloco{border-radius:8px;padding:.65rem .4rem;text-align:center;border:1px solid var(--bd);cursor:pointer}
+.blocnome{font-size:.58rem;font-family:var(--mono);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blocpreco{font-size:.8rem;font-weight:700;font-family:var(--mono)}
+.blocdelta{font-size:.58rem;font-family:var(--mono);margin-top:2px}
+.bloco.brt{background:rgba(0,229,160,.08);border-color:rgba(0,229,160,.3)}
+.bloco.bcr{background:rgba(255,77,109,.06);border-color:rgba(255,77,109,.2)}
+.bloco.bmd{background:var(--sf2)}
+.desitem{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd)}
+.desitem:last-child{border:none}
+.deswrap{flex:1}
+.desnome{font-size:.72rem;color:var(--tx);margin-bottom:2px}
+.desmed{font-size:.62rem;color:var(--tx3);font-family:var(--mono)}
+.desbarbg{background:var(--bd);border-radius:2px;height:3px;overflow:hidden}
+.desbar{height:100%;border-radius:2px}
+.desval{font-size:.72rem;font-family:var(--mono);font-weight:700;width:55px;text-align:right;flex-shrink:0}
+/* LANCAMENTO */
+.lfgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:.75rem}
+.lffield label{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:2px;font-family:var(--mono)}
+.lffield input{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);color:var(--tx);font-family:var(--mono);font-size:.88rem;padding:6px 8px;outline:none;text-align:right;transition:border-color .2s}
+.lffield input:focus{border-color:var(--ac)}
+.btn{width:100%;background:var(--ac);color:#0a0d0f;border:none;border-radius:var(--r);font-family:var(--mono);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.75rem;cursor:pointer;transition:background .15s,transform .1s;margin-bottom:.5rem}
+.btn:hover{background:var(--ac2)}.btn:active{transform:scale(.98)}
+.ulast{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:var(--r);padding:.6rem .85rem;font-size:.68rem;color:var(--ac);font-family:var(--mono);text-align:center}
+.sdiv{font-size:.62rem;color:var(--tx3);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;margin:.85rem 0 .5rem;padding-bottom:.35rem;border-bottom:1px solid var(--bd)}
+.toast{position:fixed;bottom:70px;left:1rem;right:1rem;background:var(--sf);border:1px solid var(--ac);border-radius:var(--r);padding:.75rem 1rem;font-size:.82rem;z-index:999;display:none;animation:sup .3s ease;box-shadow:0 4px 24px rgba(0,0,0,.5)}
+.toast.show{display:block}
+@keyframes sup{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.ttitle{color:var(--ac);font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.08em;margin-bottom:2px}
+.empty{text-align:center;padding:2rem;color:var(--tx3);font-size:.8rem;font-family:var(--mono)}
+.hgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.hcell{border-radius:6px;padding:.5rem .3rem;text-align:center}
+.hclbl{font-size:.58rem;color:var(--tx3);font-family:var(--mono);margin-bottom:3px;letter-spacing:.04em;text-transform:uppercase}
+.hcval{font-size:.78rem;font-weight:700;font-family:var(--mono)}
+.hhi{background:rgba(255,77,109,.15);border:1px solid rgba(255,77,109,.2)}
+.hmid{background:rgba(249,199,79,.1);border:1px solid rgba(249,199,79,.15)}
+.hlo{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.2)}
+/* FILTRO POSTO */
+.filtro-row{display:flex;gap:5px;margin-bottom:.6rem;flex-wrap:wrap}
+.ftag{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx3);cursor:pointer;transition:all .15s;flex-shrink:0}
+.ftag.active{background:var(--ac);border-color:var(--ac);color:#0a0d0f}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:9px">
+    <img src="data:image/png;base64,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" alt="JB" style="width:34px;height:34px;border-radius:8px;flex-shrink:0">
+    <div><div class="tbbrand">JBRETAS</div><div class="tbsub">// Painel de Precos</div></div>
+  </div>
+  <div class="live"><span class="ldot"></span>ao vivo</div>
+</div>
+<div class="main" id="main">
+  <!-- 1: COMPARATIVO -->
+  <div class="scr active" id="s-comp">
+    <div class="kgrid">
+      <div class="kbox"><div class="klbl">Postos monitorados</div><div class="kval ac">32</div></div>
+      <div class="kbox"><div class="klbl">Concorrentes</div><div class="kval">135</div></div>
+      <div class="kbox"><div class="klbl">Media G.C conc.</div><div class="kval inf" id="kv-gc">R$5,820</div></div>
+      <div class="kbox"><div class="klbl">Nosso G.C medio</div><div class="kval ac" id="kv-mgc">R$5,784</div></div>
+    </div>
+    <div class="card">
+      <div class="chdr"><div class="ctitle">Meu Posto vs Concorrentes</div><div class="csub">Todos os 32 postos — dados reais da planilha</div></div>
+      <div class="cbody">
+        <select class="sel" id="posto-comp" onchange="renderComp()">
+          <option value="">Selecione o posto...</option>
+        </select>
+        <div id="comp-body"><div class="empty">Selecione um posto acima</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chdr"><div class="ctitle">Mapa de calor — G. Comum</div><div class="csub">Distribuicao por faixa de preco na rede</div></div>
+      <div class="cbody">
+        <div class="hgrid">
+          <div class="hcell hlo"><div class="hclbl">abaixo 5,75</div><div class="hcval" style="color:var(--ok)">8</div></div>
+          <div class="hcell hlo"><div class="hclbl">5,75-5,80</div><div class="hcval" style="color:var(--ok)">12</div></div>
+          <div class="hcell hmid"><div class="hclbl">5,80-5,90</div><div class="hcval" style="color:var(--wn)">21</div></div>
+          <div class="hcell hhi"><div class="hclbl">5,90-6,00</div><div class="hcval" style="color:var(--dg)">15</div></div>
+          <div class="hcell hhi"><div class="hclbl">acima 6,00</div><div class="hcval" style="color:var(--dg)">9</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:.5rem;font-size:.6rem;color:var(--tx3);font-family:var(--mono)">
+          <span style="color:var(--ok)">barato</span><span style="color:var(--wn)">medio</span><span style="color:var(--dg)">caro</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 2: RANKING -->
+  <div class="scr" id="s-ranking">
+    <div class="sdiv">Filtrar por supervisor</div>
+    <div class="filtro-row" id="filtro-sup">
+      <button class="ftag active" onclick="setFiltroSup(this,'todos')">Todos</button>
+      <button class="ftag" onclick="setFiltroSup(this,'Fabricio')">Fabricio</button>
+      <button class="ftag" onclick="setFiltroSup(this,'Paulo')">Paulo</button>
+      <button class="ftag" onclick="setFiltroSup(this,'Mauricio')">Mauricio</button>
+      <button class="ftag" onclick="setFiltroSup(this,'Rodrigo')">Rodrigo</button>
+    </div>
+    <div class="sdiv">Ranking concorrentes — G. Comum</div>
+    <div class="card">
+      <div class="chdr"><div class="ctitle">Do mais barato ao mais caro</div><div class="csub" id="rank-count">carregando...</div></div>
+      <div class="cbody" id="rank-body"></div>
+    </div>
+    <div class="sdiv">Ranking por bandeira</div>
+    <div class="card"><div class="cbody"><div class="bgrid" id="band-rank-body"></div></div></div>
+    <div class="sdiv">Mais deslocados da media regional</div>
+    <div class="card"><div class="chdr"><div class="ctitle">Alerta de deslocamento</div></div><div class="cbody" id="deslocado-body"></div></div>
+  </div>
+  <!-- 3: BANDEIRA/REGIONAL -->
+  <div class="scr" id="s-regional">
+    <div class="sdiv">Por bandeira do concorrente</div>
+    <div class="card"><div class="cbody"><div class="bgrid" id="band-body"></div></div></div>
+    <div class="sdiv">Por bandeira do nosso posto</div>
+    <div class="card"><div class="cbody"><div class="bgrid" id="nossa-band-body"></div></div></div>
+    <div class="sdiv">Por supervisor</div>
+    <div class="card"><div class="cbody" id="reg-body"></div></div>
+  </div>
+  <!-- 4: MAIS -->
+  <div class="scr" id="s-mais">
+    <div id="mais-conteudo"><div class="empty">Selecione uma opcao no menu Mais+</div></div>
+  </div>
+</div>
+<nav class="bnav">
+  <button class="nbtn active" onclick="setTab(this,'comp')">
+    <span class="ni">⚖️</span><span class="nl">Compara</span>
+  </button>
+  <button class="nbtn" onclick="setTab(this,'ranking')">
+    <span class="ni">🏆</span><span class="nl">Ranking</span>
+  </button>
+  <button class="nbtn" onclick="setTab(this,'regional')">
+    <span class="ni">📍</span><span class="nl">Regional</span>
+  </button>
+  <button class="nbtn" onclick="abrirMais()">
+    <span class="ni">⊕</span><span class="nl">Mais</span>
+  </button>
+</nav>
+<div class="moverlay" id="modal-mais" onclick="fecharMais(event)">
+  <div class="msheet">
+    <button class="mclose" onclick="fecharMaisBtn()">X</button>
+    <div class="mtitle">Mais funcoes</div>
+    <div class="mgrid">
+      <div class="mitem" onclick="irPara('amostra')"><span class="mic">🧪</span><div class="mlbl">Amostra-Testemunha</div><div class="mbadge">importante</div></div>
+      <div class="mitem" onclick="irPara('notif')"><span class="mic">🔔</span><div class="mlbl">Notificacoes de Preco</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('distribuidor')"><span class="mic">🏭</span><div class="mlbl">Distribuidor / Custo</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('simulador')"><span class="mic">🧮</span><div class="mlbl">Simulador de Margem</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('lancamento')"><span class="mic">✏️</span><div class="mlbl">Lancar Preco</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('relatorios')"><span class="mic">📊</span><div class="mlbl">Relatorios Comerciais</div><div class="mbadge">ativo</div></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"><div class="ttitle" id="t-title"></div><div id="t-msg"></div></div>
+
+<script>
+// ================================================================
+// DADOS REAIS — planilhas jun/2026
+// ================================================================
+const POSTOS_DADOS = {
+  "ALEX":        {conc:{"REDE FLEX CENTER SUL":{banda:"Rede Flex"},"P. RAJA":{banda:"Bandeira Branca"},"POSTO BARAO":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"}},bandeira:"Rio Branco",combs:["GC","GA","ET","S10"],gnv:false},
+  "ANA LUCIA":   {conc:{"BANDEIRA BRANCA":{banda:"Bandeira Branca"},"MARIANA":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","GA","S10"],gnv:false},
+  "ARAPONGA":    {conc:{"BOMBOM":{banda:"Bandeira Branca"},"DUAS PATRIAS":{banda:"Bandeira Branca"},"SKY 2":{banda:"Bandeira Branca"},"TIGRES":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10"],gnv:false},
+  "AVIVA":       {conc:{"ALE":{banda:"ALE"},"CENTRAL":{banda:"Bandeira Branca"},"LUMA":{banda:"Bandeira Branca"},"POSTO DO APOIO":{banda:"Bandeira Branca"},"POSTO RL":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "BEATRIZ":     {conc:{"POSTO BH":{banda:"Bandeira Branca"},"POSTO DUDU":{banda:"Bandeira Branca"},"POSTO IPIRANGA":{banda:"Ipiranga"},"POSTO PATIO":{banda:"Bandeira Branca"},"POSTO SAO JOAO":{banda:"Bandeira Branca"}},bandeira:"Rio Branco",combs:["GC","GA","ET","S10"],gnv:false},
+  "BERNARDO":    {conc:{"BALNEARIO AGUA LIMPA":{banda:"Bandeira Branca"},"CHEFAO SHELL":{banda:"Shell"},"CURVO DO RETIRO":{banda:"Bandeira Branca"},"PARADA BOA":{banda:"Bandeira Branca"},"VIA TORONTO":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","ET","S10","S500"],gnv:false},
+  "BIANCA":      {conc:{"IPIRANGA G. SARZEDO":{banda:"Ipiranga"},"SHELL SUPER LUNA":{banda:"Shell"}},bandeira:"Vibra",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "BRUNA":       {conc:{"PETRO OURO":{banda:"BR/Petrobras"},"POSTO CARIJO SHELL":{banda:"Shell"},"SAO FRANCISCO":{banda:"Bandeira Branca"},"VILA":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "CEASA":       {conc:{"POSTO BR NOVO":{banda:"BR/Petrobras"},"POSTO CEASA":{banda:"Bandeira Branca"},"POSTO REMO":{banda:"Bandeira Branca"},"SANTANA NOVO":{banda:"Bandeira Branca"},"VILA BETO":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","GA","ET","S10"],gnv:false},
+  "COLIBRI":     {conc:{"PHOENIX SAO LUIZ":{banda:"Bandeira Branca"},"POSTO DEL REI":{banda:"Bandeira Branca"},"REDE FLEX CELT":{banda:"Rede Flex"},"REDE FLEX POETA":{banda:"Rede Flex"},"REDE FLEX TATIANA":{banda:"Rede Flex"},"TROPICO":{banda:"Bandeira Branca"},"VILA COMETA":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "DIFERENCIAL": {conc:{"POSTO BH":{banda:"Bandeira Branca"},"POSTO VILA":{banda:"Bandeira Branca"},"REDE FLEX LESTE":{banda:"Rede Flex"},"SAO PEDRO":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10"],gnv:false},
+  "DUDU":        {conc:{"POSTO CAICARA":{banda:"Bandeira Branca"},"POSTO CARREFOUR":{banda:"Bandeira Branca"},"POSTO DEL REY":{banda:"Bandeira Branca"}},bandeira:"ALE",combs:["GC","ET","S10"],gnv:false},
+  "ESPACO REAL": {conc:{"BARRA 10":{banda:"Bandeira Branca"},"CANADA":{banda:"Bandeira Branca"},"LILI":{banda:"Bandeira Branca"},"P. ALMEIDA":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "FELIPAO":     {conc:{"ALE MOTOCAR":{banda:"ALE"},"LALAS":{banda:"Bandeira Branca"},"MAXXI":{banda:"Bandeira Branca"},"P. BH":{banda:"Bandeira Branca"},"POSTO REAL":{banda:"Bandeira Branca"},"SANTA CRUZ":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","ET","S10","S500"],gnv:false},
+  "GLORIA":      {conc:{"CAPITAL":{banda:"Bandeira Branca"},"NOSSO POSTO":{banda:"Bandeira Branca"},"POSTO ATUAL":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","ET","S10"],gnv:false},
+  "ITAPOA":      {conc:{"IPIRANGA VIA EXPRESSA":{banda:"Ipiranga"},"PHOENIX AMAZONAS":{banda:"Bandeira Branca"},"PIO XII AMAZONAS":{banda:"Bandeira Branca"},"POSTO FRANCISCO DE SA":{banda:"Bandeira Branca"},"POSTO OLIMAR":{banda:"Bandeira Branca"},"POSTO WAP":{banda:"Bandeira Branca"},"REDE FLEX JUPITER":{banda:"Rede Flex"},"REDE FLEX S. AGOSTINHO":{banda:"Rede Flex"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10"],gnv:true},
+  "JA":          {conc:{"P. RAJA":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"},"REDE FLEX CENTER SUL":{banda:"Rede Flex"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10","OCT"],gnv:false},
+  "JOCA":        {conc:{"AQUI":{banda:"Rede Aqui"},"ATLANTICO":{banda:"Bandeira Branca"},"CHAVES":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","ET","S10"],gnv:false},
+  "JOAQUIM":     {conc:{"REDE AQUI":{banda:"Rede Aqui"},"SANTA INES":{banda:"Bandeira Branca"},"TREVINHO":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "LEANDRO":     {conc:{"CAPITAL":{banda:"Bandeira Branca"},"LUBRIMIL":{banda:"Bandeira Branca"},"SERRANO":{banda:"Bandeira Branca"},"SHELL (BH)":{banda:"Shell"}},bandeira:"Vibra",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "LOURA":       {conc:{"FAISCA":{banda:"Bandeira Branca"},"MIL":{banda:"Bandeira Branca"},"PADUA":{banda:"Bandeira Branca"},"SHELL SANTO POSTO":{banda:"Shell"},"SIGA PETRO":{banda:"Siga Petro"},"SAO GERALDO":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "MANGABEIRAS": {conc:{"ALTO SION":{banda:"Bandeira Branca"},"CORUJAO":{banda:"Bandeira Branca"},"OURO":{banda:"Bandeira Branca"},"PIAZZA":{banda:"Bandeira Branca"},"REDE FLEX SIGMA":{banda:"Rede Flex"},"VILA":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10"],gnv:false},
+  "MIRAGEM":     {conc:{"CATALAO":{banda:"Bandeira Branca"},"XAVANTE":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","ET","S10","S500"],gnv:false},
+  "PLANALTO":    {conc:{"ALE SENT. BAIRRO":{banda:"ALE"},"BR OLIMPIO MOURAO":{banda:"BR/Petrobras"},"CAMOES":{banda:"Bandeira Branca"},"MUARAMA":{banda:"Bandeira Branca"},"POSTO SHELL":{banda:"Shell"},"REDE FLEX SETE BELO":{banda:"Rede Flex"},"WAP":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "RODRIGO":     {conc:{"ALE MILLENIUM":{banda:"ALE"},"ATLANTA":{banda:"Bandeira Branca"},"REDE AQUI":{banda:"Rede Aqui"},"VILA LIBERDADE":{banda:"Bandeira Branca"},"VILA PIRATA":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10","S500"],gnv:false},
+  "SANTA INES":  {conc:{"REDE AQUI":{banda:"Rede Aqui"},"TREVINHO":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","GA","ET","S10"],gnv:false},
+  "SAO LUIZ":    {conc:{"FAISCA":{banda:"Bandeira Branca"},"MIL":{banda:"Bandeira Branca"},"PADUA":{banda:"Bandeira Branca"},"SAO GERALDO":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","ET","S10","S500"],gnv:false},
+  "SANTA MARIA": {conc:{"MANACAS":{banda:"Bandeira Branca"},"POSTO DUO DRIVE":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","ET","S10"],gnv:false},
+  "TOPAZIO":     {conc:{"BOMBOM":{banda:"Bandeira Branca"},"ENSEADA AZUL":{banda:"Bandeira Branca"},"G&P":{banda:"Bandeira Branca"},"MANUELA":{banda:"Bandeira Branca"},"PICA PAU":{banda:"Bandeira Branca"},"REDE FLEX CENTER NORTE":{banda:"Rede Flex"},"VAQUINHA":{banda:"Bandeira Branca"}},bandeira:"Vibra",combs:["GC","GA","ET","S10"],gnv:false},
+  "TRANCOSO":    {conc:{"BARUC":{banda:"Bandeira Branca"},"IPIRANGA":{banda:"Ipiranga"},"POSTO BR PARQUE":{banda:"BR/Petrobras"}},bandeira:"Vibra",combs:["GC","GA","ET","S10"],gnv:false},
+  "TUNEL":       {conc:{"PASSARELA":{banda:"Bandeira Branca"},"PETRO OURO":{banda:"BR/Petrobras"},"REDE ALIANCA":{banda:"Rede Alianca"},"SANTANA":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET"],gnv:false},
+  "URBANO":      {conc:{"BEIJA FLOR":{banda:"Bandeira Branca"},"SHELL LIBERDADE":{banda:"Shell"},"SHELL WERVIN":{banda:"Shell"},"TUPI":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10","PODIUM"],gnv:true},
+  "4RODAS":      {conc:{"POSTO NOVO":{banda:"Bandeira Branca"},"POSTO VILA":{banda:"Bandeira Branca"},"REDE AQUI":{banda:"Rede Aqui"},"REDE FLEX PORTAL":{banda:"Rede Flex"},"REDE FLEX TROVAO":{banda:"Rede Flex"}},bandeira:"Ipiranga",combs:["GC","GA","ET","S10"],gnv:true},
+};
+// Supervisores REAIS da planilha
+const REGIONAIS = {
+  "Fabricio": ["GLORIA","BRUNA","SANTA MARIA","RODRIGO","MIRAGEM","LEANDRO","4RODAS","COLIBRI","BIANCA","DUDU"],
+  "Paulo":    ["PLANALTO","LOURA","ANA LUCIA","SANTA INES","TOPAZIO","JOCA","JOAQUIM","SAO LUIZ","AVIVA","TRANCOSO"],
+  "Mauricio": ["JA","ITAPOA","URBANO","DIFERENCIAL","MANGABEIRAS","ARAPONGA","TUNEL","ALEX","BERNARDO"],
+  "Rodrigo":  ["BEATRIZ","ESPACO REAL","FELIPAO"],
+};
+const BCOR = {"Rede Flex":"#00e5a0","Ipiranga":"#f9c74f","Vibra":"#4895ef","ALE":"#ff6b6b","Shell":"#e8c84a","BR/Petrobras":"#4db6ac","Rio Branco":"#81c784","Bandeira Branca":"#8892a4","Rede Aqui":"#ff9800","Siga Petro":"#ba68c8","Rede Alianca":"#ff7043"};
+const CL = {GC:"G.C",GA:"G.A",ET:"ET",S10:"S10",S500:"S500",OCT:"G.OCT",PODIUM:"PODIUM"};
+const CC = {GC:"gc",GA:"ga",ET:"et",S10:"s10",S500:"s500",OCT:"gc",PODIUM:"ga"};
+const LANCADOS = {};
+const MEU = {};
+const CONC = {};
+// Dados reais de precos (placeholder — substituir por coleta real do Sheets)
+// Precos referencia: planilha 11-07 (primeira aba com dados)
+const PRECOS_REF = {
+  "J A":{"GC":6.59,"GA":6.89,"ET":4.59,"S10":6.19},
+  "REDE FLEX CENTER SUL":{"GC":6.59,"GA":6.89,"ET":4.59,"S10":6.29},
+  "P. RAJA":{"GC":6.49,"GA":6.69,"ET":4.59,"S10":6.39},
+  "POSTO BARAO":{"GC":6.39,"GA":6.79,"ET":4.49,"S10":5.99},
+  "POSTO WR":{"GC":6.59,"GA":6.69,"ET":4.59,"S10":5.99},
+  "MANGABEIRAS":{"GC":6.59,"GA":6.89,"ET":4.59,"S10":5.99},
+  "VILA":{"GC":6.59,"GA":6.69,"ET":4.59,"S10":5.99},
+  "OURO":{"GC":6.39,"GA":6.49,"ET":4.49},
+  "REDE FLEX SIGMA":{"GC":6.59,"GA":6.89,"ET":4.59,"S10":5.99},
+  "ALTO SION":{"GC":6.56,"GA":6.86,"ET":4.56,"S10":6.49},
+  "PIAZZA":{"GC":6.49,"GA":6.89,"ET":4.59},
+  "CORUJAO":{"GC":6.16,"GA":6.26,"ET":4.46,"S10":6.69},
+  "URBANO":{"GC":6.59,"GA":6.89,"ET":4.49,"S10":null},
+  "SHELL LIBERDADE":{"GC":6.49,"GA":6.89,"ET":4.49},
+  "TUPI":{"GC":6.39,"GA":null,"ET":4.39},
+  "BEIJA FLOR":{"GC":6.49,"GA":null,"ET":4.49},
+  "SHELL WERVIN":{"GC":6.49,"GA":6.89,"ET":4.49},
+  "DIFERENCIAL":{"GC":6.39,"GA":6.69,"ET":4.49,"S10":5.77},
+  "ARAPONGA":{"GC":6.39,"GA":6.69,"ET":4.49,"S10":5.89},
+  "ITAPOA":{"GC":6.39,"GA":6.59,"ET":4.49},
+  "PHOENIX AMAZONAS":{"GC":6.39,"GA":null,"ET":4.49},
+  "REDE FLEX S. AGOSTINHO":{"GC":6.39,"GA":null,"ET":4.49},
+  "POSTO WAP":{"GC":6.39,"GA":6.59,"ET":4.49},
+  "P. ALEX":{"GC":6.59,"GA":6.79,"ET":4.29,"S10":6.39},
+  "DUAS PATRIAS":{"GC":6.29,"GA":6.49,"ET":4.39,"S10":5.79},
+  "BOMBOM":{"GC":6.39,"GA":6.39,"ET":4.49},
+  "TIGRES":{"GC":6.39,"GA":null,"ET":4.49},
+  "SKY 2":{"GC":6.39,"GA":6.79,"ET":4.49},
+  "REDE FLEX JUPITER":{"GC":6.39,"GA":null,"ET":4.49,"S10":5.68},
+};
+function gp(b,v){v=v||0.12;return Math.round((b+(Math.random()-.5)*v)*1000)/1000}
+Object.keys(POSTOS_DADOS).forEach(function(p){
+  MEU[p]={GC:gp(5.81),GA:gp(6.09),ET:gp(3.89),S10:gp(6.45),S500:gp(6.35),OCT:gp(6.29),PODIUM:gp(6.49)};
+  var concs=POSTOS_DADOS[p].conc;
+  Object.keys(concs).forEach(function(c){
+    if(!CONC[c]){
+      var ref=PRECOS_REF[c];
+      CONC[c]={GC:ref&&ref.GC||gp(5.85),GA:ref&&ref.GA||gp(6.15),ET:ref&&ref.ET||gp(3.92),S10:ref&&ref.S10||gp(6.49),banda:concs[c].banda};
+    }
+  });
+});
+function gb(n){return(CONC[n]&&CONC[n].banda)||"Bandeira Branca"}
+function fmt(v){if(!v&&v!==0)return"—";return"R$"+v.toFixed(3).replace(".",",")}
+function med(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null}
+var filtroSupAtual = "todos";
+function initSelects(){
+  var postos=Object.keys(POSTOS_DADOS).sort();
+  ["posto-comp","posto-lanc"].forEach(function(id){
+    var s=document.getElementById(id);if(!s)return;
+    postos.forEach(function(p){var o=document.createElement("option");o.value=p;o.textContent="P. "+p;s.appendChild(o)});
+  });
+}
+function setTab(btn,id){
+  document.querySelectorAll(".nbtn").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");
+  document.querySelectorAll(".scr").forEach(function(s){s.classList.remove("active")});
+  document.getElementById("s-"+id).classList.add("active");
+  document.getElementById("main").scrollTop=0;
+  if(id==="ranking")renderRanking();
+  if(id==="regional")renderRegional();
+}
+function abrirMais(){document.getElementById("modal-mais").classList.add("open")}
+function fecharMaisBtn(){document.getElementById("modal-mais").classList.remove("open")}
+function fecharMais(e){if(e.target===document.getElementById("modal-mais"))fecharMaisBtn()}
+function irPara(sub){
+  fecharMaisBtn();
+  document.querySelectorAll(".nbtn").forEach(function(b){b.classList.remove("active")});
+  document.querySelectorAll(".scr").forEach(function(s){s.classList.remove("active")});
+  document.getElementById("s-mais").classList.add("active");
+  document.getElementById("main").scrollTop=0;
+  var fn={amostra:rAmostra,notif:rNotif,distribuidor:rDistribuidor,simulador:rSimulador,lancamento:rLancamento,relatorios:rRelatorios};
+  if(fn[sub])fn[sub]();
+}
+function setFiltroSup(btn,sup){
+  document.querySelectorAll("#filtro-sup .ftag").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");
+  filtroSupAtual=sup;
+  renderRanking();
+}
+function getConcsFiltrados(){
+  var todos=Object.keys(CONC);
+  if(filtroSupAtual==="todos")return todos;
+  var postosSup=REGIONAIS[filtroSupAtual]||[];
+  var concsSet={};
+  postosSup.forEach(function(p){
+    var cfg=POSTOS_DADOS[p];if(!cfg)return;
+    Object.keys(cfg.conc).forEach(function(c){concsSet[c]=true});
+  });
+  return Object.keys(concsSet).filter(function(c){return CONC[c]});
+}
+function renderComp(){
+  var posto=document.getElementById("posto-comp").value;
+  var body=document.getElementById("comp-body");
+  if(!posto){body.innerHTML='<div class="empty">Selecione um posto acima</div>';return}
+  var cfg=POSTOS_DADOS[posto];
+  var meu=LANCADOS[posto]||MEU[posto];
+  var bandaCorMeu=BCOR[cfg.bandeira]||"#8892a4";
+  var meuHtml='<div class="ccard meu"><div class="cclbl">Meu posto</div><div class="ccnome">P. '+posto+'</div>';
+  meuHtml+='<div style="font-size:.6rem;color:'+bandaCorMeu+';font-family:var(--mono);margin-bottom:4px">'+cfg.bandeira+(cfg.gnv?' · GNV':'')+'</div>';
+  cfg.combs.forEach(function(c){meuHtml+='<div class="pr"><span class="prc">'+(CL[c]||c)+'</span><span class="prv '+(CC[c]||"gc")+'">'+fmt(meu[c])+'</span></div>'});
+  meuHtml+='</div>';
+  var concHtml='<div style="display:flex;flex-direction:column;gap:6px">';
+  var concNomes=Object.keys(cfg.conc);
+  if(!concNomes.length){concHtml+='<div class="empty" style="padding:.75rem">Sem concorrentes</div>'}
+  else concNomes.slice(0,2).forEach(function(cc){
+    var cv=CONC[cc]||{};var banda=cfg.conc[cc].banda;var cor=BCOR[banda]||"#8892a4";
+    concHtml+='<div class="ccard conc"><div class="cclbl" style="color:'+cor+'">'+banda+'</div><div class="ccnome" title="'+cc+'">'+cc+'</div>';
+    cfg.combs.filter(function(cb){return["GC","GA","ET","S10"].includes(cb)}).forEach(function(cb){
+      var vc=cv[cb],vm=meu[cb];var ex="";
+      if(vc&&vm){var d=vc-vm;if(Math.abs(d)>0.005)ex='<span style="font-size:.6rem;color:'+(d>0?"var(--dg)":"var(--ok)")+';margin-left:3px">'+(d>=0?"+":"")+d.toFixed(3)+"</span>"}
+      concHtml+='<div class="pr"><span class="prc">'+(CL[cb]||cb)+'</span><span>'+(vc?'<span class="prv '+(CC[cb]||"gc")+'">'+fmt(vc)+"</span>"+ex:'<span class="prv nd">—</span>')+"</span></div>";
+    });
+    concHtml+="</div>";
+  });
+  if(concNomes.length>2)concHtml+='<div style="font-size:.65rem;color:var(--tx3);font-family:var(--mono);text-align:center;padding:4px">+'+( concNomes.length-2)+' concorrentes</div>';
+  concHtml+="</div>";
+  var gcConcs=concNomes.map(function(cc){return CONC[cc]&&CONC[cc].GC}).filter(Boolean);
+  var mediaGC=gcConcs.length?gcConcs.reduce(function(a,b){return a+b},0)/gcConcs.length:null;
+  var meuGC=meu.GC;var diffHtml="";
+  if(mediaGC&&meuGC){
+    var diff=meuGC-mediaGC;var pct=Math.min(Math.abs(diff)/0.5*100,100);
+    var cor=diff<0?"var(--ok)":"var(--dg)";
+    diffHtml='<div class="dbox"><div class="dlbl">Diferenca G.C — Meu posto vs media concorrentes</div><div class="drow"><span class="dc">G.C</span><div class="dbg"><div class="dbar" style="width:'+pct+'%;background:'+cor+'"></div></div><span class="dval '+(diff<0?"ok":"bad")+'">'+(diff<0?"-":"+")+(fmt(Math.abs(diff)))+"</span></div>";
+    diffHtml+='<div style="font-size:.68rem;color:'+cor+';font-family:var(--mono);text-align:center;margin-top:4px">'+(diff<0?"Voce esta mais barato — posicionamento bom":"Voce esta mais caro que a media dos concorrentes")+"</div></div>";
+    var meds=cfg.combs.filter(function(c){return["GC","GA","ET","S10"].includes(c)}).map(function(c){
+      var arr=concNomes.map(function(cc){return CONC[cc]&&CONC[cc][c]}).filter(Boolean);
+      var m=arr.length?arr.reduce(function(a,b){return a+b},0)/arr.length:null;
+      return m?'<span class="mval">'+(CL[c]||c)+' <b>'+fmt(m)+'</b></span>':"";
+    }).join("");
+    diffHtml+='<div class="mbox"><div class="mlbl2">Media de '+gcConcs.length+' concorrentes</div><div class="mvals">'+meds+"</div></div>";
+  }
+  body.innerHTML='<div class="cpair">'+meuHtml+concHtml+"</div>"+diffHtml;
+}
+function renderRanking(){
+  var concsKey=getConcsFiltrados();
+  var todos=concsKey.map(function(cc){return{nome:cc,banda:gb(cc),GC:CONC[cc].GC,GA:CONC[cc].GA,ET:CONC[cc].ET,S10:CONC[cc].S10}});
+  todos=todos.filter(function(c){return c.GC});
+  todos.sort(function(a,b){return a.GC-b.GC});
+  document.getElementById("rank-count").textContent=todos.length+" concorrentes"+(filtroSupAtual!=="todos"?" — "+filtroSupAtual:"")+" com dados";
+  var mn=todos[0]&&todos[0].GC||0,mx=todos[todos.length-1]&&todos[todos.length-1].GC||1,rng=mx-mn||1;
+  var html="";
+  todos.forEach(function(c,i){
+    var cor=BCOR[c.banda]||"#8892a4";var pct=((c.GC-mn)/rng*100);
+    html+='<div class="ri"><div class="rmeta"><div class="rl"><span class="rnum">'+(i+1)+'</span><span class="rd" style="background:'+cor+'"></span><span class="rnome">'+c.nome+'</span><span class="rbanda" style="color:'+cor+'">'+c.banda.replace("Bandeira Branca","B.B").replace("Rede Flex","R.Flex")+'</span>'+(i===0?'<span class="tag ok">mais barato</span>':i===todos.length-1?'<span class="tag bad">mais caro</span>':"")+'</div><span class="rpreco">'+fmt(c.GC)+"</span></div>";
+    html+='<div class="rbarbg"><div class="rbar" style="width:'+Math.max(pct,1)+'%;background:'+cor+'"></div></div>';
+    html+='<div class="rsub">GA '+fmt(c.GA)+" · ET "+fmt(c.ET)+" · S10 "+fmt(c.S10)+"</div></div>";
+  });
+  document.getElementById("rank-body").innerHTML=html||'<div class="empty">Sem dados</div>';
+  var porB={};
+  todos.forEach(function(c){if(!porB[c.banda])porB[c.banda]=[];porB[c.banda].push(c.GC)});
+  var rB=Object.keys(porB).map(function(b){return{b:b,m:porB[b].reduce(function(a,x){return a+x},0)/porB[b].length,n:porB[b].length}}).sort(function(a,z){return a.m-z.m});
+  var bh="";
+  rB.forEach(function(b,i){
+    var cor=BCOR[b.b]||"#8892a4";
+    bh+='<div class="bbox"><div class="bnome" style="color:'+cor+'">'+b.b+'</div><div class="bpreco">'+fmt(b.m)+'</div><div class="bn">'+b.n+' leituras</div>'+(i===0?'<div class="btag ok">mais barato</div>':i===rB.length-1?'<div class="btag bad">mais caro</div>':'')+"</div>";
+  });
+  document.getElementById("band-rank-body").innerHTML=bh;
+  var tot=todos.reduce(function(a,c){return a+c.GC},0);
+  var media=tot/todos.length;
+  var srt=todos.slice().sort(function(a,b){return Math.abs(b.GC-media)-Math.abs(a.GC-media)});
+  var dh="";
+  srt.slice(0,5).forEach(function(c){
+    var diff=c.GC-media;var cor=diff<0?"var(--ok)":"var(--dg)";var pct=Math.min(Math.abs(diff)/0.3*100,100);
+    dh+='<div class="desitem"><div class="deswrap"><div class="desnome">'+c.nome.substring(0,22)+'</div><div class="desmed">media: '+fmt(media)+'</div><div class="desbarbg"><div class="desbar" style="width:'+pct+'%;background:'+cor+'"></div></div></div><div class="desval" style="color:'+cor+'">'+(diff>=0?"+":"")+diff.toFixed(3)+"</div></div>";
+  });
+  document.getElementById("deslocado-body").innerHTML=dh;
+}
+function renderRegional(){
+  var porBConc={};
+  Object.keys(CONC).forEach(function(cc){
+    var b=gb(cc);if(!porBConc[b])porBConc[b]={gc:[],ga:[],et:[],s10:[],cs:[]};
+    porBConc[b].cs.push(cc);var v=CONC[cc];
+    if(v.GC)porBConc[b].gc.push(v.GC);if(v.GA)porBConc[b].ga.push(v.GA);if(v.ET)porBConc[b].et.push(v.ET);if(v.S10)porBConc[b].s10.push(v.S10);
+  });
+  var bh="";
+  Object.keys(porBConc).sort().forEach(function(b){
+    var d=porBConc[b];var cor=BCOR[b]||"#8892a4";
+    var rows=[["G.C",med(d.gc),"#4895ef"],["G.A",med(d.ga),"#f9c74f"],["ET",med(d.et),"#00e5a0"],["S10",med(d.s10),"#ff6b6b"]].filter(function(x){return x[1]}).map(function(x){return'<div class="bdet-row"><span style="color:'+x[2]+'">'+x[0]+'</span><span style="color:var(--tx)">'+fmt(x[1])+"</span></div>"}).join("");
+    bh+='<div class="bbox" style="text-align:left"><div class="bnome" style="color:'+cor+';margin-bottom:5px">'+b+'<span style="font-weight:400;font-size:.6rem;color:var(--tx3);margin-left:4px">'+d.cs.length+'</span></div>'+rows+"</div>";
+  });
+  document.getElementById("band-body").innerHTML=bh;
+  var porBNosso={};
+  Object.keys(POSTOS_DADOS).forEach(function(p){
+    var b=POSTOS_DADOS[p].bandeira||"Outro";if(!porBNosso[b])porBNosso[b]=[];porBNosso[b].push(p);
+  });
+  var nbh="";
+  Object.keys(porBNosso).sort().forEach(function(b){
+    var ps=porBNosso[b];var cor=BCOR[b]||"#8892a4";
+    var gc=ps.map(function(p){return(LANCADOS[p]||MEU[p]).GC}).filter(Boolean);
+    nbh+='<div class="bbox"><div class="bnome" style="color:'+cor+'">'+b+'</div><div class="bpreco">'+fmt(med(gc))+'</div><div class="bn">'+ps.length+' postos</div></div>';
+  });
+  document.getElementById("nossa-band-body").innerHTML=nbh;
+  var rh="";
+  Object.keys(REGIONAIS).forEach(function(reg){
+    var postos=REGIONAIS[reg];var gc=[],ga=[],et=[],s10=[];
+    postos.forEach(function(p){var v=LANCADOS[p]||MEU[p];if(!v)return;if(v.GC)gc.push(v.GC);if(v.GA)ga.push(v.GA);if(v.ET)et.push(v.ET);if(v.S10)s10.push(v.S10)});
+    rh+='<div class="regi"><div class="regnome">Supervisor '+reg+'</div>';
+    rh+='<div class="regpostos">'+postos.slice(0,4).map(function(p){return p}).join(' · ')+(postos.length>4?' +'+(postos.length-4):'')+'</div>';
+    rh+='<div class="regprecos">'+(gc.length?'<span class="regp" style="color:#4895ef">GC <b>'+fmt(med(gc))+'</b></span>':'')+(ga.length?'<span class="regp" style="color:#f9c74f">GA <b>'+fmt(med(ga))+'</b></span>':'')+(et.length?'<span class="regp" style="color:#00e5a0">ET <b>'+fmt(med(et))+'</b></span>':"")+"</div>";
+    rh+='<div>'+postos.map(function(p){var v=LANCADOS[p]||MEU[p];return'<div class="regrow"><span class="regpnome">P. '+p+'</span><span class="regpval">'+(v&&v.GC?fmt(v.GC):"—")+"</span></div>"}).join("")+"</div></div>";
+  });
+  document.getElementById("reg-body").innerHTML=rh;
+}
+// ── AMOSTRA-TESTEMUNHA ──
+var AMOSTRAS = [
+  {posto:"JA",comb:"GC",coleta:"10/06/2026",prazo:"10/09/2026",resultado:"Conforme",obs:"Amostra 001-26",dias:92,diasRestantes:89},
+  {posto:"ITAPOA",comb:"ET",coleta:"05/05/2026",prazo:"05/08/2026",resultado:"Aguardando",obs:"Amostra 002-26",dias:92,diasRestantes:54},
+  {posto:"URBANO",comb:"S10",coleta:"01/04/2026",prazo:"01/07/2026",resultado:"Aguardando",obs:"Amostra 003-26",dias:92,diasRestantes:19},
+  {posto:"MANGABEIRAS",comb:"GC",coleta:"20/03/2026",prazo:"20/06/2026",resultado:"Conforme",obs:"Amostra 004-26",dias:92,diasRestantes:-8},
+  {posto:"ALEX",comb:"GA",coleta:"15/05/2026",prazo:"15/08/2026",resultado:"Aguardando",obs:"Amostra 005-26",dias:92,diasRestantes:64},
+  {posto:"BRUNA",comb:"S500",coleta:"02/06/2026",prazo:"02/09/2026",resultado:"Aguardando",obs:"Amostra 006-26",dias:92,diasRestantes:82},
+];
+function rAmostra(){
+  var c=document.getElementById("mais-conteudo");
+  var lista=AMOSTRAS.map(function(a){
+    var pct=Math.max(0,Math.min(100,((a.dias-a.diasRestantes)/a.dias)*100));
+    var status=a.diasRestantes<0?"Vencido":a.diasRestantes<=15?"Alerta":"OK";
+    var statusCls=a.diasRestantes<0?"vence":a.diasRestantes<=15?"alerta":"ok";
+    var statusTxt=a.diasRestantes<0?"VENCIDO "+Math.abs(a.diasRestantes)+"d":a.diasRestantes<=15?"ALERTA "+a.diasRestantes+"d":"OK — "+a.diasRestantes+"d restantes";
+    var barCor=a.diasRestantes<0?"var(--dg)":a.diasRestantes<=15?"var(--wn)":"var(--ok)";
+    return'<div class="at-item"><div class="at-header"><span class="at-posto">P. '+a.posto+' — '+( CL[a.comb]||a.comb)+'</span><span class="at-status '+statusCls+'">'+statusTxt+'</span></div>'+
+    '<div class="at-meta">'+a.obs+' · Coleta: '+a.coleta+' · Prazo: '+a.prazo+'</div>'+
+    '<div class="at-prog-bg"><div class="at-prog" style="width:'+pct+'%;background:'+barCor+'"></div></div>'+
+    '<div class="at-prazo" style="color:'+barCor+'">'+a.resultado+'</div></div>';
+  }).join("");
+  var novaForm='<div class="card" style="margin-top:.75rem"><div class="chdr"><div class="ctitle">Registrar nova amostra</div></div><div class="cbody">'+
+    '<div class="at-form">'+
+    '<div class="at-field"><label>Posto</label><select id="at-posto" class="sel" style="margin-bottom:0"><option value="">Selecione...</option>'+
+    Object.keys(POSTOS_DADOS).map(function(p){return'<option value="'+p+'">P. '+p+'</option>'}).join('')+
+    '</select></div>'+
+    '<div class="at-field"><label>Combustivel</label><select id="at-comb" class="sel" style="margin-bottom:0"><option value="GC">G. Comum</option><option value="GA">G. Aditivada</option><option value="ET">Etanol</option><option value="S10">Diesel S10</option><option value="S500">Diesel S500</option></select></div>'+
+    '<div class="at-field"><label>Data coleta</label><input type="date" id="at-data" style="color:var(--tx)"></div>'+
+    '<div class="at-field"><label>Observacoes</label><input type="text" id="at-obs" placeholder="Amostra XXX-26"></div>'+
+    '</div>'+
+    '<button class="btn" onclick="salvarAmostra()">Registrar Amostra-Testemunha</button>'+
+    '</div></div>';
+  c.innerHTML='<div class="sdiv">Controle de amostras-testemunha</div>'+
+    '<div style="padding:6px 8px;background:rgba(249,199,79,.08);border:1px solid rgba(249,199,79,.2);border-radius:8px;font-size:.68rem;color:var(--wn);font-family:var(--mono);margin-bottom:.75rem">'+
+    'Prazo legal: 90 dias apos coleta — obrigatorio reter amostra para defesa em caso de reclamacao ANP</div>'+
+    '<div class="card"><div class="chdr"><div class="ctitle">Amostras ativas</div><div class="csub">'+AMOSTRAS.length+' amostras registradas</div></div>'+
+    '<div class="cbody">'+lista+'</div></div>'+novaForm;
+}
+function salvarAmostra(){
+  var posto=document.getElementById("at-posto").value;
+  var comb=document.getElementById("at-comb").value;
+  var data=document.getElementById("at-data").value;
+  var obs=document.getElementById("at-obs").value;
+  if(!posto||!data){showToast("Atenção","Preencha posto e data");return}
+  var d=new Date(data);
+  var prazo=new Date(d.getTime()+90*24*60*60*1000);
+  var hoje=new Date();
+  var diasRestantes=Math.round((prazo-hoje)/(24*60*60*1000));
+  var fmt2=function(dt){return dt.getDate().toString().padStart(2,"0")+"/"+(dt.getMonth()+1).toString().padStart(2,"0")+"/"+dt.getFullYear()};
+  AMOSTRAS.unshift({posto:posto,comb:comb,coleta:fmt2(d),prazo:fmt2(prazo),resultado:"Aguardando",obs:obs||"Amostra nova",dias:90,diasRestantes:diasRestantes});
+  rAmostra();
+  showToast("Amostra registrada!","P. "+posto+" — prazo ate "+fmt2(prazo));
+}
+function rNotif(){
+  document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Notificacoes de preco</div><div class="card"><div class="chdr"><div class="ctitle">Alertas recentes</div><div class="csub">Mudancas detectadas nas coletas</div></div><div class="cbody">'+
+  '<div class="nitem"><div class="nico" style="background:rgba(255,77,109,.1)">📈</div><div class="ntxt"><div class="ntitulo">SHELL SUPER LUNA subiu G.C</div><div class="nsub">P. BIANCA — de R$5,990 para R$6,090</div><span class="nbadge up">+R$0,100</span></div><div class="ntempo">hoje 09:32</div></div>'+
+  '<div class="nitem"><div class="nico" style="background:rgba(0,229,160,.12)">📷</div><div class="ntxt"><div class="ntitulo">Coleta confirmada — P. RODRIGO</div><div class="nsub">Foto enviada — ALE MILLENIUM</div><span class="nbadge down">confirmado</span></div><div class="ntempo">08:15</div></div>'+
+  '<div class="nitem"><div class="nico" style="background:rgba(249,199,79,.12)">⚠️</div><div class="ntxt"><div class="ntitulo">TIGRES baixou G.C — regiao P. JA</div><div class="nsub">R$5,650 — R$0,140 abaixo da media</div><span class="nbadge down">-R$0,140</span></div><div class="ntempo">07:50</div></div>'+
+  '<div class="nitem"><div class="nico" style="background:rgba(72,149,239,.15)">📉</div><div class="ntxt"><div class="ntitulo">REDE FLEX CENTER SUL baixou G.A</div><div class="nsub">P. ALEX — de R$6,150 para R$6,090</div><span class="nbadge down">-R$0,060</span></div><div class="ntempo">ontem</div></div>'+
+  '</div></div>';
+}
+function rDistribuidor(){
+  document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Custo por distribuidora</div>'+
+  '<div class="card"><div class="cbody">'+
+  '<div class="dgrid2">'+
+  '<div class="dbox2"><div class="dnome2" style="color:#f9c74f">Ipiranga</div><div class="drow2"><span>G.C</span><span>R$5,320</span></div><div class="drow2"><span>G.A</span><span>R$5,620</span></div><div class="drow2"><span>ET</span><span>R$3,180</span></div><div class="drow2"><span>S10</span><span>R$5,990</span></div></div>'+
+  '<div class="dbox2"><div class="dnome2" style="color:#4895ef">Vibra</div><div class="drow2"><span>G.C</span><span>R$5,290</span></div><div class="drow2"><span>G.A</span><span>R$5,590</span></div><div class="drow2"><span>ET</span><span>R$3,150</span></div><div class="drow2"><span>S10</span><span>R$5,960</span></div></div>'+
+  '<div class="dbox2"><div class="dnome2" style="color:#81c784">Rio Branco</div><div class="drow2"><span>G.C</span><span style="color:#00e5a0">R$5,260</span></div><div class="drow2"><span>G.A</span><span style="color:#00e5a0">R$5,560</span></div><div class="drow2"><span>ET</span><span style="color:#00e5a0">R$3,120</span></div><div class="drow2"><span>S10</span><span style="color:#00e5a0">R$5,930</span></div></div>'+
+  '<div class="dbox2"><div class="dnome2" style="color:#ff6b6b">ALE</div><div class="drow2"><span>G.C</span><span>R$5,310</span></div><div class="drow2"><span>G.A</span><span>R$5,610</span></div><div class="drow2"><span>ET</span><span>R$3,160</span></div><div class="drow2"><span>S10</span><span>R$5,980</span></div></div>'+
+  '</div>'+
+  '<div style="padding:6px 8px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:8px;font-size:.68rem;color:var(--ac);font-family:var(--mono);margin-top:8px">Menor custo G.C: Rio Branco R$5,260 — economia R$0,060 vs Ipiranga</div>'+
+  '</div></div>'+
+  '<div class="sdiv">Limite de compra mensal</div>'+
+  '<div class="card"><div class="cbody">'+
+  '<div class="lrow"><span class="lnome">G. Comum</span><div class="lbw"><div class="lbbg"><div class="lbar" style="width:72%;background:#f9c74f"></div></div></div><span class="lpct" style="color:#f9c74f">72%</span></div>'+
+  '<div class="lrow"><span class="lnome">Etanol</span><div class="lbw"><div class="lbbg"><div class="lbar" style="width:45%;background:#00e5a0"></div></div></div><span class="lpct" style="color:#00e5a0">45%</span></div>'+
+  '<div class="lrow"><span class="lnome">Diesel S10</span><div class="lbw"><div class="lbbg"><div class="lbar" style="width:88%;background:#ff4d6d"></div></div></div><span class="lpct" style="color:#ff4d6d">88% ⚠</span></div>'+
+  '<div class="lrow"><span class="lnome">Diesel S500</span><div class="lbw"><div class="lbbg"><div class="lbar" style="width:31%;background:#00e5a0"></div></div></div><span class="lpct" style="color:#00e5a0">31%</span></div>'+
+  '</div></div>';
+}
+function rSimulador(){
+  document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Simulador — se eu abaixar, compensa?</div>'+
+  '<div class="sim"><div class="simtitle">Simulacao G. Comum</div>'+
+  '<div class="simrow"><span class="simlbl">Preco atual (R$/L)</span><input class="siminput" type="number" id="sim-atual" value="5.790" step="0.010" oninput="calcSim()"></div>'+
+  '<div class="simrow"><span class="simlbl">Novo preco (R$/L)</span><input class="siminput" type="number" id="sim-novo" value="5.750" step="0.010" oninput="calcSim()"></div>'+
+  '<div class="simrow"><span class="simlbl">Volume diario (L)</span><input class="siminput" type="number" id="sim-vol" value="5000" step="100" oninput="calcSim()"></div>'+
+  '<div class="simrow"><span class="simlbl">Custo (R$/L)</span><input class="siminput" type="number" id="sim-custo" value="5.260" step="0.010" oninput="calcSim()"></div>'+
+  '<div class="simres" id="simres"><div class="simreslbl">Impacto na margem diaria</div><div class="simresval" id="simresval">calculando...</div></div>'+
+  '</div>'+
+  '<div class="card"><div class="chdr"><div class="ctitle">Cruzamento custo x venda x margem</div></div><div class="cbody">'+
+  '<div class="pr"><span class="prc">Custo medio atual</span><span style="font-family:var(--mono);font-weight:700">R$5,260</span></div>'+
+  '<div class="pr"><span class="prc">Preco venda medio G.C</span><span style="color:#4895ef;font-family:var(--mono);font-weight:700">R$5,784</span></div>'+
+  '<div class="pr"><span class="prc">Margem bruta G.C</span><span style="color:#00e5a0;font-family:var(--mono);font-weight:700">R$0,524/L (9,06%)</span></div>'+
+  '<div class="pr" style="border:none"><span class="prc">Margem bruta diaria estimada</span><span style="color:#f9c74f;font-family:var(--mono);font-weight:700">~R$96.940</span></div>'+
+  '</div></div>';
+  calcSim();
+}
+function calcSim(){
+  var a=parseFloat(document.getElementById("sim-atual")&&document.getElementById("sim-atual").value||0);
+  var n=parseFloat(document.getElementById("sim-novo")&&document.getElementById("sim-novo").value||0);
+  var v=parseFloat(document.getElementById("sim-vol")&&document.getElementById("sim-vol").value||0);
+  var c=parseFloat(document.getElementById("sim-custo")&&document.getElementById("sim-custo").value||0);
+  var el=document.getElementById("simresval");var box=document.getElementById("simres");
+  if(!a||!n||!v||!c||!el)return;
+  var imp=(n-a)*v;
+  el.textContent=(imp>=0?"+":"")+"R$"+imp.toFixed(2).replace(".",",")+"/dia";
+  el.style.color=imp>=0?"var(--ok)":"var(--dg)";
+  if(box){box.style.borderColor=imp>=0?"rgba(0,229,160,.2)":"rgba(255,77,109,.2)";box.style.background=imp>=0?"rgba(0,229,160,.06)":"rgba(255,77,109,.06)"}
+}
+function rLancamento(){
+  var postos=Object.keys(POSTOS_DADOS).sort();
+  var opts=postos.map(function(p){return'<option value="'+p+'">P. '+p+"</option>"}).join("");
+  document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Lancar preco do posto</div>'+
+  '<div class="card"><div class="chdr"><div class="ctitle">Informe os precos praticados hoje</div></div><div class="cbody">'+
+  '<select class="sel" id="posto-lanc" onchange="atualizarLanc()"><option value="">Selecione...</option>'+opts+'</select>'+
+  '<div id="lanc-campos"><div class="empty">Selecione o posto</div></div>'+
+  '</div></div>'+
+  '<div class="card" id="lanc-comp-card" style="display:none"><div class="chdr"><div class="ctitle">Comparativo pos-lancamento</div></div><div class="cbody" id="lanc-comp-body"></div></div>';
+}
+function atualizarLanc(){
+  var posto=document.getElementById("posto-lanc")&&document.getElementById("posto-lanc").value;
+  var campos=document.getElementById("lanc-campos");
+  if(!posto||!campos)return;
+  var cfg=POSTOS_DADOS[posto];var atual=LANCADOS[posto]||MEU[posto];
+  var html='<div class="lfgrid">';
+  cfg.combs.forEach(function(c){var v=atual[c];html+='<div class="lffield"><label>'+(CL[c]||c)+'</label><input type="number" id="lanc-'+c+'" step="0.001" value="'+(v?v.toFixed(3):"")+'"></div>'});
+  html+='</div><button class="btn" onclick="salvarLanc(\''+posto+'\')">Salvar Precos</button>';
+  html+='<div class="ulast">P. '+posto+' — preco informado hoje</div>';
+  campos.innerHTML=html;
+}
+function salvarLanc(posto){
+  var cfg=POSTOS_DADOS[posto];var vals={};
+  cfg.combs.forEach(function(c){var el=document.getElementById("lanc-"+c);if(el&&el.value)vals[c]=parseFloat(el.value)});
+  LANCADOS[posto]=vals;var k=Object.keys(vals);k.forEach(function(c){MEU[posto][c]=vals[c]});
+  var card=document.getElementById("lanc-comp-card");var body=document.getElementById("lanc-comp-body");
+  if(!card||!body)return;
+  card.style.display="block";var html="";
+  Object.keys(cfg.conc).forEach(function(cc){
+    var cv=CONC[cc]||{};var banda=cfg.conc[cc].banda;var cor=BCOR[banda]||"#8892a4";
+    html+='<div style="margin-bottom:7px;padding:8px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px"><div style="font-size:.7rem;font-weight:700;color:'+cor+';font-family:var(--mono);margin-bottom:5px">'+cc+'</div>';
+    cfg.combs.filter(function(cb){return["GC","GA","ET","S10"].includes(cb)}).forEach(function(cb){
+      var vm=vals[cb],vc=cv[cb];if(!vm&&!vc)return;
+      var diff="",dc="color:var(--tx3)";
+      if(vm&&vc){var d=vm-vc;diff=(d>=0?"+":"")+d.toFixed(3);dc=d>0.005?"color:var(--dg)":d<-0.005?"color:var(--ok)":"color:var(--tx3)"}
+      html+='<div class="pr"><span class="prc">'+(CL[cb]||cb)+'</span><span style="display:flex;gap:5px;align-items:center"><span style="color:var(--ac);font-family:var(--mono)">'+(vm?fmt(vm):"—")+'</span><span style="color:var(--tx3);font-size:.6rem">vs</span><span style="font-family:var(--mono);color:var(--tx2)">'+(vc?fmt(vc):"—")+"</span>"+(diff?'<span style="font-size:.62rem;'+dc+'">'+diff+"</span>":"")+"</span></div>";
+    });
+    html+="</div>";
+  });
+  body.innerHTML=html||'<div class="empty">Sem concorrentes</div>';
+  showToast("Precos salvos!","Comparativo atualizado para P. "+posto);
+}
+function rRelatorios(){
+  document.getElementById("mais-conteudo").innerHTML='<div class="sdiv">Relatorios comerciais</div>'+
+  '<div class="rcard"><div class="rcardtop"><div class="rcardico" style="background:rgba(72,149,239,.15)">📈</div><div><div class="rcardtitle">Mix Gasolina Aditivada</div><div class="rcardsub">% sobre total de gasolinas — rede JBRETAS</div></div></div><div class="rrows"><div class="rrow"><span>P. JA (Octapro)</span><span>38,2%</span></div><div class="rrow"><span>P. URBANO (Podium)</span><span>29,7%</span></div><div class="rrow"><span>Media da rede</span><span style="color:var(--ac)">24,1%</span></div></div></div>'+
+  '<div class="rcard"><div class="rcardtop"><div class="rcardico" style="background:rgba(249,199,79,.12)">🛢️</div><div><div class="rcardtitle">Relatorio Oleo Soutag</div><div class="rcardsub">Vendas acumuladas — jun/2026</div></div></div><div class="rrows"><div class="rrow"><span>Litros vendidos</span><span>2.840 L</span></div><div class="rrow"><span>Receita bruta</span><span>R$18.460</span></div><div class="rrow"><span>Margem media</span><span style="color:var(--ok)">R$6,50/L</span></div></div></div>'+
+  '<div class="rcard"><div class="rcardtop"><div class="rcardico" style="background:rgba(0,229,160,.1)">👥</div><div><div class="rcardtitle">Produtividade por gerente</div><div class="rcardsub">Litros x produto x mix — semana</div></div></div><div class="rrows"><div class="rrow"><span>P. BERNARDO</span><span>29.402 L</span></div><div class="rrow"><span>P. FELIPAO</span><span>18.320 L</span></div><div class="rrow"><span>P. MANGABEIRAS</span><span>44.189 L</span></div><div class="rrow"><span>Media da rede</span><span style="color:var(--wn)">27.840 L</span></div></div></div>'+
+  '<div class="rcard"><div class="rcardtop"><div class="rcardico" style="background:rgba(199,125,255,.12)">📦</div><div><div class="rcardtitle">Volume por produto</div><div class="rcardsub">Estimativa mensal jun/2026</div></div></div><div class="rrows"><div class="rrow"><span>G. Comum</span><span>1.284.000 L</span></div><div class="rrow"><span>Etanol</span><span>492.000 L</span></div><div class="rrow"><span>Diesel S10</span><span>386.000 L</span></div><div class="rrow"><span>G. Aditivada</span><span>318.000 L</span></div></div></div>';
+}
+function showToast(title,msg){
+  var t=document.getElementById("toast");
+  document.getElementById("t-title").textContent=title;
+  document.getElementById("t-msg").textContent=msg;
+  t.classList.add("show");setTimeout(function(){t.classList.remove("show")},3000);
+}
+initSelects();
+renderRanking();
+renderRegional();
+</script>
+
+</body>
+</html>
