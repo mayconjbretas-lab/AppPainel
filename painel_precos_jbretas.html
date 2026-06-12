@@ -225,18 +225,13 @@ body::before{content:'';position:fixed;inset:0;
 .ftag.active{background:var(--ac);border-color:var(--ac);color:#0a0d0f}
 
 /* MAPA */
-.map-wrap{position:relative;background:#0d1117;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:.75rem}
+.map-wrap{position:relative;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:.75rem;height:300px}
 .map-ctrl{display:flex;gap:6px;margin-bottom:.6rem;flex-wrap:wrap;align-items:center}
 .map-sel{background:var(--sf2);border:1px solid var(--bd);border-radius:20px;color:var(--tx2);font-size:.62rem;font-family:var(--mono);padding:4px 10px;outline:none;cursor:pointer}
 .map-sel:focus{border-color:var(--ac)}
 .map-ftag{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx3);cursor:pointer}
 .map-ftag.on{background:var(--ac);border-color:var(--ac);color:#0a0d0f}
-#mapa-svg{display:block;width:100%;cursor:grab}
-#mapa-svg:active{cursor:grabbing}
-.map-dot{cursor:pointer;transition:r .1s}
-.map-dot:hover{r:7}
-.map-label{font-family:var(--mono);font-size:7px;pointer-events:none;dominant-baseline:central}
-.map-price-label{font-family:var(--mono);font-size:7.5px;font-weight:700;pointer-events:none}
+#leaflet-map{width:100%;height:100%}
 .map-legend{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
 .map-leg-item{display:flex;align-items:center;gap:5px;font-size:.62rem;color:var(--tx3);font-family:var(--mono)}
 .map-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -251,6 +246,12 @@ body::before{content:'';position:fixed;inset:0;
 .map-conc-title{font-size:.6rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
 .map-conc-list{display:flex;flex-wrap:wrap;gap:4px}
 .map-conc-chip{font-size:.6rem;font-family:var(--mono);padding:2px 7px;border-radius:10px;background:var(--sf);border:1px solid var(--bd);color:var(--tx3)}
+.leaflet-popup-content-wrapper{background:#1e2229;border:1px solid #2a3040;border-radius:8px;box-shadow:none;color:#eef0f4}
+.leaflet-popup-tip{background:#1e2229}
+.leaflet-popup-content{margin:8px 12px;font-size:11px;font-family:'Space Mono',monospace;line-height:1.5}
+.leaflet-control-zoom a{background:#1e2229;color:#8892a4;border-color:#2a3040}
+.leaflet-control-zoom a:hover{background:#252b35;color:#eef0f4}
+.leaflet-bar{border:1px solid #2a3040!important}
 </style>
 </head>
 <body>
@@ -599,45 +600,45 @@ function renderRegional(){
 
 /* ===== MAPA ===== */
 const MAP_POSTOS = [
-  {k:"JA",n:"P. JA",lat:-19.958,lng:-43.957,x:236.3,y:65.4,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"MANGABEIRAS",n:"MANGA.",lat:-19.96,lng:-43.961,x:234.1,y:65.9,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"URBANO",n:"URBANO",lat:-19.963,lng:-43.954,x:237.9,y:66.6,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"DIFERENCIAL",n:"DIFER.",lat:-19.918,lng:-43.937,x:246.9,y:55.2,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"ARAPONGA",n:"ARAPON.",lat:-19.962,lng:-43.95,x:240.0,y:66.4,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"ITAPOA",n:"ITAPOA",lat:-19.92,lng:-43.981,x:223.5,y:55.7,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"ALEX",n:"ALEX",lat:-19.956,lng:-43.959,x:235.2,y:64.9,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"BERNARDO",n:"BERNARDO",lat:-19.966,lng:-43.941,x:244.8,y:67.4,sup:"Mauricio",banda:"Ipiranga"},
-  {k:"TUNEL",n:"TUNEL",lat:-19.905,lng:-43.947,x:241.6,y:51.9,sup:"Fabricio",banda:"Ipiranga"},
-  {k:"ANA LUCIA",n:"ANA L.",lat:-19.869,lng:-43.969,x:229.9,y:42.8,sup:"Paulo",banda:"Vibra"},
-  {k:"TRANCOSO",n:"TRANC.",lat:-19.905,lng:-43.93,x:250.7,y:51.9,sup:"Fabricio",banda:"Vibra"},
-  {k:"SANTA INES",n:"STA.IN.",lat:-19.935,lng:-44.063,x:179.7,y:59.5,sup:"Paulo",banda:"Vibra"},
-  {k:"JOAQUIM",n:"JOAQUIM",lat:-19.938,lng:-44.065,x:178.7,y:60.3,sup:"Paulo",banda:"Vibra"},
-  {k:"JOCA",n:"JOCA",lat:-19.929,lng:-43.973,x:227.7,y:58.0,sup:"Paulo",banda:"Vibra"},
-  {k:"TOPAZIO",n:"TOPAZIO",lat:-19.774,lng:-44.053,x:185.1,y:18.7,sup:"Paulo",banda:"Vibra"},
-  {k:"PLANALTO",n:"PLANALTO",lat:-19.827,lng:-44.007,x:209.6,y:32.2,sup:"Paulo",banda:"Ipiranga"},
-  {k:"LOURA",n:"LOURA",lat:-19.938,lng:-44.09,x:165.3,y:60.3,sup:"Paulo",banda:"Ipiranga"},
-  {k:"AVIVA",n:"AVIVA",lat:-19.782,lng:-44.075,x:173.3,y:20.8,sup:"Paulo",banda:"Ipiranga"},
-  {k:"SAO LUIZ",n:"SAO LZ",lat:-19.817,lng:-44.058,x:182.4,y:29.6,sup:"Paulo",banda:"Ipiranga"},
-  {k:"COLIBRI",n:"COLIBRI",lat:-19.814,lng:-44.065,x:178.7,y:28.9,sup:"Fabricio",banda:"Vibra"},
-  {k:"GLORIA",n:"GLORIA",lat:-19.937,lng:-43.91,x:261.3,y:60.0,sup:"Fabricio",banda:"Ipiranga"},
-  {k:"BRUNA",n:"BRUNA",lat:-19.895,lng:-43.955,x:237.3,y:49.4,sup:"Fabricio",banda:"Vibra"},
-  {k:"MIRAGEM",n:"MIRAGEM",lat:-19.782,lng:-43.885,x:274.7,y:20.8,sup:"Fabricio",banda:"Vibra"},
-  {k:"LEANDRO",n:"LEANDRO",lat:-19.782,lng:-44.075,x:173.3,y:20.8,sup:"Fabricio",banda:"Vibra"},
-  {k:"4RODAS",n:"4RODAS",lat:-19.867,lng:-43.918,x:257.1,y:42.3,sup:"Fabricio",banda:"Ipiranga"},
-  {k:"RODRIGO",n:"RODRIGO",lat:-19.957,lng:-43.929,x:251.2,y:65.1,sup:"Fabricio",banda:"Ipiranga"},
-  {k:"SANTA MARIA",n:"STA.MA.",lat:-19.8,lng:-44.075,x:173.3,y:25.3,sup:"Fabricio",banda:"Vibra"},
-  {k:"CEASA",n:"CEASA",lat:-19.895,lng:-43.969,x:229.9,y:49.4,sup:"Paulo",banda:"Vibra"},
-  {k:"BEATRIZ",n:"BEATRIZ",lat:-20.025,lng:-44.108,x:155.7,y:82.3,sup:"Rodrigo",banda:"Rio Branco"},
-  {k:"ESPACO REAL",n:"ESP.R.",lat:-21.095,lng:-44.229,x:91.2,y:353.4,sup:"Rodrigo",banda:"Ipiranga"},
-  {k:"FELIPAO",n:"FELIPAO",lat:-19.923,lng:-43.99,x:218.7,y:56.5,sup:"Rodrigo",banda:"Vibra"},
-  {k:"BIANCA",n:"BIANCA",lat:-20.04,lng:-44.15,x:133.3,y:86.1,sup:"Rodrigo",banda:"Vibra"},
-  {k:"DUDU",n:"DUDU",lat:-19.933,lng:-44.003,x:211.7,y:59.0,sup:"Fabricio",banda:"ALE"},
+  {k:"JA",n:"P. JA",lat:-19.958,lng:-43.957,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"MANGABEIRAS",n:"MANGA.",lat:-19.960,lng:-43.961,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"URBANO",n:"URBANO",lat:-19.963,lng:-43.954,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"DIFERENCIAL",n:"DIFER.",lat:-19.918,lng:-43.937,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"ARAPONGA",n:"ARAPON.",lat:-19.962,lng:-43.950,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"ITAPOA",n:"ITAPOA",lat:-19.920,lng:-43.981,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"ALEX",n:"ALEX",lat:-19.956,lng:-43.959,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"BERNARDO",n:"BERNARDO",lat:-19.966,lng:-43.941,sup:"Mauricio",banda:"Ipiranga"},
+  {k:"TUNEL",n:"TUNEL",lat:-19.905,lng:-43.947,sup:"Fabricio",banda:"Ipiranga"},
+  {k:"ANA LUCIA",n:"ANA L.",lat:-19.869,lng:-43.969,sup:"Paulo",banda:"Vibra"},
+  {k:"TRANCOSO",n:"TRANC.",lat:-19.905,lng:-43.930,sup:"Fabricio",banda:"Vibra"},
+  {k:"SANTA INES",n:"STA.IN.",lat:-19.935,lng:-44.063,sup:"Paulo",banda:"Vibra"},
+  {k:"JOAQUIM",n:"JOAQUIM",lat:-19.938,lng:-44.065,sup:"Paulo",banda:"Vibra"},
+  {k:"JOCA",n:"JOCA",lat:-19.929,lng:-43.973,sup:"Paulo",banda:"Vibra"},
+  {k:"TOPAZIO",n:"TOPAZIO",lat:-19.774,lng:-44.053,sup:"Paulo",banda:"Vibra"},
+  {k:"PLANALTO",n:"PLANALTO",lat:-19.827,lng:-44.007,sup:"Paulo",banda:"Ipiranga"},
+  {k:"LOURA",n:"LOURA",lat:-19.938,lng:-44.090,sup:"Paulo",banda:"Ipiranga"},
+  {k:"AVIVA",n:"AVIVA",lat:-19.782,lng:-44.075,sup:"Paulo",banda:"Ipiranga"},
+  {k:"SAO LUIZ",n:"SAO LZ",lat:-19.817,lng:-44.058,sup:"Paulo",banda:"Ipiranga"},
+  {k:"COLIBRI",n:"COLIBRI",lat:-19.814,lng:-44.065,sup:"Fabricio",banda:"Vibra"},
+  {k:"GLORIA",n:"GLORIA",lat:-19.937,lng:-43.910,sup:"Fabricio",banda:"Ipiranga"},
+  {k:"BRUNA",n:"BRUNA",lat:-19.895,lng:-43.955,sup:"Fabricio",banda:"Vibra"},
+  {k:"MIRAGEM",n:"MIRAGEM",lat:-19.782,lng:-43.885,sup:"Fabricio",banda:"Vibra"},
+  {k:"LEANDRO",n:"LEANDRO",lat:-19.782,lng:-44.075,sup:"Fabricio",banda:"Vibra"},
+  {k:"4RODAS",n:"4RODAS",lat:-19.867,lng:-43.918,sup:"Fabricio",banda:"Ipiranga"},
+  {k:"RODRIGO",n:"RODRIGO",lat:-19.957,lng:-43.929,sup:"Fabricio",banda:"Ipiranga"},
+  {k:"SANTA MARIA",n:"STA.MA.",lat:-19.800,lng:-44.075,sup:"Fabricio",banda:"Vibra"},
+  {k:"CEASA",n:"CEASA",lat:-19.895,lng:-43.969,sup:"Paulo",banda:"Vibra"},
+  {k:"BEATRIZ",n:"BEATRIZ",lat:-20.025,lng:-44.108,sup:"Rodrigo",banda:"Rio Branco"},
+  {k:"ESPACO REAL",n:"ESP.R.",lat:-21.095,lng:-44.229,sup:"Rodrigo",banda:"Ipiranga"},
+  {k:"FELIPAO",n:"FELIPAO",lat:-19.923,lng:-43.990,sup:"Rodrigo",banda:"Vibra"},
+  {k:"BIANCA",n:"BIANCA",lat:-20.040,lng:-44.150,sup:"Rodrigo",banda:"Vibra"},
+  {k:"DUDU",n:"DUDU",lat:-19.933,lng:-44.003,sup:"Fabricio",banda:"ALE"},
 ];
 
 var mapaFuel = "GC";
 var mapaFiltroSup = "todos";
-var mapaSelected = null;
-var mapaShowPrices = false;
+var leafletMap = null;
+var leafletMarkers = [];
 
 const SUP_COLORS = {Mauricio:"#00e5a0",Paulo:"#4895ef",Fabricio:"#f9c74f",Rodrigo:"#c77dff"};
 const FUEL_LABEL = {GC:"Gasolina Comum",GA:"Gasolina Aditivada",ET:"Etanol",S10:"Diesel S-10",S500:"Diesel S-500"};
@@ -651,98 +652,118 @@ function rMapa(){
     '<option value="GC">G. Comum</option><option value="GA">G. Aditivada</option>'+
     '<option value="ET">Etanol</option><option value="S10">Diesel S10</option><option value="S500">Diesel S500</option>'+
     '</select>'+
-    '<button class="map-ftag" id="btn-prices" onclick="togglePrecos()">Precos</button>'+
     '<button class="map-ftag on" id="btn-todos" onclick="mapaSetSup(this,\'todos\')">Todos</button>'+
     '<button class="map-ftag" id="btn-Mauricio" onclick="mapaSetSup(this,\'Mauricio\')">Mauricio</button>'+
     '<button class="map-ftag" id="btn-Paulo" onclick="mapaSetSup(this,\'Paulo\')">Paulo</button>'+
     '<button class="map-ftag" id="btn-Fabricio" onclick="mapaSetSup(this,\'Fabricio\')">Fabricio</button>'+
     '<button class="map-ftag" id="btn-Rodrigo" onclick="mapaSetSup(this,\'Rodrigo\')">Rodrigo</button>'+
     '</div>'+
-    '<div class="map-wrap">'+
-    '<svg id="mapa-svg" viewBox="80 10 220 110" preserveAspectRatio="xMidYMid meet" height="260" role="img" aria-label="Mapa dos postos JBRETAS em Belo Horizonte">'+
-    '<title>Mapa dos postos JBRETAS</title>'+
-    '<rect x="80" y="10" width="220" height="110" fill="#0d1117"/>'+
-    '<g id="map-dots"></g>'+
-    '<g id="map-prices"></g>'+
-    '</svg>'+
-    '</div>'+
+    '<div class="map-wrap"><div id="leaflet-map"></div></div>'+
     '<div class="map-legend">'+
     '<span class="map-leg-item"><span class="map-leg-dot" style="background:#00e5a0"></span>Mauricio</span>'+
     '<span class="map-leg-item"><span class="map-leg-dot" style="background:#4895ef"></span>Paulo</span>'+
     '<span class="map-leg-item"><span class="map-leg-dot" style="background:#f9c74f"></span>Fabricio</span>'+
     '<span class="map-leg-item"><span class="map-leg-dot" style="background:#c77dff"></span>Rodrigo</span>'+
-    '<span class="map-leg-item"><span class="map-leg-dot" style="background:#3a4355"></span>Sem dados</span>'+
     '</div>'+
     '<div id="mapa-detail"></div>';
 
-  mapaFuel="GC"; mapaFiltroSup="todos"; mapaSelected=null; mapaShowPrices=false;
-  renderMapaDots();
+  mapaFuel="GC"; mapaFiltroSup="todos"; leafletMarkers=[];
+
+  if(typeof L === 'undefined'){
+    var cssLink = document.createElement('link');
+    cssLink.rel='stylesheet';
+    cssLink.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(cssLink);
+    var script=document.createElement('script');
+    script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload=function(){initLeaflet()};
+    document.head.appendChild(script);
+  } else {
+    initLeaflet();
+  }
 }
 
-function renderMapaDots(){
-  var dotsG=document.getElementById("map-dots");
-  var pricesG=document.getElementById("map-prices");
-  if(!dotsG||!pricesG)return;
-  dotsG.innerHTML="";
-  pricesG.innerHTML="";
+function initLeaflet(){
+  if(leafletMap){leafletMap.remove();leafletMap=null;}
+  var mapEl=document.getElementById('leaflet-map');
+  if(!mapEl)return;
+
+  leafletMap = L.map('leaflet-map',{
+    center:[-19.920,-43.975],
+    zoom:13,
+    zoomControl:true
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; CartoDB &copy; OSM',
+    subdomains:'abcd',
+    maxZoom:19
+  }).addTo(leafletMap);
+
+  renderLeafletMarkers();
+}
+
+function renderLeafletMarkers(){
+  if(!leafletMap||typeof L==='undefined')return;
+  leafletMarkers.forEach(function(m){m.remove()});
+  leafletMarkers=[];
 
   var postosFiltrados=MAP_POSTOS.filter(function(p){
-    if(mapaFiltroSup==="todos")return true;
-    return p.sup===mapaFiltroSup;
+    return mapaFiltroSup==='todos'||p.sup===mapaFiltroSup;
   });
 
   postosFiltrados.forEach(function(p){
-    if(p.k==="ESPACO REAL")return;
     var meu=LANCADOS[p.k]||MEU[p.k];
     var preco=meu&&meu[mapaFuel];
-    var cor=SUP_COLORS[p.sup]||"#3a4355";
-    var isSelected=mapaSelected===p.k;
+    var cor=SUP_COLORS[p.sup]||'#3a4355';
 
-    var circle=document.createElementNS("http://www.w3.org/2000/svg","circle");
-    circle.setAttribute("cx",p.x);
-    circle.setAttribute("cy",p.y);
-    circle.setAttribute("r",isSelected?"6":"4.5");
-    circle.setAttribute("fill",cor);
-    circle.setAttribute("stroke",isSelected?"#fff":"rgba(0,0,0,.4)");
-    circle.setAttribute("stroke-width",isSelected?"1.5":"0.8");
-    circle.setAttribute("class","map-dot");
-    circle.setAttribute("data-k",p.k);
-    circle.onclick=function(){mapaClick(p.k)};
-    dotsG.appendChild(circle);
+    var icon = L.divIcon({
+      className:'',
+      html:'<div style="'+
+        'background:'+cor+';'+
+        'border:2px solid rgba(0,0,0,.4);'+
+        'border-radius:50%;'+
+        'width:14px;height:14px;'+
+        'cursor:pointer;'+
+        'box-shadow:0 0 0 3px '+cor+'30'+
+      '"></div>',
+      iconSize:[14,14],
+      iconAnchor:[7,7],
+      popupAnchor:[0,-10]
+    });
 
-    if(mapaShowPrices&&preco){
-      var txt=document.createElementNS("http://www.w3.org/2000/svg","text");
-      txt.setAttribute("x",p.x);
-      txt.setAttribute("y",p.y-7);
-      txt.setAttribute("text-anchor","middle");
-      txt.setAttribute("fill",cor);
-      txt.setAttribute("class","map-price-label");
-      txt.textContent=preco.toFixed(2).replace(".",",");
-      pricesG.appendChild(txt);
-    }else{
-      var lbl=document.createElementNS("http://www.w3.org/2000/svg","text");
-      lbl.setAttribute("x",p.x);
-      lbl.setAttribute("y",p.y+11);
-      lbl.setAttribute("text-anchor","middle");
-      lbl.setAttribute("fill","#5a6478");
-      lbl.setAttribute("class","map-label");
-      lbl.textContent=p.n;
-      pricesG.appendChild(lbl);
-    }
+    var precoStr = preco ? 'R$'+preco.toFixed(2).replace('.',',') : '—';
+    var cfg=POSTOS_DADOS[p.k];
+    var concCount=cfg?Object.keys(cfg.conc).length:0;
+
+    var marker=L.marker([p.lat,p.lng],{icon:icon});
+    marker.bindPopup(
+      '<div style="font-family:monospace;min-width:130px">'+
+      '<div style="font-weight:700;color:#00e5a0;margin-bottom:4px">'+p.n+'</div>'+
+      '<div style="color:#8892a4;font-size:10px;margin-bottom:4px">Sup. '+p.sup+' · '+p.banda+'</div>'+
+      '<div style="display:flex;justify-content:space-between;border-top:1px solid #2a3040;padding-top:4px">'+
+      '<span style="color:#8892a4">'+(FUEL_LABEL[mapaFuel]||mapaFuel)+'</span>'+
+      '<span style="font-weight:700;color:'+cor+'">'+precoStr+'</span>'+
+      '</div>'+
+      '<div style="color:#5a6478;font-size:10px;margin-top:4px">'+concCount+' concorrentes monitorados</div>'+
+      '<div style="margin-top:6px"><button onclick="mapaClickLeaflet(\''+p.k+'\')" style="background:rgba(0,229,160,.15);border:1px solid rgba(0,229,160,.4);border-radius:5px;color:#00e5a0;font-family:monospace;font-size:10px;padding:3px 8px;cursor:pointer;width:100%">Ver detalhes</button></div>'+
+      '</div>',
+      {className:''}
+    );
+    marker.addTo(leafletMap);
+    leafletMarkers.push(marker);
   });
 }
 
-function mapaClick(k){
-  mapaSelected=k;
-  renderMapaDots();
+function mapaClickLeaflet(k){
   var p=MAP_POSTOS.find(function(x){return x.k===k});
   if(!p)return;
   var meu=LANCADOS[k]||MEU[k];
   var cfg=POSTOS_DADOS[k];
-  var cor=SUP_COLORS[p.sup]||"#8892a4";
-  var bandaCor=BCOR[p.banda]||"#8892a4";
+  var cor=SUP_COLORS[p.sup]||'#8892a4';
+  var bandaCor=BCOR[p.banda]||'#8892a4';
 
-  var priceBoxes="";
+  var priceBoxes='';
   if(meu&&cfg){
     var fuels=cfg.combs.filter(function(f){return["GC","GA","ET","S10"].includes(f)});
     var fuelColors={GC:"#4895ef",GA:"#f9c74f",ET:"#00e5a0",S10:"#ff4d6d"};
@@ -755,19 +776,19 @@ function mapaClick(k){
     priceBoxes+='</div>';
   }
 
-  var concsHtml="";
+  var concsHtml='';
   if(cfg&&Object.keys(cfg.conc).length){
     var concsArr=Object.keys(cfg.conc);
     concsHtml='<div class="map-concs"><div class="map-conc-title">'+concsArr.length+' concorrentes monitorados</div><div class="map-conc-list">';
     concsArr.forEach(function(cc){
-      var banda=cfg.conc[cc].banda;var bcor=BCOR[banda]||"#8892a4";
+      var banda=cfg.conc[cc].banda;var bcor=BCOR[banda]||'#8892a4';
       var cv=CONC[cc];var gcStr=cv&&cv.GC?(' '+cv.GC.toFixed(2).replace('.',',')):'';
-      concsHtml+='<span class="map-conc-chip" style="border-color:'+bcor+'20;color:'+bcor+'">'+cc+gcStr+'</span>';
+      concsHtml+='<span class="map-conc-chip" style="border-color:'+bcor+'30;color:'+bcor+'">'+cc+gcStr+'</span>';
     });
     concsHtml+='</div></div>';
   }
 
-  document.getElementById("mapa-detail").innerHTML=
+  document.getElementById('mapa-detail').innerHTML=
     '<div class="map-detail">'+
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'+
     '<div><div class="map-detail-nome">P. '+k+'</div>'+
@@ -780,25 +801,32 @@ function mapaClick(k){
     priceBoxes+
     concsHtml+
     '</div>';
+
+  document.getElementById('main').scrollTop = document.getElementById('mais-conteudo').offsetHeight;
 }
 
 function mapaFuelChange(f){
   mapaFuel=f;
-  renderMapaDots();
+  renderLeafletMarkers();
 }
 
 function mapaSetSup(btn,sup){
   document.querySelectorAll(".map-ftag[id^='btn-']").forEach(function(b){b.classList.remove("on")});
   btn.classList.add("on");
   mapaFiltroSup=sup;
-  renderMapaDots();
-}
-
-function togglePrecos(){
-  mapaShowPrices=!mapaShowPrices;
-  var btn=document.getElementById("btn-prices");
-  if(btn)btn.classList.toggle("on",mapaShowPrices);
-  renderMapaDots();
+  renderLeafletMarkers();
+  if(leafletMap&&sup!=='todos'){
+    var postos=MAP_POSTOS.filter(function(p){return p.sup===sup});
+    if(postos.length){
+      var lats=postos.map(function(p){return p.lat});
+      var lngs=postos.map(function(p){return p.lng});
+      var bounds=[[Math.min.apply(null,lats)-0.01,Math.min.apply(null,lngs)-0.01],
+                  [Math.max.apply(null,lats)+0.01,Math.max.apply(null,lngs)+0.01]];
+      leafletMap.fitBounds(bounds,{padding:[20,20]});
+    }
+  } else if(leafletMap){
+    leafletMap.setView([-19.920,-43.975],13);
+  }
 }
 
 /* AMOSTRA */
