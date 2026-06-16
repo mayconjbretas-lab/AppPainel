@@ -1,0 +1,14 @@
+{
+  "name": "JBRETAS — Painel de Preços",
+  "short_name": "JB Preços",
+  "description": "Painel de Preços ADM — Rede JBRETAS",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d0f12",
+  "theme_color": "#00e5a0",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
