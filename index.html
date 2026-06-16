@@ -6,8 +6,10 @@
     <title>JBRETAS — Painel de Preços</title>
     <link rel="manifest" href="manifest_precos.json">
     <link rel="stylesheet" href="CSS/style_precos.css">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -19,7 +21,7 @@
             <p>Insira seu e-mail cadastrado para acessar o painel de monitoramento.</p>
             <div class="input-group">
                 <i class="fa fa-envelope"></i>
-                <input type="email" id="user-email" placeholder="seu-email@dominio.com" required>
+                <input type="email" id="user-email" placeholder="seu-email@jbretas.com" required>
             </div>
             <button id="btn-login" onclick="autenticarUsuario()">Acessar Painel</button>
             <div id="login-error" class="error-msg" style="display: none;"></div>
@@ -31,7 +33,7 @@
             <div class="header-left">
                 <span class="logo-jb">JB</span>
                 <div class="brand-info">
-                    <h1>JBRETAS</h1>
+                    <h1>JBRETAŠ</h1>
                     <p>// PAINEL DE PREÇOS</p>
                 </div>
             </div>
@@ -61,14 +63,14 @@
         </div>
 
         <div id="error-alert" class="alert-box" style="display: none;">
-            <span>Erro ao carregar os dados. Verifique a conexão.</span>
-            <button onclick="carregarDadosPainel()"><i class="fa fa-sync"></i></button>
+            <span>Erro ao carregar dados — sem dados.</span>
+            <button onclick="recarregarDados()"><i class="fa fa-sync"></i></button>
         </div>
 
         <section id="section-compara" class="panel-section">
-            <div class="section-card">
+            <div class="section-card full-width">
                 <h2>Meu Posto vs Concorrentes</h2>
-                <p class="subtitle">Selecione um posto abaixo para ver o comparativo em tempo real</p>
+                <p class="subtitle" id="total-postos-sub">Todos os postos — dados reais da planilha</p>
                 
                 <div class="select-container">
                     <select id="select-posto" onchange="atualizarComparativo()">
@@ -77,16 +79,16 @@
                 </div>
                 
                 <div id="placeholder-compara" class="placeholder-text">
-                    Selecione um posto acima para carregar o comparativo.
+                    Selecione um posto acima para ver o comparativo de preços.
                 </div>
 
                 <div id="dados-comparativo" style="display: none;">
                     </div>
             </div>
 
-            <div class="section-card">
+            <div class="section-card full-width">
                 <h2>Mapa de Calor — G. Comum</h2>
-                <p class="subtitle">Distribuição por faixa de preço na rede</p>
+                <p class="subtitle">Distribuição por faixa na rede</p>
                 <div class="heat-bar">
                     <span class="bar-label barato">barato</span>
                     <span class="bar-label medio">médio</span>
@@ -96,17 +98,20 @@
         </section>
 
         <section id="section-mapa" class="panel-section" style="display: none;">
-            <div class="map-controls">
-                <select id="map-filtro-combustivel">
-                    <option value="Gasolina Comum">Gasolina Comum</option>
-                    <option value="Gasolina Aditivada">Gasolina Aditivada</option>
-                    <option value="Etanol">Etanol</option>
-                    <option value="Diesel S10">Diesel S10</option>
-                </select>
-                <div class="supervisores-tags" id="map-tags-supervisores">
-                    </div>
+            <div class="section-card full-width">
+                <h2>Mapa de Preços — BH / GRANDE BH</h2>
+                <div class="map-controls">
+                    <select id="map-filtro-combustivel" onchange="renderizarMarcadoresMapa()">
+                        <option value="Gasolina Comum">Gasolina Comum</option>
+                        <option value="Gasolina Aditivada">Gasolina Aditivada</option>
+                        <option value="Etanol">Etanol</option>
+                        <option value="Diesel S10">Diesel S10</option>
+                    </select>
+                    <div class="supervisores-tags" id="map-tags-supervisores">
+                        </div>
+                </div>
+                <div id="map"></div>
             </div>
-            <div id="map"></div>
         </section>
 
         <nav class="bottom-nav">
@@ -134,13 +139,5 @@
     </div>
 
     <script src="js/app_precos.js"></script>
-    <script>
-        // Registro do Service Worker para PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker_precos.js')
-                .then(() => console.log("Service Worker ativo."))
-                .catch(err => console.error("Erro no SW:", err));
-        }
-    </script>
 </body>
 </html>
