@@ -1,181 +1,146 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d0f12">
-<title>JBRETAS — Painel de Preços</title>
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="./css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JBRETAS — Painel de Preços</title>
+    <link rel="manifest" href="manifest_precos.json">
+    <link rel="stylesheet" href="CSS/style_precos.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-<!-- ═══════════ TELA LOGIN ═══════════ -->
-<div id="screen-login">
-  <div class="login-wrap">
-    <div class="login-logo">
-      <div class="logo-box"><span>JB</span></div>
-      <div class="logo-text">
-        <div class="brand">JBRETAS</div>
-        <div class="brand-sub">// Painel de Preços ADM</div>
-      </div>
-    </div>
-    <div id="login-erro" class="login-erro hidden"></div>
-    <div class="field-group">
-      <label class="flbl">E-mail</label>
-      <input id="inp-email" type="email" class="finput" placeholder="adm@jbretas.com" autocomplete="username">
-    </div>
-    <div class="field-group">
-      <label class="flbl">Senha</label>
-      <div class="senha-row">
-        <input id="inp-senha" type="password" class="finput" placeholder="••••••••" autocomplete="current-password">
-        <button class="olho-btn" onclick="toggleSenha()" type="button">👁</button>
-      </div>
-    </div>
-    <button class="btn-entrar" id="btn-entrar" onclick="entrar()">ENTRAR</button>
-    <p class="login-hint">Acesso restrito — ADM JBRETAS</p>
-  </div>
-</div>
-
-<!-- ═══════════ APP PRINCIPAL ═══════════ -->
-<div id="screen-app" class="hidden">
-  <!-- TOPBAR -->
-  <header class="topbar">
-    <div class="tb-left">
-      <div class="tb-logo"><span>JB</span></div>
-      <div>
-        <div class="tb-brand">JBRETAS</div>
-        <div class="tb-sub">// PAINEL DE PREÇOS</div>
-      </div>
-    </div>
-    <div class="tb-right">
-      <div class="live-badge"><span class="ldot"></span><span id="live-txt">ao vivo</span></div>
-      <button class="sair-btn" onclick="sair()">⏏️</button>
-    </div>
-  </header>
-
-  <!-- CONTEÚDO PRINCIPAL -->
-  <main class="main" id="main">
-
-    <!-- ── TELA COMPARAR ── -->
-    <section class="scr active" id="s-comp">
-      <div class="kgrid">
-        <div class="kbox"><div class="klbl">Postos próprios</div><div class="kval ac" id="kv-proprios">--</div></div>
-        <div class="kbox"><div class="klbl">Concorrentes</div><div class="kval" id="kv-concs">--</div></div>
-        <div class="kbox"><div class="klbl">Média GC conc.</div><div class="kval inf" id="kv-gc">--</div></div>
-        <div class="kbox"><div class="klbl">Nosso GC médio</div><div class="kval ac" id="kv-mgc">--</div></div>
-      </div>
-      <div class="upd-row"><span id="upd-txt">Carregando dados...</span><button class="refresh-btn" onclick="carregarDados()">↻</button></div>
-      <div class="card">
-        <div class="chdr"><div class="ctitle">Meu Posto vs Concorrentes</div><div class="csub" id="comp-sub">Selecione um posto</div></div>
-        <div class="cbody">
-          <select class="sel" id="posto-comp" onchange="renderComp()">
-            <option value="">Selecione o posto...</option>
-          </select>
-          <div id="comp-body"><div class="empty">Selecione um posto acima</div></div>
+    <div id="login-screen" class="login-container">
+        <div class="login-box">
+            <div class="login-logo">JB</div>
+            <h2>Painel de Preços</h2>
+            <p>Insira seu e-mail cadastrado para acessar o painel de monitoramento.</p>
+            <div class="input-group">
+                <i class="fa fa-envelope"></i>
+                <input type="email" id="user-email" placeholder="seu-email@dominio.com" required>
+            </div>
+            <button id="btn-login" onclick="autenticarUsuario()">Acessar Painel</button>
+            <div id="login-error" class="error-msg" style="display: none;"></div>
         </div>
-      </div>
-      <div class="card">
-        <div class="chdr"><div class="ctitle">Mapa de calor — G. Comum</div><div class="csub">Distribuição por faixa na rede</div></div>
-        <div class="cbody"><div class="hgrid" id="heatmap-body"></div>
-          <div style="display:flex;justify-content:space-between;margin-top:.5rem;font-size:.6rem;color:var(--tx3)">
-            <span style="color:var(--ok)">barato</span><span style="color:var(--wn)">médio</span><span style="color:var(--dg)">caro</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── TELA RANKING ── -->
-    <section class="scr" id="s-ranking">
-      <div class="sdiv">Filtrar por supervisor</div>
-      <div class="filtro-row" id="filtro-sup">
-        <button class="ftag active" onclick="setFiltroSup(this,'todos')">Todos</button>
-        <button class="ftag" onclick="setFiltroSup(this,'Fabricio')">Fabricio</button>
-        <button class="ftag" onclick="setFiltroSup(this,'Paulo')">Paulo</button>
-        <button class="ftag" onclick="setFiltroSup(this,'Mauricio')">Mauricio</button>
-        <button class="ftag" onclick="setFiltroSup(this,'Gledson')">Gledson</button>
-        <button class="ftag" onclick="setFiltroSup(this,'Rodrigo')">Rodrigo</button>
-      </div>
-      <div class="sdiv">Concorrentes — G. Comum (mais barato ao mais caro)</div>
-      <div class="card"><div class="chdr"><div class="ctitle">Ranking de preços</div><div class="csub" id="rank-count">--</div></div><div class="cbody" id="rank-body"></div></div>
-      <div class="sdiv">Ranking por bandeira</div>
-      <div class="card"><div class="cbody"><div class="bgrid" id="band-rank-body"></div></div></div>
-      <div class="sdiv">Mais deslocados da média</div>
-      <div class="card"><div class="chdr"><div class="ctitle">Alerta de deslocamento</div></div><div class="cbody" id="deslocado-body"></div></div>
-    </section>
-
-    <!-- ── TELA REGIONAL ── -->
-    <section class="scr" id="s-regional">
-      <div class="sdiv">Por bandeira do concorrente</div>
-      <div class="card"><div class="cbody"><div class="bgrid" id="band-body"></div></div></div>
-      <div class="sdiv">Por supervisor</div>
-      <div class="card"><div class="cbody" id="reg-body"></div></div>
-    </section>
-
-    <!-- ── TELA MAPA ── -->
-    <section class="scr" id="s-mapa">
-      <div class="sdiv">Mapa de preços — BH / Grande BH</div>
-      <div class="map-ctrl">
-        <select class="map-sel" id="mf" onchange="mapaFuelChange(this.value)">
-          <option value="GC">G. Comum</option>
-          <option value="GA">G. Aditivada</option>
-          <option value="ET">Etanol</option>
-          <option value="S10">Diesel S10</option>
-        </select>
-        <button class="map-ftag on" id="mbtn-todos" onclick="mapaSetSup(this,'todos')">Todos</button>
-        <button class="map-ftag" id="mbtn-Mauricio" onclick="mapaSetSup(this,'Mauricio')">Mauricio</button>
-        <button class="map-ftag" id="mbtn-Paulo" onclick="mapaSetSup(this,'Paulo')">Paulo</button>
-        <button class="map-ftag" id="mbtn-Fabricio" onclick="mapaSetSup(this,'Fabricio')">Fabricio</button>
-        <button class="map-ftag" id="mbtn-Gledson" onclick="mapaSetSup(this,'Gledson')">Gledson</button>
-        <button class="map-ftag" id="mbtn-Rodrigo" onclick="mapaSetSup(this,'Rodrigo')">Rodrigo</button>
-      </div>
-      <div class="map-wrap"><div id="leaflet-map"></div></div>
-      <div class="map-legend" id="map-legend"></div>
-      <div id="mapa-detail"></div>
-    </section>
-
-    <!-- ── TELA MAIS+ ── -->
-    <section class="scr" id="s-mais">
-      <div id="mais-conteudo"><div class="empty">Selecione uma opção no menu Mais+</div></div>
-    </section>
-
-  </main>
-
-  <!-- BOTTOM NAV -->
-  <nav class="bnav">
-    <button class="nbtn active" onclick="setTab(this,'comp')"><span class="ni">⚖️</span><span class="nl">Compara</span></button>
-    <button class="nbtn" onclick="setTab(this,'ranking')"><span class="ni">🏆</span><span class="nl">Ranking</span></button>
-    <button class="nbtn" onclick="setTab(this,'regional')"><span class="ni">📍</span><span class="nl">Regional</span></button>
-    <button class="nbtn" onclick="setTab(this,'mapa')"><span class="ni">🗺️</span><span class="nl">Mapa</span></button>
-    <button class="nbtn" onclick="abrirMais()"><span class="ni">⊕</span><span class="nl">Mais+</span></button>
-  </nav>
-</div>
-
-<!-- MODAL MAIS+ -->
-<div class="moverlay" id="modal-mais" onclick="fecharMais(event)">
-  <div class="msheet">
-    <button class="mclose" onclick="fecharMaisBtn()">✕</button>
-    <div class="mtitle">Mais funções</div>
-    <div class="mgrid">
-      <div class="mitem" onclick="irPara('amostra')"><span class="mic">🧪</span><div class="mlbl">Amostra-Testemunha</div><div class="mbadge imp">importante</div></div>
-      <div class="mitem" onclick="irPara('notif')"><span class="mic">🔔</span><div class="mlbl">Notificações</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('distribuidor')"><span class="mic">🏭</span><div class="mlbl">Distribuidor</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('simulador')"><span class="mic">🧮</span><div class="mlbl">Simulador</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('lancamento')"><span class="mic">✏️</span><div class="mlbl">Lançar Preço</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('relatorios')"><span class="mic">📊</span><div class="mlbl">Relatórios</div><div class="mbadge">ativo</div></div>
     </div>
-  </div>
-</div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"><div class="t-title" id="t-title"></div><div class="t-msg" id="t-msg"></div></div>
+    <div id="main-panel" style="display: none;">
+        <header>
+            <div class="header-left">
+                <span class="logo-jb">JB</span>
+                <div class="brand-info">
+                    <h1>JBRETAS</h1>
+                    <p>// PAINEL DE PREÇOS</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="status-badge"><span class="dot"></span> ao vivo</span>
+                <button class="logout-btn" onclick="logout()"><i class="fa fa-sign-out-alt"></i> Sair</button>
+            </div>
+        </header>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="./js/app.js"></script>
+        <div class="summary-cards">
+            <div class="card">
+                <h3>POSTOS MONITORADOS</h3>
+                <div id="card-postos" class="card-value">--</div>
+            </div>
+            <div class="card">
+                <h3>CONCORRENTES</h3>
+                <div id="card-concorrentes" class="card-value">--</div>
+            </div>
+            <div class="card">
+                <h3>MÉDIA G.C. CONC.</h3>
+                <div id="card-media-conc" class="card-value-blue">--</div>
+            </div>
+            <div class="card">
+                <h3>NOSSO G.C. MÉDIO</h3>
+                <div id="card-nosso-medio" class="card-value-green">--</div>
+            </div>
+        </div>
+
+        <div id="error-alert" class="alert-box" style="display: none;">
+            <span>Erro ao carregar os dados. Verifique a conexão.</span>
+            <button onclick="carregarDadosPainel()"><i class="fa fa-sync"></i></button>
+        </div>
+
+        <section id="section-compara" class="panel-section">
+            <div class="section-card">
+                <h2>Meu Posto vs Concorrentes</h2>
+                <p class="subtitle">Selecione um posto abaixo para ver o comparativo em tempo real</p>
+                
+                <div class="select-container">
+                    <select id="select-posto" onchange="atualizarComparativo()">
+                        <option value="">Selecione o posto...</option>
+                    </select>
+                </div>
+                
+                <div id="placeholder-compara" class="placeholder-text">
+                    Selecione um posto acima para carregar o comparativo.
+                </div>
+
+                <div id="dados-comparativo" style="display: none;">
+                    </div>
+            </div>
+
+            <div class="section-card">
+                <h2>Mapa de Calor — G. Comum</h2>
+                <p class="subtitle">Distribuição por faixa de preço na rede</p>
+                <div class="heat-bar">
+                    <span class="bar-label barato">barato</span>
+                    <span class="bar-label medio">médio</span>
+                    <span class="bar-label caro">caro</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-mapa" class="panel-section" style="display: none;">
+            <div class="map-controls">
+                <select id="map-filtro-combustivel">
+                    <option value="Gasolina Comum">Gasolina Comum</option>
+                    <option value="Gasolina Aditivada">Gasolina Aditivada</option>
+                    <option value="Etanol">Etanol</option>
+                    <option value="Diesel S10">Diesel S10</option>
+                </select>
+                <div class="supervisores-tags" id="map-tags-supervisores">
+                    </div>
+            </div>
+            <div id="map"></div>
+        </section>
+
+        <nav class="bottom-nav">
+            <button id="nav-compara" class="nav-item active" onclick="mudarAba('compara')">
+                <i class="fa fa-scales-balanced"></i>
+                <span>COMPARA</span>
+            </button>
+            <button id="nav-ranking" class="nav-item" onclick="mudarAba('ranking')">
+                <i class="fa fa-trophy"></i>
+                <span>RANKING</span>
+            </button>
+            <button id="nav-regional" class="nav-item" onclick="mudarAba('regional')">
+                <i class="fa fa-map-pin"></i>
+                <span>REGIONAL</span>
+            </button>
+            <button id="nav-mapa" class="nav-item" onclick="mudarAba('mapa')">
+                <i class="fa fa-map"></i>
+                <span>MAPA</span>
+            </button>
+            <button id="nav-mais" class="nav-item" onclick="mudarAba('mais')">
+                <i class="fa fa-ellipsis-h"></i>
+                <span>MAIS+</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="js/app_precos.js"></script>
+    <script>
+        // Registro do Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker_precos.js')
+                .then(() => console.log("Service Worker ativo."))
+                .catch(err => console.error("Erro no SW:", err));
+        }
+    </script>
 </body>
 </html>
