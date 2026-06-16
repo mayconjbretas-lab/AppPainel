@@ -1,5 +1,5 @@
 // URL de publicação (Web App) do seu Google Apps Script
-const APPS_SCRIPT_URL = "SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5EIYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec";
 
 let dadosGlobais = null;
 let mapaLeaflet = null;
