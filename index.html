@@ -752,22 +752,46 @@ function renderRegional(){
 // MAPA — CartoDB Positron (fundo BRANCO)
 // ══════════════════════════════════════════════════
 // Plota postos próprios – usa lat/lng da API se existir e for válida, senão usa MAP_POSTOS
-MAP_POSTOS.forEach(function(mp) {
+
+  // 1. Renderiza o tile do mapa (fundo branco do CartoDB)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+    attribution: '&copy;<a href="https://www.openstreetmap.org/copyright">OSM</a> &copy;<a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(leafletMap);
+  
+  // 2. Executa a plotagem com tratamento de erro para segurança
+  try {
+    renderLeafletMarkers();
+  } catch (erro) {
+    console.error("Erro ao renderizar os marcadores:", erro);
+  }
+} // <--- Este fecha a função initMapa
+
+function renderLeafletMarkers() {
+  // Limpa marcadores anteriores se houver a lista
+  if (typeof leafletMarkers !== 'undefined') {
+    leafletMarkers.forEach(function(m) { leafletMap.removeLayer(m); });
+    leafletMarkers = [];
+  }
+
+  // Percorre a lista de postos fixos
+  MAP_POSTOS.forEach(function(mp) {
     var filtOk = mapaSupAtual === 'todos' || mp.sup === mapaSupAtual;
     if (!filtOk) return;
 
     var dadosApi = MEU[mp.k] || {};
 
-    // Força o uso do MAP_POSTOS se a API não trouxer um número válido
+    // Validação segura de coordenadas
     var lat = (dadosApi.lat && !isNaN(dadosApi.lat)) ? dadosApi.lat : mp.lat;
     var lng = (dadosApi.lng && !isNaN(dadosApi.lng)) ? dadosApi.lng : mp.lng;
 
     var cor = SUPCOR[mp.sup] || '#00e5a0';
     var preco = dadosApi[mapaFuelAtual];
 
-    // Se mesmo assim não houver coordenada válida, não tenta plotar para não quebrar o mapa
     if (!lat || !lng) return;
 
+    // Cria o marcador circular
     var mk = L.circleMarker([lat, lng], {
         radius: 10, 
         fillColor: cor, 
@@ -784,7 +808,15 @@ MAP_POSTOS.forEach(function(mp) {
 
     mk.addTo(leafletMap);
     leafletMarkers.push(mk);
-});
+  }); // <--- Este fecha o MAP_POSTOS.forEach
+
+  // REMOVE O LOADING: Força o sumiço da tela de carregamento após rodar o loop
+  var loadingEl = document.getElementById('loading') || document.querySelector('.loading'); 
+  if (loadingEl) {
+    loadingEl.style.display = 'none';
+  }
+} // <--- Este fecha a função renderLeafletMarkers
+  
   // Legenda
   var legHtml=Object.keys(SUPCOR).map(function(s){
     return '<span style="color:'+SUPCOR[s]+'">'+s+'</span>';
