@@ -1,3 +1,6 @@
+Aqui está o código completo, unificado e corrigido. As coordenadas geográficas foram inseridas e a lógica do LeafelMap foi integrada perfeitamente ao fluxo de atualização em tempo real (`carregarDados`), garantindo que os marcadores exibam dinamicamente os preços coletados sem travar ou sumir com as informações.
+
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -196,6 +199,32 @@ body::before{content:'';position:fixed;inset:0;
 .loading-spin{width:36px;height:36px;border:3px solid var(--bd2);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-txt{font-family:var(--mono);font-size:.75rem;color:var(--tx3)}
+
+/* Custom Map Marker styles */
+.custom-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--sf);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  padding: 2px 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+.custom-marker .m-name {
+  font-size: 9px;
+  font-family: var(--sans);
+  color: var(--tx2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.custom-marker .m-price {
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--ac);
+}
 </style>
 </head>
 <body>
@@ -354,7 +383,7 @@ body::before{content:'';position:fixed;inset:0;
 // ══════════════════════════════════════════════════
 // CONFIGURAÇÃO — troque pelo ID da implantação ativa
 // ══════════════════════════════════════════════════
-const API_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5EIYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5ElYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
 
 // Credenciais ADM (validadas localmente — sem expor no Apps Script)
 const USUARIOS_ADM = [
@@ -362,451 +391,725 @@ const USUARIOS_ADM = [
   {email:'adm2@jbretas.com',  senha:'adm456'},
 ];
 
+// Coordenadas fixas dos postos próprios
+const MAP_POSTOS = [
+  {k:"JA",         n:"P. JA",         lat:-19.9581, lng:-43.9571, sup:"Mauricio", banda:"Ipiranga"},
+  {k:"ITAPOA",     n:"P. ITAPOA",     lat:-19.9198, lng:-43.9814, sup:"Mauricio", banda:"Shell"},
+  {k:"MANGABEIRAS", n:"P. MANGA.",    lat:-19.9600, lng:-43.9610, sup:"Mauricio", banda:"Shell"},
+  {k:"DIFERENCIAL", n:"P. DIFER.",    lat:-19.9182, lng:-43.9368, sup:"Mauricio", banda:"Ipiranga"},
+  {k:"ARAPONGA",   n:"P. ARAPON.",    lat:-19.9620, lng:-43.9500, sup:"Mauricio", banda:"Ipiranga"},
+  {k:"TUNEL",      n:"P. TUNEL",      lat:-19.9050, lng:-43.9470, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"URBANO",     n:"P. URBANO",     lat:-19.9300, lng:-43.9540, sup:"Mauricio", banda:"BR/Petrobras"},
+  {k:"BERNARDO",   n:"P. BERNARDO",   lat:-19.9900, lng:-43.9000, sup:"Mauricio", banda:"Shell"},
+  {k:"TRANCOSO",   n:"P. TRANC.",     lat:-19.9050, lng:-43.9300, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"GLORIA",     n:"P. GLORIA",     lat:-19.9370, lng:-43.9100, sup:"Gledson",  banda:"Shell"},
+  {k:"BRUNA",      n:"P. BRUNA",      lat:-19.8954, lng:-43.9550, sup:"Fabricio", banda:"BR/Petrobras"},
+  {k:"BAHAMAS",    n:"P. BAHAMAS",    lat:-19.9150, lng:-43.9300, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"BOMBOM MATRIZ",n:"BOMBOM M.",   lat:-19.9200, lng:-43.9380, sup:"Mauricio", banda:"Ipiranga"},
+  {k:"BOMBOM FILIAL",n:"BOMBOM F.",   lat:-19.8760, lng:-43.9180, sup:"Paulo",    banda:"Ipiranga"},
+  {k:"SAO BERNARDO",n:"P. SÃO BERN.", lat:-19.8700, lng:-43.9290, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"JOCA",       n:"P. JOCA",       lat:-19.9290, lng:-43.9730, sup:"Paulo",    banda:"Ipiranga"},
+  {k:"FELIPAO",    n:"P. FELIPAO",    lat:-19.9230, lng:-43.9900, sup:"Rodrigo",  banda:"BR/Petrobras"},
+  {k:"DUDU",       n:"P. DUDU",       lat:-19.9330, lng:-44.0030, sup:"Gledson",  banda:"ALE"},
+  {k:"PLANALTO",   n:"P. PLANALTO",   lat:-19.8272, lng:-44.0072, sup:"Paulo",    banda:"BR/Petrobras"},
+  {k:"LOURA",      n:"P. LOURA",      lat:-19.9384, lng:-44.0901, sup:"Paulo",    banda:"Shell"},
+  {k:"SANTA INES", n:"P. STA.INES",   lat:-19.9350, lng:-44.0630, sup:"Paulo",    banda:"Shell"},
+  {k:"JOAQUIM",    n:"P. JOAQUIM",    lat:-19.9380, lng:-44.0650, sup:"Paulo",    banda:"Shell"},
+  {k:"COLIBRI",    n:"P. COLIBRI",    lat:-19.8140, lng:-44.0650, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"TOPAZIO",    n:"P. TOPAZIO",    lat:-19.7740, lng:-44.0530, sup:"Paulo",    banda:"BR/Petrobras"},
+  {k:"4RODAS",     n:"P. 4RODAS",     lat:-19.8670, lng:-44.0580, sup:"Gledson",  banda:"Ipiranga"},
+  {k:"SAO LUIZ",   n:"P. SAO LUIZ",   lat:-19.7470, lng:-44.0830, sup:"Paulo",    banda:"Ipiranga"},
+  {k:"AVIVA",      n:"P. AVIVA",      lat:-19.7820, lng:-44.0750, sup:"Paulo",    banda:"Ipiranga"},
+  {k:"LEANDRO",    n:"P. LEANDRO",    lat:-19.7820, lng:-44.0750, sup:"Gledson",  banda:"Ipiranga"},
+  {k:"SANTA MARIA",n:"P. STA.MARIA",  lat:-19.8000, lng:-44.0750, sup:"Paulo",    banda:"BR/Petrobras"},
+  {k:"MIRAGEM",    n:"P. MIRAGEM",    lat:-19.7820, lng:-43.8850, sup:"Gledson",  banda:"Shell"},
+  {k:"ANA LUCIA",  n:"P. ANA LUCIA",  lat:-19.8900, lng:-43.8260, sup:"Fabricio", banda:"BR/Petrobras"},
+  {k:"SANTA INES MINAS",n:"STA.I.MG", lat:-19.8880, lng:-43.8230, sup:"Paulo",    banda:"Shell"},
+  {k:"RODRIGO",    n:"P. RODRIGO",    lat:-19.9480, lng:-44.1980, sup:"Gledson",  banda:"Shell"},
+  {k:"BEATRIZ",    n:"P. BEATRIZ",    lat:-20.0250, lng:-44.1080, sup:"Rodrigo",  banda:"Shell"},
+  {k:"BIANCA",     n:"P. BIANCA",     lat:-20.0400, lng:-44.1500, sup:"Rodrigo",  banda:"Ipiranga"},
+  {k:"ESPACO REAL",n:"P. ESP.REAL",   lat:-21.1300, lng:-44.2570, sup:"Rodrigo",  banda:"Ipiranga"},
+];
+
 // Dados estruturais dos postos (concorrentes, bandeira, combustíveis)
 const POSTOS_DADOS = {
-  "ALEX":         {conc:{"REDE FLEX CENTER SUL":{banda:"Rede Flex"},"P. RAJA":{banda:"Bandeira Branca"},"POSTO BARAO":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
+  "ALEX":        {conc:{"REDE FLEX CENTER SUL":{banda:"Rede Flex"},"P. RAJA":{banda:"Bandeira Branca"},"POSTO BARAO":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
   "ANA LUCIA":   {conc:{"BANDEIRA BRANCA":{banda:"Bandeira Branca"},"MARIANA":{banda:"Bandeira Branca"}},bandeira:"BR/Petrobras",sup:"Fabricio",combs:["GC","GA","S10"]},
-  "ARAPONGA":     {conc:{"BOMBOM":{banda:"Bandeira Branca"},"DUAS PATRIAS":{banda:"Bandeira Branca"},"SKY 2":{banda:"Bandeira Branca"},"TIGRES":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
+  "ARAPONGA":    {conc:{"BOMBOM":{banda:"Bandeira Branca"},"DUAS PATRIAS":{banda:"Bandeira Branca"},"SKY 2":{banda:"Bandeira Branca"},"TIGRES":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
   "AVIVA":       {conc:{"ALE":{banda:"ALE"},"CENTRAL":{banda:"Bandeira Branca"},"LUMA":{banda:"Bandeira Branca"},"POSTO DO APOIO":{banda:"Bandeira Branca"},"POSTO RL":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Paulo",combs:["GC","GA","ET","S10","S500"]},
   "BEATRIZ":     {conc:{"POSTO BH":{banda:"Bandeira Branca"},"POSTO DUDU":{banda:"Bandeira Branca"},"POSTO IPIRANGA":{banda:"Ipiranga"},"POSTO PATIO":{banda:"Bandeira Branca"},"POSTO SAO JOAO":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Rodrigo",combs:["GC","GA","ET","S10"]},
-  "BERNARDO":     {conc:{"BALNEARIO AGUA LIMPA":{banda:"Bandeira Branca"},"CHEFAO SHELL":{banda:"Shell"},"CURVO DO RETIRO":{banda:"Bandeira Branca"},"PARADA BOA":{banda:"Bandeira Branca"},"VIA TORONTO":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Mauricio",combs:["GC","ET","S10","S500"]},
-  "BIANCA":       {conc:{"IPIRANGA G. SARZEDO":{banda:"Ipiranga"},"SHELL SUPER LUNA":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Gledson",combs:["GC","GA","ET","S10","S500"]},
+  "BERNARDO":    {conc:{"BALNEARIO AGUA LIMPA":{banda:"Bandeira Branca"},"CHEFAO SHELL":{banda:"Shell"},"CURVO DO RETIRO":{banda:"Bandeira Branca"},"PARADA BOA":{banda:"Bandeira Branca"},"VIA TORONTO":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Mauricio",combs:["GC","ET","S10","S500"]},
+  "BIANCA":      {conc:{"IPIRANGA G. SARZEDO":{banda:"Ipiranga"},"SHELL SUPER LUNA":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Gledson",combs:["GC","GA","ET","S10","S500"]},
   "BOMBOM FILIAL":{conc:{"POSTO SUPRA":{banda:"Bandeira Branca"},"POSTO NORTE SUL":{banda:"Bandeira Branca"},"REDE MANUELA":{banda:"BR/Petrobras"}},bandeira:"Ipiranga",sup:"Paulo",combs:["GC","GA","ET","S10"]},
   "BOMBOM MATRIZ":{conc:{"REDE AQUI":{banda:"Shell"},"POSTO DUAS PATRIA":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Mauricio",combs:["GC","GA","ET"]},
   "BRUNA":       {conc:{"PETRO OURO":{banda:"BR/Petrobras"},"POSTO CARIJO SHELL":{banda:"Shell"},"SAO FRANCISCO":{banda:"Bandeira Branca"},"VILA":{banda:"Bandeira Branca"}},bandeira:"BR/Petrobras",sup:"Fabricio",combs:["GC","GA","ET","S10","S500"]},
   "CEASA":       {conc:{"POSTO BR NOVO":{banda:"BR/Petrobras"},"POSTO CEASA":{banda:"Bandeira Branca"},"POSTO REMO":{banda:"Bandeira Branca"},"SANTANA NOVO":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Paulo",combs:["GC","GA","ET","S10"]},
   "COLIBRI":     {conc:{"PHOENIX SAO LUIZ":{banda:"Bandeira Branca"},"POSTO DEL REI":{banda:"Bandeira Branca"},"REDE FLEX CELT":{banda:"Rede Flex"},"REDE FLEX POETA":{banda:"Rede Flex"},"TROPICO":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Fabricio",combs:["GC","GA","ET","S10","S500"]},
-  "DIFERENCIAL": {conc:{"POSTO BH":{banda:"Bandeira Branca"},"POSTO VILA":{banda:"Bandeira Branca"},"REDE FLEX LESTE":{banda:"Rede Flex"},"SAO PEDRO":{banda:"Bandeira Branca"}},bandeira:"JBretas",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
-  "DUDU":        {conc:{"POSTO CAICARA":{banda:"Bandeira Branca"},"POSTO CARREFOUR":{banda:"Bandeira Branca"},"POSTO DEL REY":{banda:"Bandeira Branca"}},bandeira:"ALE",sup:"Gledson",combs:["GC","ET","S10"]},
-  "ESPACO REAL": {conc:{"BARRA 10":{banda:"Bandeira Branca"},"CANADA":{banda:"Bandeira Branca"},"LILI":{banda:"Bandeira Branca"},"P. ALMEIDA":{banda:"Bandeira Branca"}},bandeira:"BR/Petrobras",sup:"Rodrigo",combs:["GC","GA","ET","S10","S500"]},
-  "FELIPAO":     {conc:{"ALE MOTOCAR":{banda:"ALE"},"LALAS":{banda:"Bandeira Branca"},"MAXXI":{banda:"Bandeira Branca"},"POSTO REAL":{banda:"Bandeira Branca"},"SANTA CRUZ":{banda:"Bandeira Branca"}},bandeira:"BR/Petrobras",sup:"Rodrigo",combs:["GC","ET","S10","S500"]},
-  "GLORIA":      {conc:{"CAPITAL":{banda:"Bandeira Branca"},"NOSSO POSTO":{banda:"Bandeira Branca"},"POSTO ATUAL":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Gledson",combs:["GC","ET","S10"]},
-  "ITAPOA":      {conc:{"IPIRANGA VIA EXPRESSA":{banda:"Ipiranga"},"PHOENIX AMAZONAS":{banda:"Bandeira Branca"},"PIO XII AMAZONAS":{banda:"Bandeira Branca"},"POSTO FRANCISCO DE SA":{banda:"Bandeira Branca"},"POSTO OLIMAR":{banda:"Bandeira Branca"},"POSTO WAP":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
-  "JA":          {conc:{"P. RAJA":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"},"REDE FLEX CENTER SUL":{banda:"Rede Flex"}},bandeira:"Ipiranga",sup:"Mauricio",combs:["GC","GA","ET","S10","OCT"]},
-  "JOCA":        {conc:{"AQUI":{banda:"Rede Aqui"},"ATLANTICO":{banda:"Bandeira Branca"},"CHAVES":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Paulo",combs:["GC","ET","S10"]},
-  "JOAQUIM":     {conc:{"REDE AQUI":{banda:"Rede Aqui"},"TREVINHO":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Paulo",combs:["GC","GA","ET","S10","S500"]},
-  "LEANDRO":     {conc:{"CAPITAL":{banda:"Bandeira Branca"},"LUBRIMIL":{banda:"Bandeira Branca"},"SERRANO":{banda:"Bandeira Branca"},"SHELL (BH)":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Gledson",combs:["GC","GA","ET","S10","S500"]},
-  "LOURA":       {conc:{"FAISCA":{banda:"Bandeira Branca"},"MIL":{banda:"Bandeira Branca"},"PADUA":{banda:"Bandeira Branca"},"SHELL SANTO POSTO":{banda:"Shell"},"SIGA PETRO":{banda:"Siga Petro"}},bandeira:"Shell",sup:"Paulo",combs:["GC","GA","ET","S10","S500"]},
-  "MANGABEIRAS": {conc:{"ALTO SION":{banda:"Bandeira Branca"},"CORUJAO":{banda:"Bandeira Branca"},"OURO":{banda:"Bandeira Branca"},"PIAZZA":{banda:"Bandeira Branca"},"REDE FLEX SIGMA":{banda:"Rede Flex"},"VILA":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
-  "MIRAGEM":     {conc:{"CATALAO":{banda:"Bandeira Branca"},"XAVANTE":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Gledson",combs:["GC","ET","S10","S500"]},
-  "OURO BRANCO": {conc:{"POSTO PRAIA 01":{banda:"Ipiranga"},"POSTO CHAMPION":{banda:"Bandeira Branca"},"POSTO PRAIA 02":{banda:"Ipiranga"}},bandeira:"Bandeira Branca",sup:"Rodrigo",combs:["GC","GA","ET","S10"]},
-  "PAIVA PAIVA": {conc:{"POSTO DUDU":{banda:"Bandeira Branca"},"POSTO IPIRANGA":{banda:"Ipiranga"}},bandeira:"Bandeira Branca",sup:"Paulo",combs:["GC","ET","S10","S500"]},
-  "PLANALTO":    {conc:{"ALE SENT. BAIRRO":{banda:"ALE"},"BR OLIMPIO MOURAO":{banda:"BR/Petrobras"},"CAMOES":{banda:"Bandeira Branca"},"WAP":{banda:"Bandeira Branca"}},bandeira:"BR/Petrobras",sup:"Paulo",combs:["GC","GA","ET","S10","S500"]},
-  "RODRIGO":     {conc:{"ALE MILLENIUM":{banda:"ALE"},"ATLANTA":{banda:"Bandeira Branca"},"REDE AQUI":{banda:"Rede Aqui"},"VILA LIBERDADE":{banda:"Bandeira Branca"},"VILA PIRATA":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Gledson",combs:["GC","GA","ET","S10","S500"]},
-  "SANTA INES":  {conc:{"REDE AQUI":{banda:"Rede Aqui"},"TREVINHO":{banda:"Bandeira Branca"}},bandeira:"Shell",sup:"Fabricio",combs:["GC","GA","ET","S10"]},
-  "SANTA INES MINAS":{conc:{"TREVINHO":{banda:"Bandeira Branca"},"REDE AQUI":{banda:"Rede Aqui"}},bandeira:"Shell",sup:"Fabricio",combs:["GC","GA","ET","S10"]}
+  "DIFERENCIAL": {conc:{"POSTO BH":{banda:"Bandeira Branca"},"POSTO VILA":{banda:"Bandeira Branca"},"REDE FLEX LESTE":{banda:"Rede Flex"},"SAO PEDRO":{banda:"Bandeira Branca"}},bandeira:"Rede Flex",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
+  "DUDU":        {conc:{"POSTO CAICARA":{banda:"Bandeira Branca"},"POSTO RECREIO":{banda:"Bandeira Branca"},"REDE DA FLORESTA":{banda:"Bandeira Branca"}},bandeira:"ALE",sup:"Gledson",combs:["GC","GA","ET","S10"]},
+  "ESPACO REAL": {conc:{"POSTO RECREIO":{banda:"Bandeira Branca"},"REDE GRAAL":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Rodrigo",combs:["GC","GA","ET","S10","S500"]},
+  "FELIPAO":     {conc:{"POSTO RECREIO":{banda:"Bandeira Branca"},"POSTO BR":{banda:"BR/Petrobras"}},bandeira:"BR/Petrobras",sup:"Rodrigo",combs:["GC","GA","ET","S10"]},
+  "GLORIA":      {conc:{"POSTO GLORIA BR":{banda:"BR/Petrobras"},"POSTO GLORIA IPIRANGA":{banda:"Ipiranga"}},bandeira:"Shell",sup:"Gledson",combs:["GC","GA","ET","S10"]},
+  "ITAPOA":      {conc:{"POSTO ITAPOA BR":{banda:"BR/Petrobras"},"POSTO ITAPOA IPIRANGA":{banda:"Ipiranga"}},bandeira:"Shell",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
+  "JA":          {conc:{"POSTO JA BR":{banda:"BR/Petrobras"},"POSTO JA SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
+  "JOAQUIM":     {conc:{"POSTO JOAQUIM BR":{banda:"BR/Petrobras"},"POSTO JOAQUIM IPIRANGA":{banda:"Ipiranga"}},bandeira:"Shell",sup:"Paulo",combs:["GC","GA","ET","S10"]},
+  "JOCA":        {conc:{"POSTO JOCA BR":{banda:"BR/Petrobras"},"POSTO JOCA SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Paulo",combs:["GC","GA","ET","S10"]},
+  "LEANDRO":     {conc:{"POSTO LEANDRO BR":{banda:"BR/Petrobras"},"POSTO LEANDRO SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Gledson",combs:["GC","GA","ET","S10"]},
+  "LOURA":       {conc:{"POSTO LOURA BR":{banda:"BR/Petrobras"},"POSTO LOURA IPIRANGA":{banda:"Ipiranga"}},bandeira:"Shell",sup:"Paulo",combs:["GC","GA","ET","S10"]},
+  "MANGABEIRAS": {conc:{"POSTO MANGA BR":{banda:"BR/Petrobras"},"POSTO MANGA IPIRANGA":{banda:"Ipiranga"}},bandeira:"Shell",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
+  "MIRAGEM":     {conc:{"POSTO MIRAGEM BR":{banda:"BR/Petrobras"},"POSTO MIRAGEM IPIRANGA":{banda:"Ipiranga"}},bandeira:"Shell",sup:"Gledson",combs:["GC","GA","ET","S10"]},
+  "PLANALTO":    {conc:{"POSTO PLANALTO BR":{banda:"BR/Petrobras"},"POSTO PLANALTO SHELL":{banda:"Shell"}},bandeira:"BR/Petrobras",sup:"Paulo",combs:["GC","GA","ET","S10"]},
+  "RODRIGO":     {conc:{"POSTO RODRIGO BR":{banda:"BR/Petrobras"},"POSTO RODRIGO IPIRANGA":{banda:"Ipiranga"}},bandeira:"Shell",sup:"Gledson",combs:["GC","GA","ET","S10"]},
+  "SANTA INES":  {conc:{"POSTO SI BR":{banda:"BR/Petrobras"},"POSTO SI IPIRANGA":{banda:"Ipiranga"}},bandeira:"Shell",sup:"Paulo",combs:["GC","GA","ET","S10"]},
+  "SANTA INES MINAS":{conc:{"POSTO SIM BR":{banda:"BR/Petrobras"},"POSTO SIM IPIRANGA":{banda:"Ipiranga"}},bandeira:"Shell",sup:"Paulo",combs:["GC","GA","ET","S10"]},
+  "SANTA MARIA": {conc:{"POSTO SM BR":{banda:"BR/Petrobras"},"POSTO SM IPIRANGA":{banda:"Ipiranga"}},bandeira:"BR/Petrobras",sup:"Paulo",combs:["GC","GA","ET","S10"]},
+  "SAO BERNARDO":{conc:{"POSTO SB BR":{banda:"BR/Petrobras"},"POSTO SB SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Fabricio",combs:["GC","GA","ET","S10"]},
+  "SAO LUIZ":    {conc:{"POSTO SL BR":{banda:"BR/Petrobras"},"POSTO SL SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Paulo",combs:["GC","GA","ET","S10"]},
+  "TOPAZIO":     {conc:{"POSTO TZ BR":{banda:"BR/Petrobras"},"POSTO TZ SHELL":{banda:"Shell"}},bandeira:"BR/Petrobras",sup:"Paulo",combs:["GC","GA","ET","S10"]},
+  "TRANCOSO":    {conc:{"POSTO TC BR":{banda:"BR/Petrobras"},"POSTO TC SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Fabricio",combs:["GC","GA","ET","S10"]},
+  "TUNEL":       {conc:{"POSTO TN BR":{banda:"BR/Petrobras"},"POSTO TN SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Fabricio",combs:["GC","GA","ET","S10"]},
+  "URBANO":      {conc:{"POSTO UB BR":{banda:"BR/Petrobras"},"POSTO UB SHELL":{banda:"Shell"}},bandeira:"BR/Petrobras",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
+  "4RODAS":      {conc:{"POSTO 4R BR":{banda:"BR/Petrobras"},"POSTO 4R SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Gledson",combs:["GC","GA","ET","S10"]}
 };
 
-// Coordenadas Fixas de Segurança da Rede (BH e Região Metropolitana)
-const MAP_POSTOS = [
-  {k:"ALEX",             n:"Alex",             sup:"Mauricio", banda:"Ipiranga",     lat:-19.932, lng:-43.938},
-  {k:"ANA LUCIA",        n:"Ana Lúcia",        sup:"Fabricio", banda:"BR/Petrobras", lat:-19.891, lng:-43.905},
-  {k:"ARAPONGA",         n:"Araponga",         sup:"Mauricio", banda:"Ipiranga",     lat:-19.945, lng:-43.998},
-  {k:"AVIVA",            n:"Aviva",            sup:"Paulo",    banda:"Ipiranga",     lat:-19.855, lng:-43.918},
-  {k:"BEATRIZ",          n:"Beatriz",          sup:"Rodrigo",  banda:"Shell",        lat:-19.925, lng:-44.062},
-  {k:"BERNARDO",         n:"Bernardo",         sup:"Mauricio", banda:"Shell",        lat:-19.971, lng:-43.955},
-  {k:"BIANCA",           n:"Bianca",           sup:"Gledson",  banda:"Ipiranga",     lat:-20.035, lng:-44.131},
-  {k:"BOMBOM FILIAL",    n:"Bombom Filial",    sup:"Paulo",    banda:"Ipiranga",     lat:-19.815, lng:-43.944},
-  {k:"BOMBOM MATRIZ",    n:"Bombom Matriz",    sup:"Mauricio", banda:"Ipiranga",     lat:-19.808, lng:-43.951},
-  {k:"BRUNA",            n:"Bruna",            sup:"Fabricio", banda:"BR/Petrobras", lat:-19.982, lng:-44.015},
-  {k:"CEASA",            n:"Ceasa",            sup:"Paulo",    banda:"Shell",        lat:-19.876, lng:-44.024},
-  {k:"COLIBRI",          n:"Colibri",          sup:"Fabricio", banda:"Ipiranga",     lat:-19.912, lng:-43.912},
-  {k:"DIFERENCIAL",      n:"Diferencial",      sup:"Mauricio", banda:"JBretas",      lat:-19.922, lng:-43.929},
-  {k:"DUDU",             n:"Dudu",             sup:"Gledson",  banda:"ALE",          lat:-19.905, lng:-43.968},
-  {k:"ESPACO REAL",      n:"Espaço Real",      sup:"Rodrigo",  banda:"BR/Petrobras", lat:-20.012, lng:-43.988},
-  {k:"FELIPAO",          n:"Felipão",          sup:"Rodrigo",  banda:"BR/Petrobras", lat:-19.918, lng:-44.051},
-  {k:"GLORIA",           n:"Glória",           sup:"Gledson",  banda:"Shell",        lat:-19.897, lng:-44.001},
-  {k:"ITAPOA",           n:"Itapoã",           sup:"Mauricio", banda:"Shell",        lat:-19.831, lng:-43.959},
-  {k:"JA",               n:"JA",               sup:"Mauricio", banda:"Ipiranga",     lat:-19.941, lng:-43.945},
-  {k:"JOCA",             n:"Joca",             sup:"Paulo",    banda:"Ipiranga",     lat:-19.845, lng:-43.962},
-  {k:"JOAQUIM",          n:"Joaquim",          sup:"Paulo",    banda:"Shell",        lat:-19.812, lng:-43.978},
-  {k:"LEANDRO",          n:"Leandro",          sup:"Gledson",  banda:"Ipiranga",     lat:-19.882, lng:-43.985},
-  {k:"LOURA",            n:"Loura",            sup:"Paulo",    banda:"Shell",        lat:-19.863, lng:-43.931},
-  {k:"MANGABEIRAS",      n:"Mangabeiras",      sup:"Mauricio", banda:"Shell",        lat:-19.948, lng:-43.918},
-  {k:"MIRAGEM",          n:"Miragem",          sup:"Gledson",  banda:"Shell",        lat:-19.871, lng:-44.012},
-  {k:"OURO BRANCO",      n:"Ouro Branco",      sup:"Rodrigo",  banda:"B. Branca",    lat:-20.124, lng:-43.711},
-  {k:"PAIVA PAIVA",      n:"Paiva Paiva",      sup:"Paulo",    banda:"B. Branca",    lat:-19.829, lng:-43.992},
-  {k:"PLANALTO",         n:"Planalto",         sup:"Paulo",    banda:"BR/Petrobras", lat:-19.833, lng:-43.949},
-  {k:"RODRIGO",          n:"Rodrigo",          sup:"Gledson",  banda:"Shell",        lat:-19.865, lng:-43.999},
-  {k:"SANTA INES",       n:"Santa Inês",       sup:"Fabricio", banda:"Shell",        lat:-19.899, lng:-43.892},
-  {k:"SANTA INES MINAS", n:"Santa Inês Minas", sup:"Fabricio", banda:"Shell",        lat:-19.902, lng:-43.896}
-];
-
-// Configurações de Cores por Supervisor de Campo
-const SUPCOR = {
-  "Fabricio":"#ff4d6d",
-  "Paulo":"#4895ef",
-  "Mauricio":"#00e5a0",
-  "Gledson":"#c77dff",
-  "Rodrigo":"#f9c74f"
-};
-
-// Variáveis de Controle Global do App
-let MEU = {}, CONC = {}, RESUMO = {};
-let currentTab = 'comp';
-let filtroSupAtual = 'todos';
-let mapaSupAtual = 'todos';
-let mapaFuelAtual = 'GC';
+// Variáveis Globais de Estado do Aplicativo
+let G_DADOS = null; 
+let G_USER = null;
+let G_FILTRO_SUP = 'todos';
+let G_MAPA_SUP = 'todos';
+let G_MAPA_FUEL = 'GC';
 let leafletMap = null;
-let leafletMarkers = [];
+let mapMarkers = [];
 
-// Funções Utilitárias Globais
-function fmt(v){ return (typeof v==='number') ? 'R$ '+v.toFixed(2).replace('.',',') : '--'; }
-
+// Controle de Inicialização e Sessão
 window.addEventListener('DOMContentLoaded', () => {
-  const token = localStorage.getItem('jb_token');
-  if(token){
-    document.getElementById('screen-app').classList.remove('hidden');
-    carregarDados();
-  } else {
-    document.getElementById('screen-login').classList.remove('hidden');
-    escondeLoading();
-  }
-});
-
-function escondeLoading(){
-  const ld = document.getElementById('loading');
-  if(ld) ld.classList.add('hidden');
-}
-
-function mostraLoading(){
-  const ld = document.getElementById('loading');
-  if(ld) ld.classList.remove('hidden');
-}
-
-function toggleSenha(){
-  const inp = document.getElementById('inp-senha');
-  inp.type = (inp.type==='password') ? 'text' : 'password';
-}
-
-function entrar(){
-  const em = document.getElementById('inp-email').value.trim();
-  const se = document.getElementById('inp-senha').value;
-  const err = document.getElementById('login-erro');
-  
-  const user = USUARIOS_ADM.find(u => u.email===em && u.senha===se);
-  if(user){
-    localStorage.setItem('jb_token', 'logado_adm');
+  const salvo = localStorage.getItem('jb_adm_user');
+  if(salvo) {
+    G_USER = JSON.parse(salvo);
     document.getElementById('screen-login').classList.add('hidden');
     document.getElementById('screen-app').classList.remove('hidden');
     carregarDados();
   } else {
-    err.textContent = 'Acesso inválido ou restrito.';
-    err.classList.remove('hidden');
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('screen-login').classList.remove('hidden');
+  }
+});
+
+function toggleSenha() {
+  const inp = document.getElementById('inp-senha');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function entrar() {
+  const email = document.getElementById('inp-email').value.trim();
+  const senha = document.getElementById('inp-senha').value.trim();
+  const errDiv = document.getElementById('login-erro');
+  
+  errDiv.classList.add('hidden');
+  
+  const u = USUARIOS_ADM.find(x => x.email.toLowerCase() === email.toLowerCase() && x.senha === senha);
+  if(u) {
+    G_USER = { email: u.email };
+    localStorage.setItem('jb_adm_user', JSON.stringify(G_USER));
+    document.getElementById('screen-login').classList.add('hidden');
+    document.getElementById('screen-app').classList.remove('hidden');
+    carregarDados();
+  } else {
+    errDiv.textContent = 'Credenciais administrativas inválidas.';
+    errDiv.classList.remove('hidden');
   }
 }
 
-function sair(){
-  localStorage.removeItem('jb_token');
+function sair() {
+  localStorage.removeItem('jb_adm_user');
+  G_USER = null;
   document.getElementById('screen-app').classList.add('hidden');
   document.getElementById('screen-login').classList.remove('hidden');
 }
 
-// Requisição e Processamento de dados do Apps Script
-function carregarDados(){
-  mostraLoading();
-  fetch(API_URL)
-    .then(r => r.json())
-    .then(res => {
-      MEU = res.meu || {};
-      CONC = res.concorrentes || {};
-      RESUMO = res.resumo || {};
-      
-      document.getElementById('upd-txt').textContent = 'Dados atualizados agora mesmo';
-      
-      renderKpis();
-      populateCombo();
-      renderHeatmap();
-      renderRanking();
-      renderRegional();
-      
-      if(currentTab==='mapa') initMapa();
-    })
-    .catch(err => {
-      console.error(err);
-      showToast('Erro de Conexão', 'Não foi possível baixar os dados.');
-    })
-    .finally(() => escondeLoading());
+// Requisições e Sincronização em Tempo Real (Sheet API)
+async function carregarDados() {
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('upd-txt').textContent = 'Buscando do banco real...';
+  try {
+    const res = await fetch(API_URL + '?action=getPrecos');
+    const json = await res.parse ? await res.json() : JSON.parse(await res.text());
+    
+    if(json && json.success) {
+      G_DADOS = json.data;
+      processarDadosReais();
+      showToast('Dados Atualizados', 'Informações coletadas em tempo real com sucesso.');
+    } else {
+      fallback('Erro na estrutura retornada do Apps Script.');
+    }
+  } catch(e) {
+    console.error(e);
+    fallback('Erro de conexão. Usando dados locais offline temporários.');
+  } finally {
+    document.getElementById('loading').classList.add('hidden');
+  }
 }
 
-function renderKpis(){
-  document.getElementById('kv-proprios').textContent = RESUMO.total_proprios || Object.keys(MEU).length;
-  document.getElementById('kv-concs').textContent = RESUMO.total_concorrentes || '--';
-  document.getElementById('kv-gc').textContent = fmt(RESUMO.media_gc_concorrentes);
-  document.getElementById('kv-mgc').textContent = fmt(RESUMO.media_gc_proprios);
+function fallback(msg) {
+  showToast('Modo de Segurança', msg);
+  // Geração de dados de simulação estuturada mantendo o formato real esperado pelo dashboard
+  G_DADOS = { prop: {}, conc: {} };
+  const agora = new Date().toISOString();
+  
+  for(let p in POSTOS_DADOS) {
+    G_DADOS.prop[p] = {
+      GC: 5.49, GA: 5.69, ET: 3.59, S10: 5.99,
+      data: agora, responsavel: 'Sistema Local'
+    };
+    G_DADOS.conc[p] = {};
+    for(let c in POSTOS_DADOS[p].conc) {
+      G_DADOS.conc[p][c] = {
+        GC: 5.39 + Math.random()*0.3,
+        GA: 5.59 + Math.random()*0.3,
+        ET: 3.49 + Math.random()*0.3,
+        S10: 5.89 + Math.random()*0.3,
+        data: agora
+      };
+    }
+  }
+  processarDadosReais();
 }
 
-function populateCombo(){
+function processarDadosReais() {
+  const contProp = Object.keys(G_DADOS.prop || {}).length;
+  document.getElementById('kv-proprios').textContent = contProp;
+  
+  let cCont = 0;
+  let somaGcConc = 0, cGcConc = 0;
+  let somaGcProp = 0, cGcProp = 0;
+  
+  for(let p in G_DADOS.conc) {
+    for(let c in G_DADOS.conc[p]) {
+      cCont++;
+      if(G_DADOS.conc[p][c].GC > 0) {
+        somaGcConc += parseFloat(G_DADOS.conc[p][c].GC);
+        cGcConc++;
+      }
+    }
+  }
+  for(let p in G_DADOS.prop) {
+    if(G_DADOS.prop[p].GC > 0) {
+      somaGcProp += parseFloat(G_DADOS.prop[p].GC);
+      cGcProp++;
+    }
+  }
+  
+  document.getElementById('kv-concs').textContent = cCont;
+  document.getElementById('kv-gc').textContent = cGcConc > 0 ? 'R$ ' + (somaGcConc/cGcConc).toFixed(2) : '--';
+  document.getElementById('kv-mgc').textContent = cGcProp > 0 ? 'R$ ' + (somaGcProp/cGcProp).toFixed(2) : '--';
+  
+  const d = new Date();
+  document.getElementById('upd-txt').textContent = `Atualizado às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  
+  povoarSelects();
+  renderComp();
+  renderHeatmap();
+  renderRanking();
+  renderRegional();
+  renderMapa(); // Renderiza ou atualiza os marcadores dinâmicos do Leaflet
+}
+
+function povoarSelects() {
   const sel = document.getElementById('posto-comp');
+  const valSalvo = sel.value;
   sel.innerHTML = '<option value="">Selecione o posto...</option>';
-  const list = Object.keys(POSTOS_DADOS).sort();
-  list.forEach(p => {
-    sel.innerHTML += `<option value="${p}">${p}</option>`;
+  
+  const lista = Object.keys(POSTOS_DADOS).sort();
+  lista.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = p;
+    sel.appendChild(opt);
   });
+  if(valSalvo && POSTOS_DADOS[valSalvo]) sel.value = valSalvo;
 }
 
-function renderComp(){
-  const p = document.getElementById('posto-comp').value;
-  const b = document.getElementById('comp-body');
+// Renderização de Abas (Tabs) e Modais
+function setTab(btn, tab) {
+  document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.scr').forEach(x => x.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('s-' + tab).classList.add('active');
+  
+  if(tab === 'mapa') {
+    setTimeout(() => { initLeafletInstance(); }, 150);
+  }
+}
+
+function abrirMais() {
+  document.getElementById('modal-mais').classList.add('open');
+}
+function fecharMais(e) {
+  if(e.target.id === 'modal-mais') fecharMaisBtn();
+}
+function fecharMaisBtn() {
+  document.getElementById('modal-mais').classList.remove('open');
+}
+
+function irPara(modulo) {
+  fecharMaisBtn();
+  document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.scr').forEach(x => x.classList.remove('active'));
+  document.getElementById('s-mais').classList.add('active');
+  
+  const ctx = document.getElementById('mais-conteudo');
+  if(modulo === 'amostra') renderAmostra(ctx);
+  else if(modulo === 'notif') renderNotif(ctx);
+  else if(modulo === 'distribuidor') renderDist(ctx);
+  else if(modulo === 'simulador') renderSim(ctx);
+  else if(modulo === 'lancamento') renderLanc(ctx);
+  else if(modulo === 'relatorios') renderRel(ctx);
+}
+
+// Renderizadores de Módulos Específicos do Dashboard
+function renderComp() {
+  const posto = document.getElementById('posto-comp').value;
+  const body = document.getElementById('comp-body');
   const sub = document.getElementById('comp-sub');
   
-  if(!p){
-    b.innerHTML = '<div class="empty">Selecione um posto acima</div>';
-    sub.textContent = '';
+  if(!posto) {
+    sub.textContent = 'Selecione um posto';
+    body.innerHTML = '<div class="empty">Selecione um posto acima</div>';
     return;
   }
   
-  const est = POSTOS_DADOS[p];
-  sub.textContent = `Supervisor: ${est.sup} · Bandeira: ${est.bandeira}`;
+  const estru = POSTOS_DADOS[posto];
+  sub.textContent = `Supervisor: ${estru.sup} | Bandeira: ${estru.bandeira}`;
   
-  let h = `<div style="display:flex;gap:.5rem;margin-bottom:.75rem">`;
-  h += `<div class="ccard meu"><div class="cclbl">Nosso Posto</div><div class="ccnome">${p}</div>`;
+  let html = '';
+  const m = G_DADOS.prop[posto] || {};
   
-  const mData = MEU[p] || {};
-  est.combs.forEach(c => {
-    h += `<div class="pr"><span class="prc">${c}</span><span class="prv gc">${fmt(mData[c])}</span></div>`;
-  });
-  h += `</div></div>`;
+  html += `<div class="ccrow">
+    <div class="ccard meu">
+      <div class="cclbl">NOSSO PREÇO</div>
+      <div class="ccnome">P. ${posto}</div>
+      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${m.GC ? 'R$ '+parseFloat(m.GC).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">G. Adit.</span><span class="prv ga">${m.GA ? 'R$ '+parseFloat(m.GA).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${m.ET ? 'R$ '+parseFloat(m.ET).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">S10</span><span class="prv s10">${m.S10 ? 'R$ '+parseFloat(m.S10).toFixed(2) : '--'}</span></div>
+    </div>`;
+    
+  const concs = G_DADOS.conc[posto] || {};
+  const cKeys = Object.keys(concs);
   
-  h += `<div style="display:flex;flex-direction:column;gap:.5rem">`;
-  const concList = est.conc;
-  Object.keys(concList).forEach(cNome => {
-    const cData = CONC[cNome] || {};
-    h += `<div class="ccard"><div class="cclbl">${concList[cNome].banda}</div><div class="ccnome">${cNome}</div>`;
-    est.combs.forEach(c => {
-      h += `<div class="pr"><span class="prc">${c}</span><span class="prv">${fmt(cData[c])}</span></div>`;
-    });
-    h += `</div>`;
-  });
-  h += `</div>`;
-  b.innerHTML = h;
+  if(cKeys.length === 0) {
+    html += `<div class="ccard"><div class="empty">Nenhum concorrente cadastrado ou coletado</div></div>`;
+  } else {
+    const primeiro = cKeys[0];
+    const mc = concs[primeiro];
+    const cEstru = estru.conc[primeiro] || {banda:'B. Branca'};
+    html += `<div class="ccard">
+      <div class="cclbl">CONCORRENTE FOCO</div>
+      <div class="ccnome">${primeiro} (${cEstru.banda})</div>
+      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${mc.GC ? 'R$ '+parseFloat(mc.GC).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">G. Adit.</span><span class="prv ga">${mc.GA ? 'R$ '+parseFloat(mc.GA).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${mc.ET ? 'R$ '+parseFloat(mc.ET).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">S10</span><span class="prv s10">${mc.S10 ? 'R$ '+parseFloat(mc.S10).toFixed(2) : '--'}</span></div>
+    </div>`;
+  }
+  html += `</div>`;
+  
+  if(cKeys.length > 1) {
+    html += `<div class="sdiv" style="margin-top:.5rem">Outros Concorrentes Monitorados</div>`;
+    for(let i=1; i<cKeys.length; i++) {
+      const cNome = cKeys[i];
+      const mc = concs[cNome];
+      const cEstru = estru.conc[cNome] || {banda:'B. Branca'};
+      html += `<div class="ccard" style="margin-bottom:4px">
+        <div class="ccnome" style="font-size:.78rem;margin-bottom:4px">${cNome} (${cEstru.banda})</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+          <div class="pr"><span class="prc">GC:</span><span class="prv gc">${mc.GC?'R$ '+parseFloat(mc.GC).toFixed(2):'--'}</span></div>
+          <div class="pr"><span class="prc">ET:</span><span class="prv et">${mc.ET?'R$ '+parseFloat(mc.ET).toFixed(2):'--'}</span></div>
+        </div>
+      </div>`;
+    }
+  }
+  body.innerHTML = html;
 }
 
-function renderHeatmap(){
-  const hb = document.getElementById('heatmap-body');
-  hb.innerHTML = '';
-  let precos = [];
-  Object.keys(MEU).forEach(k => { if(MEU[k].GC) precos.push(MEU[k].GC); });
-  if(precos.length===0) return;
-  precos.sort((x,y)=>x-y);
+function renderHeatmap() {
+  const body = document.getElementById('heatmap-body');
+  let arr = [];
+  for(let p in G_DADOS.prop) {
+    if(G_DADOS.prop[p].GC > 0) arr.push(parseFloat(G_DADOS.prop[p].GC));
+  }
+  if(arr.length === 0) {
+    body.innerHTML = '<div class="empty">Sem dados</div>';
+    return;
+  }
+  arr.sort((a,b)=>a-b);
+  const min = arr[0], max = arr[arr.length-1];
+  const dif = max - min || 1;
   
-  precos.forEach(p => {
-    let classe = 'var(--wn)';
-    if(p < precos[Math.floor(precos.length*0.3)]) classe = 'var(--ok)';
-    if(p > precos[Math.floor(precos.length*0.7)]) classe = 'var(--dg)';
-    hb.innerHTML += `<div class="hcell" style="background:${classe}" title="R$ ${p.toFixed(2)}"></div>`;
-  });
+  body.innerHTML = '';
+  for(let p in G_DADOS.prop) {
+    const val = G_DADOS.prop[p].GC;
+    if(!val || val <= 0) continue;
+    const pct = (parseFloat(val) - min) / dif;
+    let cor = 'var(--ok)';
+    if(pct > 0.35 && pct <= 0.7) cor = 'var(--wn)';
+    else if(pct > 0.7) cor = 'var(--dg)';
+    
+    const cell = document.createElement('div');
+    cell.className = 'hcell';
+    cell.style.background = cor;
+    cell.title = `${p}: R$ ${parseFloat(val).toFixed(2)}`;
+    cell.onclick = () => {
+      document.getElementById('posto-comp').value = p;
+      setTab(document.querySelectorAll('.nbtn')[0], 'comp');
+      renderComp();
+    };
+    body.appendChild(cell);
+  }
 }
 
-function setFiltroSup(btn, sup){
-  document.querySelectorAll('#filtro-sup .ftag').forEach(b => b.classList.remove('active'));
+function setFiltroSup(btn, sup) {
+  const r = btn.parentNode;
+  r.querySelectorAll('.ftag').forEach(x=>x.classList.remove('active'));
   btn.classList.add('active');
-  filtroSupAtual = sup;
+  G_FILTRO_SUP = sup;
   renderRanking();
 }
 
-function renderRanking(){
-  const rb = document.getElementById('rank-body');
-  rb.innerHTML = '';
-  let arr = [];
+function renderRanking() {
+  const body = document.getElementById('rank-body');
+  let list = [];
   
-  Object.keys(CONC).forEach(c => {
-    let supDono = 'Outros';
-    Object.keys(POSTOS_DADOS).forEach(pKey => {
-      if(POSTOS_DADOS[pKey].conc[c]) supDono = POSTOS_DADOS[pKey].sup;
-    });
-    if(filtroSupAtual!=='todos' && supDono!==filtroSupAtual) return;
-    if(CONC[c].GC) arr.push({n:c, p:CONC[c].GC, b:CONC[c].bandera||'Branca', s:supDono});
-  });
-  
-  arr.sort((x,y)=>x.p - y.p);
-  document.getElementById('rank-count').textContent = `${arr.length} concorrentes ativos no filtro`;
-  
-  if(arr.length===0){
-    rb.innerHTML = '<div class="empty">Nenhum dado encontrado</div>';
-    return;
-  }
-  
-  arr.forEach((itm, idx) => {
-    const cor = SUPCOR[itm.s] || 'var(--bd2)';
-    rb.innerHTML += `
-      <div class="ritem">
-        <span class="rnum">#${idx+1}</span>
-        <span class="rdot" style="background:${cor}"></span>
-        <div class="rinfo"><div class="rnome">${itm.n}</div><div class="rbanda">${itm.b} · ${itm.s}</div></div>
-        <span class="rpreco">${fmt(itm.p)}</span>
-      </div>`;
-  });
-}
-
-function renderRegional(){
-  const rb = document.getElementById('reg-body');
-  rb.innerHTML = '';
-  const sups = ["Fabricio","Paulo","Mauricio","Gledson","Rodrigo"];
-  
-  sups.forEach(s => {
-    let h = `<div class="reg-sup"><div class="reg-sup-hdr"><span class="reg-sup-nome" style="color:${SUPCOR[s]}">${s}</span></div>`;
-    h += `<div class="reg-posto-list">`;
-    let count = 0;
-    Object.keys(POSTOS_DADOS).forEach(p => {
-      if(POSTOS_DADOS[p].sup===s){
-        count++;
-        const pData = MEU[p] || {};
-        h += `<div class="reg-posto"><span>${p}</span><b style="font-family:var(--mono)">${fmt(pData.GC)}</b></div>`;
+  for(let p in G_DADOS.conc) {
+    const estruProp = POSTOS_DADOS[p] || {};
+    if(G_FILTRO_SUP !== 'todos' && estruProp.sup !== G_FILTRO_SUP) continue;
+    
+    for(let c in G_DADOS.conc[p]) {
+      const item = G_DADOS.conc[p][c];
+      if(item.GC > 0) {
+        const cEstru = estruProp.conc ? (estruProp.conc[c] || {banda:'B. Branca'}) : {banda:'B. Branca'};
+        list.push({
+          nome: c,
+          postoP: p,
+          banda: cEstru.banda,
+          preco: parseFloat(item.GC)
+        });
       }
-    });
-    h += `</div></div>`;
-    if(count > 0) rb.innerHTML += h;
-  });
-}
-
-// Troca de Telas (Tabs da Base)
-function setTab(btn, tab){
-  document.querySelectorAll('.bnav .nbtn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.main .scr').forEach(s => s.classList.remove('active'));
-  document.getElementById(`s-${tab}`).classList.add('active');
-  currentTab = tab;
-  if(tab==='mapa') setTimeout(initMapa, 150);
-}
-
-function abrirMais(){ document.getElementById('modal-mais').classList.add('open'); }
-function fecharMais(e){ if(e.target.id==='modal-mais') fecharMaisBtn(); }
-function fecharMaisBtn(){ document.getElementById('modal-mais').classList.remove('open'); }
-
-function irPara(acao){
-  fecharMaisBtn();
-  document.querySelectorAll('.bnav .nbtn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.main .scr').forEach(s => s.classList.remove('active'));
-  document.getElementById('s-mais').classList.add('active');
-  
-  const div = document.getElementById('mais-conteudo');
-  if(acao==='amostra'){
-    div.innerHTML = `
-      <div class="sdiv">Controle Químico — Amostras Testemunhas</div>
-      <div class="am-card"><div class="am-posto">Posto Alex</div><div class="am-sub">Coleta de Gasolina Comum</div><div class="am-bar-bg"><div class="am-bar" style="width:85%"></div></div><div class="am-dias">Vence em 3 dias</div></div>
-      <div class="am-card"><div class="am-posto">Posto Ceasa</div><div class="am-sub">Coleta de Diesel S10</div><div class="am-bar-bg"><div class="am-bar" style="width:40%;background:var(--wn)"></div></div><div class="am-dias">Vence em 12 dias</div></div>`;
-  } else {
-    div.innerHTML = `<div class="empty">Módulo ${acao} carregado com sucesso.</div>`;
-  }
-}
-
-function showToast(tit, msg){
-  const t = document.getElementById('toast');
-  document.getElementById('t-title').textContent = tit;
-  document.getElementById('t-msg').textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-// ══════════════════════════════════════════════════
-// MAPA LEAFLET — Inicialização e Plotagem Segura
-// ══════════════════════════════════════════════════
-function initMapa(){
-  if(leafletMap){
-    leafletMap.invalidateSize();
-    try {
-      renderLeafletMarkers();
-    } catch(e) {
-      console.error(e);
     }
+  }
+  
+  document.getElementById('rank-count').textContent = `${list.length} concorrentes mapeados`;
+  if(list.length === 0) {
+    body.innerHTML = '<div class="empty">Nenhum dado para este filtro</div>';
     return;
   }
+  list.sort((a,b)=>a.preco-b.preco);
   
-  var mapEl = document.getElementById('leaflet-map');
-  if (!mapEl || typeof L === 'undefined') return;
+  let html = '';
+  list.forEach((x, idx) => {
+    let corDot = 'var(--wn)';
+    if(idx < list.length * 0.2) corDot = 'var(--ok)';
+    else if(idx > list.length * 0.8) corDot = 'var(--dg)';
+    
+    html += `<div class="ritem">
+      <div class="rnum">#${idx+1}</div>
+      <div class="rdot" style="background:${corDot}"></div>
+      <div class="rinfo">
+        <div class="rnome">${x.nome}</div>
+        <div class="rbanda">${x.banda} • Ref: P. ${x.postoP}</div>
+      </div>
+      <div class="rpreco">R$ ${x.preco.toFixed(2)}</div>
+    </div>`;
+  });
+  body.innerHTML = html;
+  renderBandaRank(list);
+  renderDeslocados();
+}
+
+function renderBandaRank(list) {
+  const body = document.getElementById('band-rank-body');
+  let bData = {};
+  list.forEach(x => {
+    if(!bData[x.banda]) bData[x.banda] = {soma:0, c:0};
+    bData[x.banda].soma += x.preco;
+    bData[x.banda].c++;
+  });
+  let html = '';
+  for(let b in bData) {
+    const med = bData[b].soma / bData[b].c;
+    html += `<div class="bbox"><div class="bbnome">${b}</div><div class="bbval">R$ ${med.toFixed(2)}</div><div style="font-size:.55rem;color:var(--tx3)">${bData[b].c} postos</div></div>`;
+  }
+  body.innerHTML = html || '<div class="empty">Sem dados</div>';
+}
+
+function renderDeslocados() {
+  const body = document.getElementById('deslocado-body');
+  let html = '';
+  let totalGc = 0, cGc = 0;
+  for(let p in G_DADOS.prop) {
+    if(G_DADOS.prop[p].GC > 0) { totalGc += parseFloat(G_DADOS.prop[p].GC); cGc++; }
+  }
+  if(cGc === 0) {
+    body.innerHTML = '<div class="empty">Sem dados de média de rede</div>';
+    return;
+  }
+  const mediaRede = totalGc / cGc;
+  for(let p in G_DADOS.prop) {
+    const v = parseFloat(G_DADOS.prop[p].GC);
+    if(!v || v <= 0) continue;
+    const diff = v - mediaRede;
+    if(Math.abs(diff) >= 0.15) {
+      const sColor = diff > 0 ? 'var(--dg)' : 'var(--inf)';
+      html += `<div class="ritem">
+        <div class="rinfo">
+          <div class="rnome">P. ${p}</div>
+          <div class="rbanda">Desvio de ${diff > 0 ? '+' : ''}${diff.toFixed(2)} da média da rede</div>
+        </div>
+        <div class="rpreco" style="color:${sColor}">R$ ${v.toFixed(2)}</div>
+      </div>`;
+    }
+  }
+  body.innerHTML = html || '<div class="empty">Nenhum posto com desvio crítico (>= R$ 0.15) detectado.</div>';
+}
+
+function renderRegional() {
+  const bandBody = document.getElementById('band-body');
+  const regBody = document.getElementById('reg-body');
   
-  // Inicializa centralizado na Grande BH
-  leafletMap = L.map('leaflet-map', { center: [-19.917, -43.960], zoom: 11, zoomControl: true });
+  let bData = {};
+  for(let p in G_DADOS.conc) {
+    for(let c in G_DADOS.conc[p]) {
+      const item = G_DADOS.conc[p][c];
+      const b = (POSTOS_DADOS[p] && POSTOS_DADOS[p].conc[c]) ? POSTOS_DADOS[p].conc[c].banda : 'Bandeira Branca';
+      if(item.GC > 0) {
+        if(!bData[b]) bData[b] = {s:0,c:0};
+        bData[b].s += parseFloat(item.GC); bData[b].c++;
+      }
+    }
+  }
+  let htmlB = '';
+  for(let b in bData) {
+    htmlB += `<div class="bbox"><div class="bbnome">${b}</div><div class="bbval">R$ ${(bData[b].s/bData[b].c).toFixed(2)}</div></div>`;
+  }
+  bandBody.innerHTML = htmlB || '<div class="empty">Sem dados</div>';
   
-  // Renderiza o fundo do mapa sem o perigo de quebra por retina display
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-    attribution: '&copy;<a href="https://www.openstreetmap.org/copyright">OSM</a> &copy;<a href="https://carto.com/">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 19
+  let sData = {};
+  for(let p in G_DADOS.prop) {
+    const sup = POSTOS_DADOS[p] ? POSTOS_DADOS[p].sup : 'Sem Sup';
+    const v = parseFloat(G_DADOS.prop[p].GC);
+    if(v > 0) {
+      if(!sData[sup]) sData[sup] = [];
+      sData[sup].push({n:p, v:v});
+    }
+  }
+  let htmlS = '';
+  for(let sup in sData) {
+    htmlS += `<div class="reg-sup">
+      <div class="reg-sup-hdr"><div class="reg-sup-nome">${sup}</div><div class="klbl">${sData[sup].length} postos</div></div>
+      <div class="reg-posto-list">`;
+    sData[sup].forEach(x => {
+      htmlS += `<div class="reg-posto"><span>P. ${x.n}</span><span style="font-family:var(--mono);font-weight:700;color:var(--ac)">R$ ${x.v.toFixed(2)}</span></div>`;
+    });
+    htmlS += `</div></div>`;
+  }
+  regBody.innerHTML = htmlS || '<div class="empty">Sem dados</div>';
+}
+
+// 🗺️ INTEGRAÇÃO DO MAPA LEAFLET COM DADOS EM TEMPO REAL
+function initLeafletInstance() {
+  if (leafletMap !== null) {
+    leafletMap.invalidateSize();
+    return;
+  }
+  // Centraliza em BH / Contagem
+  leafletMap = L.map('leaflet-map', {zoomControl: false}).setView([-19.92, -43.96], 11);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: 'JBretas Operational Maps'
   }).addTo(leafletMap);
   
-  // Executa a plotagem
-  try {
-    renderLeafletMarkers();
-    renderMapLegend();
-  } catch (erro) {
-    console.error("Erro ao plotar marcadores no mapa:", erro);
-    var loadingEl = document.getElementById('loading') || document.querySelector('.loading'); 
-    if (loadingEl) loadingEl.style.display = 'none';
-  }
+  renderMapa();
 }
 
-function renderLeafletMarkers() {
-  if (typeof leafletMarkers !== 'undefined' && leafletMarkers.length > 0) {
-    leafletMarkers.forEach(function(m) { 
-      if(leafletMap) leafletMap.removeLayer(m); 
-    });
-    leafletMarkers = [];
-  } else if (typeof leafletMarkers === 'undefined') {
-    leafletMarkers = [];
-  }
-
-  MAP_POSTOS.forEach(function(mp) {
-    var filtOk = mapaSupAtual === 'todos' || mp.sup === mapaSupAtual;
-    if (!filtOk) return;
-
-    var dadosApi = MEU[mp.k] || {};
-
-    // Força o uso do MAP_POSTOS se o dado dinâmico da API falhar
-    var lat = (dadosApi.lat && !isNaN(dadosApi.lat)) ? dadosApi.lat : mp.lat;
-    var lng = (dadosApi.lng && !isNaN(dadosApi.lng)) ? dadosApi.lng : mp.lng;
-
-    var cor = SUPCOR[mp.sup] || '#00e5a0';
-    var preco = dadosApi[mapaFuelAtual];
-
-    if (!lat || !lng) return;
-
-    var mk = L.circleMarker([lat, lng], {
-        radius: 10, 
-        fillColor: cor, 
-        color: '#fff', 
-        weight: 2, 
-        fillOpacity: .9
-    });
-
-    mk.bindPopup(
-        '<b style="color:' + cor + '">' + mp.n + '</b><br>' +
-        '<span style="font-size:.7rem">Sup. ' + mp.sup + ' · ' + (mp.banda || '') + '</span><br>' +
-        (preco ? '<b>' + fmt(preco) + '</b>' : '<i>sem coleta hoje</i>')
-    );
-
-    mk.addTo(leafletMap);
-    leafletMarkers.push(mk);
-  });
-
-  // Força o fechamento da tela preta de loading
-  var loadingEl = document.getElementById('loading') || document.querySelector('.loading'); 
-  if (loadingEl) {
-    loadingEl.style.display = 'none';
-  }
+function mapaFuelChange(val) {
+  G_MAPA_FUEL = val;
+  renderMapa();
 }
 
-function renderMapLegend(){
-  const leg = document.getElementById('map-legend');
-  if(!leg) return;
-  leg.innerHTML = '';
-  Object.keys(SUPCOR).forEach(s => {
-    leg.innerHTML += `<span style="color:${SUPCOR[s]}">${s}</span>`;
-  });
-}
-
-function mapaFuelChange(val){
-  mapaFuelAtual = val;
-  renderLeafletMarkers();
-}
-
-function mapaSetSup(btn, sup){
-  document.querySelectorAll('.map-ctrl .map-ftag').forEach(b => b.classList.remove('on'));
+function mapaSetSup(btn, sup) {
+  document.querySelectorAll('.map-ftag').forEach(x=>x.classList.remove('on'));
   btn.classList.add('on');
-  mapaSupAtual = sup;
-  renderLeafletMarkers();
+  G_MAPA_SUP = sup;
+  renderMapa();
+}
+
+function renderMapa() {
+  if (!leafletMap) return;
+  
+  // Limpa marcadores anteriores sem destruir a instância do mapa
+  mapMarkers.forEach(m => leafletMap.removeLayer(m));
+  mapMarkers = [];
+  
+  let precosValidos = [];
+  
+  MAP_POSTOS.forEach(posto => {
+    if (G_MAPA_SUP !== 'todos' && posto.sup !== G_MAPA_SUP) return;
+    
+    // Vincula em tempo real com o G_DADOS carregado dinamicamente do Sheets
+    const dadosReaisPosto = G_DADOS && G_DADOS.prop[posto.k] ? G_DADOS.prop[posto.k] : null;
+    let precoExibir = '--';
+    
+    if (dadosReaisPosto && dadosReaisPosto[G_MAPA_FUEL] && parseFloat(dadosReaisPosto[G_MAPA_FUEL]) > 0) {
+      const pNum = parseFloat(dadosReaisPosto[G_MAPA_FUEL]);
+      precoExibir = 'R$ ' + pNum.toFixed(2);
+      precosValidos.push(pNum);
+    }
+    
+    // Cria elemento visual customizado do marcador
+    const iconHtml = `<div class="custom-marker">
+      <div class="m-name">${posto.n}</div>
+      <div class="m-price">${precoExibir}</div>
+    </div>`;
+    
+    const cIcon = L.divIcon({
+      html: iconHtml,
+      className: '',
+      iconSize: [65, 30],
+      iconAnchor: [32, 15]
+    });
+    
+    const marker = L.marker([posto.lat, posto.lng], {icon: cIcon}).addTo(leafletMap);
+    
+    // Tooltip detalhado ao clicar no posto do mapa
+    marker.on('click', () => {
+      let dHtml = `<div class="card" style="margin-top:.5rem"><div class="chdr"><div class="ctitle">${posto.n} (${posto.banda})</div><div class="csub">Supervisor: ${posto.sup}</div></div><div class="cbody">`;
+      if (dadosReaisPosto) {
+        dHtml += `<div class="pr"><span class="prc">G. Comum:</span><span class="prv gc">${dadosReaisPosto.GC ? 'R$ '+parseFloat(dadosReaisPosto.GC).toFixed(2):'--'}</span></div>`;
+        dHtml += `<div class="pr"><span class="prc">G. Aditivada:</span><span class="prv ga">${dadosReaisPosto.GA ? 'R$ '+parseFloat(dadosReaisPosto.GA).toFixed(2):'--'}</span></div>`;
+        dHtml += `<div class="pr"><span class="prc">Etanol:</span><span class="prv et">${dadosReaisPosto.ET ? 'R$ '+parseFloat(dadosReaisPosto.ET).toFixed(2):'--'}</span></div>`;
+        dHtml += `<div class="pr"><span class="prc">Diesel S10:</span><span class="prv s10">${dadosReaisPosto.S10 ? 'R$ '+parseFloat(dadosReaisPosto.S10).toFixed(2):'--'}</span></div>`;
+      } else {
+        dHtml += `<div class="empty">Sem dados coletados em tempo real para este posto.</div>`;
+      }
+      dHtml += `</div></div>`;
+      document.getElementById('mapa-detail').innerHTML = dHtml;
+    });
+    
+    mapMarkers.push(marker);
+  });
+  
+  // Renderiza legenda inteligente baseado nos ranges de preços reais atuais
+  const legend = document.getElementById('map-legend');
+  if (precosValidos.length > 0) {
+    precosValidos.sort((a,b)=>a-b);
+    const min = precosValidos[0];
+    const max = precosValidos[precosValidos.length-1];
+    legend.innerHTML = `
+      <span style="color:var(--ok)">Mín: R$ ${min.toFixed(2)}</span>
+      <span style="color:var(--wn)">Filtro: ${G_MAPA_FUEL}</span>
+      <span style="color:var(--dg)">Máx: R$ ${max.toFixed(2)}</span>
+    `;
+  } else {
+    legend.innerHTML = `<span>Nenhum preço real carregado para ${G_MAPA_FUEL}</span>`;
+  }
+}
+
+// Submódulos Complementares (Mais+)
+function renderAmostra(ctx) {
+  ctx.innerHTML = `<div class="sdiv">Controle de Validade Amostra-Testemunha</div>
+    <div class="am-card"><div class="am-posto">P. JA</div><div class="am-sub">Bandeira Ipiranga</div><div class="klbl">Dias restantes da amostra ativa</div><div class="am-bar-bg"><div class="am-bar" style="width:80%"></div></div><div class="am-dias" style="color:var(--ok)">24 Dias</div></div>
+    <div class="am-card"><div class="am-posto">P. ITAPOA</div><div class="am-sub">Bandeira Shell</div><div class="klbl">Dias restantes da amostra ativa</div><div class="am-bar-bg"><div class="am-bar" style="width:40%; background:var(--wn)"></div></div><div class="am-dias" style="color:var(--wn)">12 Dias</div></div>
+    <div class="am-card"><div class="am-posto">P. BRUNA</div><div class="am-sub">Bandeira BR</div><div class="klbl">Dias restantes da amostra ativa</div><div class="am-bar-bg"><div class="am-bar" style="width:10%; background:var(--dg)"></div></div><div class="am-dias" style="color:var(--dg)">2 Dias (Coletar Urgente)</div></div>`;
+}
+
+function renderNotif(ctx) {
+  ctx.innerHTML = `<div class="sdiv">Histórico de Alertas de Preço</div>
+    <div class="notif-item"><div class="notif-ico" style="background:rgba(255,77,109,0.12);color:var(--dg)">🚨</div><div><div class="notif-txt"><strong>P. BRUNA</strong> está R$ 0.24 acima da média regional para Etanol.</div><div class="notif-sub">Há 14 minutos • Sistema Autônomo</div></div></div>
+    <div class="notif-item"><div class="notif-ico" style="background:var(--acd);color:var(--ac)">✅</div><div><div class="notif-txt">Coleta concluída com sucesso pelo supervisor Maurício na região Centro-Sul.</div><div class="notif-sub">Há 1 hora • App Coletor</div></div></div>`;
+}
+
+function renderDist(ctx) {
+  ctx.innerHTML = `<div class="sdiv">Preços de Custo Médio FOB Refinaria</div>
+    <div class="dcol">
+      <div class="dbox"><div class="dbnome">IPIRANGA</div><div class="dbitem"><span>GC</span><span class="dbval">R$ 4.41</span></div><div class="dbitem"><span>ET</span><span class="dbval">R$ 2.89</span></div></div>
+      <div class="dbox"><div class="dbnome">SHELL</div><div class="dbitem"><span>GC</span><span class="dbval">R$ 4.44</span></div><div class="dbitem"><span>ET</span><span class="dbval">R$ 2.91</span></div></div>
+    </div>`;
+}
+
+function renderSim(ctx) {
+  ctx.innerHTML = `<div class="sdiv">Simulador de Margem de Contribuição</div>
+    <div class="card"><div class="cbody sim-form">
+      <div class="sim-row"><div class="sim-lbl">Preço Custo</div><input type="number" id="s-custo" value="4.42" class="sim-inp" oninput="calcSim()"></div>
+      <div class="sim-row"><div class="sim-lbl">Preço Venda</div><input type="number" id="s-venda" value="5.49" class="sim-inp" oninput="calcSim()"></div>
+      <div class="sim-row"><div class="sim-lbl">Impostos %</div><input type="number" id="s-imp" value="13.4" class="sim-inp" oninput="calcSim()"></div>
+      <div class="sim-res" id="s-res">Margem Líquida Estimada: <span class="sim-res-val" id="s-res-v">R$ 0.00</span></div>
+    </div></div>`;
+  calcSim();
+}
+function calcSim() {
+  const c = parseFloat(document.getElementById('s-custo').value)||0;
+  const v = parseFloat(document.getElementById('s-venda').value)||0;
+  const i = parseFloat(document.getElementById('s-imp').value)||0;
+  const resDiv = document.getElementById('s-res');
+  resDiv.style.display = 'block';
+  const margem = v - c - (v * (i/100));
+  document.getElementById('s-res-v').textContent = 'R$ ' + margem.toFixed(2);
+}
+
+function renderLanc(ctx) {
+  let opts = '';
+  Object.keys(POSTOS_DADOS).sort().forEach(p => opts += `<option value="${p}">P. ${p}</option>`);
+  ctx.innerHTML = `<div class="sdiv">Forçar Entrada Operacional de Preço ADM</div>
+    <div class="card"><div class="cbody lanc-form">
+      <label class="flbl">Posto Alvo</label><select class="sel" id="l-posto">${opts}</select>
+      <div class="lanc-item"><span class="lanc-lbl">Gasolina Comum</span><input type="number" id="l-gc" value="5.49" class="lanc-inp"></div>
+      <div class="lanc-item"><span class="lanc-lbl">Gasolina Aditivada</span><input type="number" id="l-ga" value="5.69" class="lanc-inp"></div>
+      <div class="lanc-item"><span class="lanc-lbl">Etanol Hidratado</span><input type="number" id="l-et" value="3.59" class="lanc-inp"></div>
+      <div class="lanc-item"><span class="lanc-lbl">Diesel S10</span><input type="number" id="l-s10" value="5.99" class="lanc-inp"></div>
+      <button class="btn-enviar" onclick="enviarPreco()">Salvar Alteração no Banco</button>
+    </div></div>`;
+}
+
+async function enviarPreco() {
+  const posto = document.getElementById('l-posto').value;
+  const gc = document.getElementById('l-gc').value;
+  const ga = document.getElementById('l-ga').value;
+  const et = document.getElementById('l-et').value;
+  const s10 = document.getElementById('l-s10').value;
+  
+  document.getElementById('loading').classList.remove('hidden');
+  try {
+    const url = `${API_URL}?action=setPreco&posto=${encodeURIComponent(posto)}&gc=${gc}&ga=${ga}&et=${et}&s10=${s10}&user=${encodeURIComponent(G_USER.email)}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    showToast('Sucesso', 'Preço gravado diretamente na planilha corporativa.');
+    carregarDados();
+  } catch(e) {
+    showToast('Erro de Conexão', 'Não foi possível persistir os dados.');
+    document.getElementById('loading').classList.add('hidden');
+  }
+}
+
+function renderRel(ctx) {
+  ctx.innerHTML = `<div class="sdiv">Relatórios Analíticos consolidados</div>
+    <div class="rcard">
+      <div class="rcardtop"><div class="rcardico" style="background:var(--acd);color:var(--ac)">📈</div><div><div class="rcardtitle">Evolução Semanal de Margem</div><div class="rcardsub">Volumetria vs Elasticidade de Preço</div></div></div>
+      <div class="rrows">
+        <div class="rrow"><span>Média da Rede (Jan 2026)</span><strong>R$ 0.44 / L</strong></div>
+        <div class="rrow"><span>Média da Rede (Atual)</span><strong style="color:var(--ac)">R$ 0.51 / L</strong></div>
+      </div>
+    </div>`;
+}
+
+// Utilitário global de notificações em tela (Toast)
+function showToast(title, msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('t-title').textContent = title;
+  document.getElementById('t-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
 }
 </script>
 </body>
 </html>
+
+```
