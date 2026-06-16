@@ -751,40 +751,39 @@ function renderRegional(){
 // ══════════════════════════════════════════════════
 // MAPA — CartoDB Positron (fundo BRANCO)
 // ══════════════════════════════════════════════════
-  function initMapa(){
-  if(leafletMap){
-    leafletMap.invalidateSize();
-    renderLeafletMarkers();
-    return;
-  }
-  var mapEl=document.getElementById('leaflet-map');
-  if(!mapEl||typeof L==='undefined')return;
-  leafletMap=L.map('leaflet-map',{center:[-19.917,-43.960],zoom:11,zoomControl:true});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
-    attribution:'&copy;<a href="https://www.openstreetmap.org/copyright">OSM</a> &copy;<a href="https://carto.com/">CARTO</a>',
-    subdomains:'abcd',maxZoom:19
-  }).addTo(leafletMap);
-  renderLeafletMarkers();
+// Plota postos próprios – usa lat/lng da API se existir e for válida, senão usa MAP_POSTOS
 MAP_POSTOS.forEach(function(mp) {
-  var filtOk = mapaSupAtual === 'todos' || mp.sup === mapaSupAtual;
-  if (!filtOk) return;
-  
-  var dadosApi = MEU[mp.k] || {};
-  var lat = dadosApi.lat || mp.lat;
-  var lng = dadosApi.lng || mp.lng;
-  var cor = SUPCOR[mp.sup] || '#00e5a0';
-  var preco = dadosApi[mapaFuelAtual];
-  
-  var mk = L.circleMarker([lat, lng], {
-    radius: 10, fillColor: cor, color: '#fff', weight: 2, fillOpacity: .9
-  });
-  mk.bindPopup(
-    '<b style="color:'+cor+'">'+mp.n+'</b><br>' +
-    '<span style="font-size:.7rem">Sup. '+mp.sup+' · '+mp.banda+'</span><br>' +
-    (preco ? '<b>'+fmt(preco)+'</b>' : '<i>sem coleta hoje</i>')
-  );
-  mk.addTo(leafletMap);
-  leafletMarkers.push(mk);
+    var filtOk = mapaSupAtual === 'todos' || mp.sup === mapaSupAtual;
+    if (!filtOk) return;
+
+    var dadosApi = MEU[mp.k] || {};
+
+    // Força o uso do MAP_POSTOS se a API não trouxer um número válido
+    var lat = (dadosApi.lat && !isNaN(dadosApi.lat)) ? dadosApi.lat : mp.lat;
+    var lng = (dadosApi.lng && !isNaN(dadosApi.lng)) ? dadosApi.lng : mp.lng;
+
+    var cor = SUPCOR[mp.sup] || '#00e5a0';
+    var preco = dadosApi[mapaFuelAtual];
+
+    // Se mesmo assim não houver coordenada válida, não tenta plotar para não quebrar o mapa
+    if (!lat || !lng) return;
+
+    var mk = L.circleMarker([lat, lng], {
+        radius: 10, 
+        fillColor: cor, 
+        color: '#fff', 
+        weight: 2, 
+        fillOpacity: .9
+    });
+
+    mk.bindPopup(
+        '<b style="color:' + cor + '">' + mp.n + '</b><br>' +
+        '<span style="font-size:.7rem">Sup. ' + mp.sup + ' · ' + (mp.banda || '') + '</span><br>' +
+        (preco ? '<b>' + fmt(preco) + '</b>' : '<i>sem coleta hoje</i>')
+    );
+
+    mk.addTo(leafletMap);
+    leafletMarkers.push(mk);
 });
   // Legenda
   var legHtml=Object.keys(SUPCOR).map(function(s){
