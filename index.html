@@ -208,24 +208,25 @@ body::before{content:'';position:fixed;inset:0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--sf);
-  border: 1px solid var(--bd);
+  background: #0d0f12;
+  border: 1.5px solid var(--bd);
   border-radius: 6px;
-  padding: 2px 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  padding: 3px 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  white-space: nowrap;
 }
 .custom-marker .m-name {
-  font-size: 9px;
-  font-family: var(--sans);
-  color: var(--tx2);
-  font-weight: 600;
-  white-space: nowrap;
+  font-size: 8px;
+  font-family: var(--mono);
+  color: var(--ac);
+  font-weight: 700;
+  letter-spacing: .03em;
 }
 .custom-marker .m-price {
   font-size: 11px;
   font-family: var(--mono);
   font-weight: 700;
-  color: var(--ac);
+  color: #fff;
 }
 </style>
 </head>
@@ -619,60 +620,60 @@ function fallback(msg) {
 }
 
 function processarDadosReais() {
-  // Reorganiza concorrentes do formato plano {nomeConcorrente: dados}
-  // para aninhado {posto: {nomeConcorrente: dados}} usando POSTOS_DADOS como referência
-  const concPlano = G_DADOS.conc || {};
-  const concAninhado = {};
-  for (let p in POSTOS_DADOS) {
-    concAninhado[p] = {};
-    const concsDoPost = POSTOS_DADOS[p].conc || {};
-    for (let nomeConc in concsDoPost) {
-      // Tenta achar no plano por nome exato ou parcial
-      const chave = Object.keys(concPlano).find(k =>
-        k.toUpperCase() === nomeConc.toUpperCase() ||
-        k.toUpperCase().includes(nomeConc.toUpperCase()) ||
-        nomeConc.toUpperCase().includes(k.replace(/^P\.\s*/i,'').toUpperCase())
-      );
-      if (chave) concAninhado[p][nomeConc] = concPlano[chave];
-    }
-  }
-  G_DADOS.conc = concAninhado;
-
-  // Mapeia postos próprios do formato "P. NOME" para "NOME"
+  // ── Postos próprios: normaliza chave removendo "P. " ──────────
   const propPlano = G_DADOS.prop || {};
   const propMapeado = {};
   for (let k in propPlano) {
-    const chave = k.replace(/^P\.\s*/i,'').trim().toUpperCase();
-    const found = Object.keys(POSTOS_DADOS).find(p => p.toUpperCase() === chave) || chave;
-    propMapeado[found] = propPlano[k];
+    // Mantém a chave original E uma versão sem "P. " para lookup
+    propMapeado[k] = propPlano[k];
+    const semP = k.replace(/^P\.\s*/i,'').trim().toUpperCase();
+    const found = Object.keys(POSTOS_DADOS).find(p => p.toUpperCase() === semP);
+    if (found && found !== k) propMapeado[found] = propPlano[k];
   }
   G_DADOS.prop = propMapeado;
 
-  const contProp = Object.keys(G_DADOS.prop || {}).length;
-  document.getElementById('kv-proprios').textContent = contProp;
-  
-  let cCont = 0;
-  let somaGcConc = 0, cGcConc = 0;
-  let somaGcProp = 0, cGcProp = 0;
-  
-  for(let p in G_DADOS.conc) {
-    for(let c in G_DADOS.conc[p]) {
-      cCont++;
-      if(G_DADOS.conc[p][c].GC > 0) {
-        somaGcConc += parseFloat(G_DADOS.conc[p][c].GC);
-        cGcConc++;
+  // ── Concorrentes: mantém formato plano {nomeConcorrente: dados} ─
+  // Mas TAMBÉM cria índice por bloco (supervisor/posto) para renderComp
+  // G_DADOS.concPorBloco = { bloco: { nomeConcorrente: dados } }
+  const concPlano = G_DADOS.conc || {};
+  const concPorBloco = {}; // agrupado por bloco (ex: "DIFERENCIAL")
+  const concPorPosto = {}; // agrupado por postoAlvo do próprio (ex: "P. DIFERENCIAL")
+
+  for (let nomeConcorrente in concPlano) {
+    const d = concPlano[nomeConcorrente];
+    const bloco = d.bloco || '';
+    const supervisor = d.supervisor || '';
+    if (!concPorBloco[bloco]) concPorBloco[bloco] = {};
+    concPorBloco[bloco][nomeConcorrente] = d;
+    // Tenta mapear para posto próprio pelo bloco
+    for (let posto in POSTOS_DADOS) {
+      const pd = POSTOS_DADOS[posto];
+      // Match pelo nome do concorrente na lista do posto
+      if (pd.conc && pd.conc[nomeConcorrente]) {
+        if (!concPorPosto[posto]) concPorPosto[posto] = {};
+        concPorPosto[posto][nomeConcorrente] = d;
       }
     }
   }
-  for(let p in G_DADOS.prop) {
-    if(G_DADOS.prop[p].GC > 0) {
-      somaGcProp += parseFloat(G_DADOS.prop[p].GC);
-      cGcProp++;
-    }
+  G_DADOS.concPlano   = concPlano;
+  G_DADOS.concPorBloco = concPorBloco;
+  G_DADOS.concPorPosto = concPorPosto;
+
+  // ── KPIs ──────────────────────────────────────────────────────
+  const contProp = Object.keys(G_DADOS.prop).filter(k => propPlano[k]).length || Object.keys(propPlano).length;
+  const contConc = Object.keys(concPlano).length;
+  document.getElementById('kv-proprios').textContent = Object.keys(propPlano).length;
+  document.getElementById('kv-concs').textContent = contConc;
+
+  let somaGcConc = 0, cGcConc = 0;
+  let somaGcProp = 0, cGcProp = 0;
+  for (let k in concPlano) {
+    if (concPlano[k].GC) { somaGcConc += parseFloat(concPlano[k].GC); cGcConc++; }
   }
-  
-  document.getElementById('kv-concs').textContent = cCont;
-  document.getElementById('kv-gc').textContent = cGcConc > 0 ? 'R$ ' + (somaGcConc/cGcConc).toFixed(2) : '--';
+  for (let k in propPlano) {
+    if (propPlano[k].GC) { somaGcProp += parseFloat(propPlano[k].GC); cGcProp++; }
+  }
+  document.getElementById('kv-gc').textContent  = cGcConc > 0 ? 'R$ ' + (somaGcConc/cGcConc).toFixed(2) : '--';
   document.getElementById('kv-mgc').textContent = cGcProp > 0 ? 'R$ ' + (somaGcProp/cGcProp).toFixed(2) : '--';
   
   const d = new Date();
@@ -739,62 +740,84 @@ function irPara(modulo) {
 // Renderizadores de Módulos Específicos do Dashboard
 function renderComp() {
   const posto = document.getElementById('posto-comp').value;
-  const body = document.getElementById('comp-body');
-  const sub = document.getElementById('comp-sub');
+  const body  = document.getElementById('comp-body');
+  const sub   = document.getElementById('comp-sub');
   
-  if(!posto) {
+  if (!posto) {
     sub.textContent = 'Selecione um posto';
-    body.innerHTML = '<div class="empty">Selecione um posto acima</div>';
+    body.innerHTML  = '<div class="empty">Selecione um posto acima</div>';
     return;
   }
   
-  const estru = POSTOS_DADOS[posto];
-  sub.textContent = `Supervisor: ${estru.sup} | Bandeira: ${estru.bandeira}`;
+  const estru = POSTOS_DADOS[posto] || {};
+  const sup   = estru.sup || '';
+  const banda = estru.bandeira || '';
+  sub.textContent = `Supervisor: ${sup} | Bandeira: ${banda}`;
   
-  let html = '';
-  const m = G_DADOS.prop[posto] || {};
+  // Busca preço do próprio: tenta "POSTO" e "P. POSTO"
+  const dadosProp = G_DADOS.prop[posto] || G_DADOS.prop['P. '+posto] || {};
+  const dataTxt   = dadosProp.data ? ` · ${dadosProp.data}` : '';
   
-  html += `<div class="ccrow">
+  const fmt = (v) => v ? 'R$'+parseFloat(v).toFixed(3).replace('.',',') : '--';
+  
+  let html = `<div class="ccrow">
     <div class="ccard meu">
-      <div class="cclbl">NOSSO PREÇO</div>
+      <div class="cclbl">NOSSO PREÇO${dataTxt}</div>
       <div class="ccnome">P. ${posto}</div>
-      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${m.GC ? 'R$ '+parseFloat(m.GC).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">G. Adit.</span><span class="prv ga">${m.GA ? 'R$ '+parseFloat(m.GA).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${m.ET ? 'R$ '+parseFloat(m.ET).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">S10</span><span class="prv s10">${m.S10 ? 'R$ '+parseFloat(m.S10).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${fmt(dadosProp.GC)}</span></div>
+      <div class="pr"><span class="prc">G. Aditivada</span><span class="prv ga">${fmt(dadosProp.GA)}</span></div>
+      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${fmt(dadosProp.ET)}</span></div>
+      <div class="pr"><span class="prc">Diesel S10</span><span class="prv s10">${fmt(dadosProp.S10)}</span></div>
     </div>`;
-    
-  const concs = G_DADOS.conc[posto] || {};
-  const cKeys = Object.keys(concs);
+
+  // Busca concorrentes: primeiro tenta pelo mapeamento por posto,
+  // depois busca diretamente no plano filtrando por bloco
+  const concPorPosto  = (G_DADOS.concPorPosto  && G_DADOS.concPorPosto[posto])  ? G_DADOS.concPorPosto[posto]  : {};
+  const concPorBloco  = (G_DADOS.concPorBloco  && G_DADOS.concPorBloco[estru.bloco || posto]) ? G_DADOS.concPorBloco[estru.bloco || posto] : {};
   
-  if(cKeys.length === 0) {
-    html += `<div class="ccard"><div class="empty">Nenhum concorrente cadastrado ou coletado</div></div>`;
+  // Merge: prioriza por posto, complementa por bloco
+  const concMerge = Object.assign({}, concPorBloco, concPorPosto);
+  const cKeys = Object.keys(concMerge);
+
+  if (cKeys.length === 0) {
+    html += `<div class="ccard"><div class="empty" style="font-size:.72rem">Sem coleta de concorrentes hoje para este posto.</div></div>`;
   } else {
+    // Primeiro concorrente = destaque
     const primeiro = cKeys[0];
-    const mc = concs[primeiro];
-    const cEstru = estru.conc[primeiro] || {banda:'B. Branca'};
+    const mc       = concMerge[primeiro];
+    const banda1   = mc.bandeira || (estru.conc && estru.conc[primeiro] ? estru.conc[primeiro].banda : 'B. Branca');
     html += `<div class="ccard">
       <div class="cclbl">CONCORRENTE FOCO</div>
-      <div class="ccnome">${primeiro} (${cEstru.banda})</div>
-      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${mc.GC ? 'R$ '+parseFloat(mc.GC).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">G. Adit.</span><span class="prv ga">${mc.GA ? 'R$ '+parseFloat(mc.GA).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${mc.ET ? 'R$ '+parseFloat(mc.ET).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">S10</span><span class="prv s10">${mc.S10 ? 'R$ '+parseFloat(mc.S10).toFixed(2) : '--'}</span></div>
+      <div class="ccnome">${primeiro}</div>
+      <div style="font-size:.6rem;color:var(--wn);font-family:var(--mono);margin-bottom:4px">${banda1}</div>
+      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${fmt(mc.GC)}</span></div>
+      <div class="pr"><span class="prc">G. Aditivada</span><span class="prv ga">${fmt(mc.GA)}</span></div>
+      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${fmt(mc.ET)}</span></div>
+      <div class="pr"><span class="prc">Diesel S10</span><span class="prv s10">${fmt(mc.S10)}</span></div>
     </div>`;
   }
   html += `</div>`;
-  
-  if(cKeys.length > 1) {
-    html += `<div class="sdiv" style="margin-top:.5rem">Outros Concorrentes Monitorados</div>`;
-    for(let i=1; i<cKeys.length; i++) {
-      const cNome = cKeys[i];
-      const mc = concs[cNome];
-      const cEstru = estru.conc[cNome] || {banda:'B. Branca'};
+
+  // Demais concorrentes
+  if (cKeys.length > 1) {
+    html += `<div class="sdiv" style="margin-top:.5rem">Todos os concorrentes coletados hoje (${cKeys.length})</div>`;
+    for (let i = 1; i < cKeys.length; i++) {
+      const nome = cKeys[i];
+      const mc   = concMerge[nome];
+      const b    = mc.bandeira || (estru.conc && estru.conc[nome] ? estru.conc[nome].banda : '');
+      const gcDiff = (dadosProp.GC && mc.GC) ? (parseFloat(mc.GC) - parseFloat(dadosProp.GC)) : null;
+      const diffHtml = gcDiff !== null
+        ? `<span style="font-size:.6rem;color:${gcDiff>0?'var(--dg)':'var(--ok)'}"> (${gcDiff>=0?'+':''}${gcDiff.toFixed(3)})</span>`
+        : '';
       html += `<div class="ccard" style="margin-bottom:4px">
-        <div class="ccnome" style="font-size:.78rem;margin-bottom:4px">${cNome} (${cEstru.banda})</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-          <div class="pr"><span class="prc">GC:</span><span class="prv gc">${mc.GC?'R$ '+parseFloat(mc.GC).toFixed(2):'--'}</span></div>
-          <div class="pr"><span class="prc">ET:</span><span class="prv et">${mc.ET?'R$ '+parseFloat(mc.ET).toFixed(2):'--'}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div><div class="ccnome" style="font-size:.78rem">${nome}</div>
+          <div style="font-size:.6rem;color:var(--tx3)">${b}</div></div>
+          <div style="font-family:var(--mono);font-size:.8rem;color:var(--wn)">${fmt(mc.GC)}${diffHtml}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">
+          <div class="pr"><span class="prc">ET</span><span class="prv et">${fmt(mc.ET)}</span></div>
+          <div class="pr"><span class="prc">S10</span><span class="prv s10">${fmt(mc.S10)}</span></div>
         </div>
       </div>`;
     }
@@ -850,22 +873,20 @@ function renderRanking() {
   const body = document.getElementById('rank-body');
   let list = [];
   
-  for(let p in G_DADOS.conc) {
-    const estruProp = POSTOS_DADOS[p] || {};
-    if(G_FILTRO_SUP !== 'todos' && estruProp.sup !== G_FILTRO_SUP) continue;
-    
-    for(let c in G_DADOS.conc[p]) {
-      const item = G_DADOS.conc[p][c];
-      if(item.GC > 0) {
-        const cEstru = estruProp.conc ? (estruProp.conc[c] || {banda:'B. Branca'}) : {banda:'B. Branca'};
-        list.push({
-          nome: c,
-          postoP: p,
-          banda: cEstru.banda,
-          preco: parseFloat(item.GC)
-        });
-      }
-    }
+  // Usa concPlano (formato plano direto da API) + filtra por supervisor
+  const concPlano = G_DADOS.concPlano || G_DADOS.conc || {};
+  for (let nome in concPlano) {
+    const item = concPlano[nome];
+    if (!item || !item.GC) continue;
+    const sup = item.supervisor || '';
+    if (G_FILTRO_SUP !== 'todos' && sup !== G_FILTRO_SUP) continue;
+    list.push({
+      nome:   nome,
+      postoP: item.bloco || '',
+      banda:  item.bandeira || 'B. Branca',
+      sup:    sup,
+      preco:  parseFloat(item.GC)
+    });
   }
   
   document.getElementById('rank-count').textContent = `${list.length} concorrentes mapeados`;
@@ -947,15 +968,13 @@ function renderRegional() {
   const regBody = document.getElementById('reg-body');
   
   let bData = {};
-  for(let p in G_DADOS.conc) {
-    for(let c in G_DADOS.conc[p]) {
-      const item = G_DADOS.conc[p][c];
-      const b = (POSTOS_DADOS[p] && POSTOS_DADOS[p].conc[c]) ? POSTOS_DADOS[p].conc[c].banda : 'Bandeira Branca';
-      if(item.GC > 0) {
-        if(!bData[b]) bData[b] = {s:0,c:0};
-        bData[b].s += parseFloat(item.GC); bData[b].c++;
-      }
-    }
+  const concPlanoReg = G_DADOS.concPlano || G_DADOS.conc || {};
+  for (let nome in concPlanoReg) {
+    const item = concPlanoReg[nome];
+    if (!item || !item.GC) continue;
+    const b = item.bandeira || 'Bandeira Branca';
+    if (!bData[b]) bData[b] = {s:0, c:0};
+    bData[b].s += parseFloat(item.GC); bData[b].c++;
   }
   let htmlB = '';
   for(let b in bData) {
@@ -1015,55 +1034,82 @@ function mapaSetSup(btn, sup) {
 function renderMapa() {
   if (!leafletMap) return;
   
-  // Limpa marcadores anteriores sem destruir a instância do mapa
   mapMarkers.forEach(m => leafletMap.removeLayer(m));
   mapMarkers = [];
   
   let precosValidos = [];
+  const SUPCOR_MAP = {Mauricio:'#00e5a0',Paulo:'#4895ef',Fabricio:'#f9c74f',Gledson:'#c77dff',Rodrigo:'#ff6b6b'};
+
+  // ── 1. Plota postos PRÓPRIOS com dados reais da API ─────────────
+  // Usa lat/lng reais da planilha quando disponíveis, senão usa MAP_POSTOS como fallback
+  const propDados = (G_DADOS && G_DADOS.prop) ? G_DADOS.prop : {};
   
-  MAP_POSTOS.forEach(posto => {
-    if (G_MAPA_SUP !== 'todos' && posto.sup !== G_MAPA_SUP) return;
+  Object.keys(propDados).forEach(chave => {
+    const d = propDados[chave];
+    const lat = d.lat ? parseFloat(d.lat) : null;
+    const lng = d.lng ? parseFloat(d.lng) : null;
     
-    // Vincula em tempo real com o G_DADOS carregado dinamicamente do Sheets
-    const dadosReaisPosto = G_DADOS && G_DADOS.prop[posto.k] ? G_DADOS.prop[posto.k] : null;
-    let precoExibir = '--';
+    // Busca no MAP_POSTOS para fallback de coordenadas e info
+    const mapInfo = MAP_POSTOS.find(p => p.k === chave || p.k === chave.replace(/^P\.\s*/i,'').trim());
+    const latFinal = lat || (mapInfo ? mapInfo.lat : null);
+    const lngFinal = lng || (mapInfo ? mapInfo.lng : null);
+    if (!latFinal || !lngFinal || isNaN(latFinal) || isNaN(lngFinal)) return;
     
-    if (dadosReaisPosto && dadosReaisPosto[G_MAPA_FUEL] && parseFloat(dadosReaisPosto[G_MAPA_FUEL]) > 0) {
-      const pNum = parseFloat(dadosReaisPosto[G_MAPA_FUEL]);
-      precoExibir = 'R$ ' + pNum.toFixed(2);
-      precosValidos.push(pNum);
-    }
+    const sup = d.supervisor || (mapInfo ? mapInfo.sup : '');
+    const banda = d.bandeira || (mapInfo ? mapInfo.banda : '');
+    const nomeExib = chave.replace(/^P\.\s*/i,'').substring(0,10);
     
-    // Cria elemento visual customizado do marcador
-    const iconHtml = `<div class="custom-marker">
-      <div class="m-name">${posto.n}</div>
+    if (G_MAPA_SUP !== 'todos' && sup !== G_MAPA_SUP) return;
+    
+    const preco = d[G_MAPA_FUEL];
+    const precoExibir = preco ? 'R$ ' + parseFloat(preco).toFixed(2) : '--';
+    if (preco) precosValidos.push(parseFloat(preco));
+    
+    const cor = SUPCOR_MAP[sup] || '#00e5a0';
+    const iconHtml = `<div class="custom-marker" style="border-color:${cor}">
+      <div class="m-name" style="color:${cor}">${nomeExib}</div>
       <div class="m-price">${precoExibir}</div>
     </div>`;
+    const cIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [70, 32], iconAnchor: [35, 16] });
+    const marker = L.marker([latFinal, lngFinal], {icon: cIcon}).addTo(leafletMap);
     
-    const cIcon = L.divIcon({
-      html: iconHtml,
-      className: '',
-      iconSize: [65, 30],
-      iconAnchor: [32, 15]
-    });
-    
-    const marker = L.marker([posto.lat, posto.lng], {icon: cIcon}).addTo(leafletMap);
-    
-    // Tooltip detalhado ao clicar no posto do mapa
     marker.on('click', () => {
-      let dHtml = `<div class="card" style="margin-top:.5rem"><div class="chdr"><div class="ctitle">${posto.n} (${posto.banda})</div><div class="csub">Supervisor: ${posto.sup}</div></div><div class="cbody">`;
-      if (dadosReaisPosto) {
-        dHtml += `<div class="pr"><span class="prc">G. Comum:</span><span class="prv gc">${dadosReaisPosto.GC ? 'R$ '+parseFloat(dadosReaisPosto.GC).toFixed(2):'--'}</span></div>`;
-        dHtml += `<div class="pr"><span class="prc">G. Aditivada:</span><span class="prv ga">${dadosReaisPosto.GA ? 'R$ '+parseFloat(dadosReaisPosto.GA).toFixed(2):'--'}</span></div>`;
-        dHtml += `<div class="pr"><span class="prc">Etanol:</span><span class="prv et">${dadosReaisPosto.ET ? 'R$ '+parseFloat(dadosReaisPosto.ET).toFixed(2):'--'}</span></div>`;
-        dHtml += `<div class="pr"><span class="prc">Diesel S10:</span><span class="prv s10">${dadosReaisPosto.S10 ? 'R$ '+parseFloat(dadosReaisPosto.S10).toFixed(2):'--'}</span></div>`;
-      } else {
-        dHtml += `<div class="empty">Sem dados coletados em tempo real para este posto.</div>`;
-      }
+      const data = d.data ? ` · ${d.data} ${d.hora||''}` : '';
+      let dHtml = `<div class="card" style="margin-top:.5rem"><div class="chdr">
+        <div class="ctitle" style="color:${cor}">${chave}</div>
+        <div class="csub">Sup: ${sup} · ${banda}${data}</div>
+      </div><div class="cbody">`;
+      dHtml += `<div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${d.GC?'R$'+parseFloat(d.GC).toFixed(3):'--'}</span></div>`;
+      dHtml += `<div class="pr"><span class="prc">G. Aditivada</span><span class="prv ga">${d.GA?'R$'+parseFloat(d.GA).toFixed(3):'--'}</span></div>`;
+      dHtml += `<div class="pr"><span class="prc">Etanol</span><span class="prv et">${d.ET?'R$'+parseFloat(d.ET).toFixed(3):'--'}</span></div>`;
+      dHtml += `<div class="pr"><span class="prc">Diesel S10</span><span class="prv s10">${d.S10?'R$'+parseFloat(d.S10).toFixed(3):'--'}</span></div>`;
       dHtml += `</div></div>`;
       document.getElementById('mapa-detail').innerHTML = dHtml;
     });
+    mapMarkers.push(marker);
+  });
+
+  // ── 2. Plota postos do MAP_POSTOS sem dados na API (fallback) ──
+  MAP_POSTOS.forEach(posto => {
+    const temDados = propDados[posto.k] || propDados['P. ' + posto.k] || 
+                     Object.keys(propDados).find(k => k.replace(/^P\.\s*/i,'').toUpperCase() === posto.k.toUpperCase());
+    if (temDados) return; // já plotado acima
+    if (G_MAPA_SUP !== 'todos' && posto.sup !== G_MAPA_SUP) return;
     
+    const cor = SUPCOR_MAP[posto.sup] || '#555';
+    const iconHtml = `<div class="custom-marker" style="border-color:${cor};opacity:.5">
+      <div class="m-name" style="color:${cor}">${posto.n}</div>
+      <div class="m-price" style="color:var(--tx3)">sem coleta</div>
+    </div>`;
+    const cIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [70, 32], iconAnchor: [35, 16] });
+    const marker = L.marker([posto.lat, posto.lng], {icon: cIcon}).addTo(leafletMap);
+    marker.on('click', () => {
+      document.getElementById('mapa-detail').innerHTML = 
+        `<div class="card" style="margin-top:.5rem"><div class="chdr">
+          <div class="ctitle">${posto.n}</div>
+          <div class="csub">Sup: ${posto.sup} · ${posto.banda}</div>
+        </div><div class="cbody"><div class="empty" style="padding:.5rem">Sem coleta hoje — aguardando dados do gerente.</div></div></div>`;
+    });
     mapMarkers.push(marker);
   });
   
@@ -1191,30 +1237,39 @@ function povoarHistPosto() {
 
 async function carregarHistorico() {
   povoarHistPosto();
-  const posto = document.getElementById('hist-posto').value;
-  const dias  = document.getElementById('hist-dias').value;
-  const sub   = document.getElementById('hist-sub');
-  const loading = document.getElementById('hist-loading');
+  const posto   = document.getElementById('hist-posto') ? document.getElementById('hist-posto').value : '';
+  const dias    = document.getElementById('hist-dias')  ? document.getElementById('hist-dias').value  : '30';
+  const subEl   = document.getElementById('hist-sub');
+  const loadEl  = document.getElementById('hist-loading');
 
-  loading.classList.remove('hidden');
-  sub.textContent = 'Carregando...';
+  if (loadEl) loadEl.classList.remove('hidden');
+  if (subEl)  subEl.textContent = 'Carregando...';
   G_HISTORICO = [];
 
   try {
-    const url = API_URL + '?tipo=historico&dias=' + dias + (posto ? '&posto=' + encodeURIComponent(posto) : '');
-    const res  = await fetch(url);
+    const url  = API_URL + '?tipo=historico&dias=' + encodeURIComponent(dias) + (posto ? '&posto=' + encodeURIComponent(posto) : '');
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000); // timeout 15s
+    const res  = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
     const json = await res.json();
-    if (json && json.success && json.historico) {
+
+    if (json && json.success && Array.isArray(json.historico)) {
       G_HISTORICO = json.historico;
-      sub.textContent = (posto || 'Todos os postos') + ' — últimos ' + dias + ' dias';
+      if (subEl) subEl.textContent = (posto || 'Todos os postos') + ' — últimos ' + dias + ' dias (' + json.historico.length + ' registros)';
+    } else if (json && json.historico) {
+      G_HISTORICO = json.historico;
+      if (subEl) subEl.textContent = (posto || 'Todos os postos') + ' — ' + G_HISTORICO.length + ' registros';
     } else {
-      sub.textContent = 'Erro ao carregar histórico.';
+      if (subEl) subEl.textContent = 'Sem dados no período selecionado.';
     }
   } catch(e) {
-    console.warn('Histórico offline:', e);
-    sub.textContent = 'Sem conexão — histórico indisponível.';
+    console.warn('Histórico erro:', e.name, e.message);
+    if (subEl) subEl.textContent = e.name === 'AbortError' 
+      ? 'Tempo esgotado — planilha muito grande. Tente filtrar por posto.' 
+      : 'Sem conexão com o servidor.';
   } finally {
-    loading.classList.add('hidden');
+    if (loadEl) loadEl.classList.add('hidden');
     renderGrafico();
     renderResumoHistorico();
     renderListaHistorico();
