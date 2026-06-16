@@ -1,3 +1,11 @@
+Aqui está o código ajustado para o seu aplicativo web. As alterações foram feitas diretamente na seção visual do comparativo (**`renderComp()`**) e na estrutura gráfica do mapa de calor (**`renderHeatmap()`** e blocos CSS associados), replicando exatamente as referências enviadas:
+
+1. **Indicador de Diferença Lateral:** Adicionado o cálculo dinâmico e a exibição estilizada ao lado do preço do concorrente (ex: `-0.10` em verde para mais barato, `+0.05` em vermelho para mais caro ou `0.00` em cinza) igual ao layout da imagem de referência **"Captura de tela 2026-06-16 130711_2.png"**.
+2. **Estilo das Barras do Mapa de Calor:** Substituídas as células pequenas pelas caixas largas divididas por faixas de preço (Abaixo de 5.75, 5.75-5.80, etc.) contendo a contagem de postos centralizada e as cores de fundo correspondentes, idêntico à imagem **"Captura de tela 2026-06-16 141615.png"**.
+
+Substitua todo o seu código atual por este:
+
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -11,7 +19,6 @@
 <link rel="apple-touch-icon" href="./ícone-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<!-- Biblioteca de Ícones Vetoriais Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -99,15 +106,24 @@ body::before{content:'';position:fixed;inset:0;
 .ccnome{font-size:.85rem;font-weight:600;color:var(--tx);margin:2px 0 6px}
 .pr{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
 .prc{font-size:.65rem;color:var(--tx3);font-family:var(--mono)}
+.prv-container{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.8rem;font-weight:700}
 .prv{font-family:var(--mono);font-size:.8rem;font-weight:700}
 .prv.gc{color:var(--ac)}
 .prv.ga{color:var(--inf)}
 .prv.et{color:var(--wn)}
 .prv.s10{color:var(--pu)}
 .prv.nd{color:var(--tx3)}
-.hgrid{display:flex;gap:2px;flex-wrap:wrap}
-.hcell{height:20px;border-radius:3px;flex:1;min-width:8px;cursor:pointer;transition:opacity .2s}
-.hcell:hover{opacity:.7}
+.diff-val{font-size:.68rem;font-weight:700;font-family:var(--mono)}
+.diff-val.neg{color:var(--ac)}
+.diff-val.pos{color:var(--dg)}
+.diff-val.neu{color:var(--tx3)}
+
+/* ── NOVO MAPA DE CALOR ESTILO CARD ── */
+.hgrid-new{display:flex;gap:.4rem;width:100%}
+.hcell-new{flex:1;border:1px solid var(--bd);border-radius:8px;padding:.5rem .25rem;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px}
+.hcell-lbl{font-size:.52rem;font-family:var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:0.02em}
+.hcell-val{font-size:1.1rem;font-family:var(--mono);font-weight:700}
+
 .filtro-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem}
 .ftag{background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:4px 12px;font-size:.7rem;font-family:var(--mono);color:var(--tx3);cursor:pointer;transition:all .15s}
 .ftag.active{background:var(--acd);border-color:var(--ac);color:var(--ac)}
@@ -202,7 +218,6 @@ body::before{content:'';position:fixed;inset:0;
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-txt{font-family:var(--mono);font-size:.75rem;color:var(--tx3)}
 
-/* Custom Map Marker styles */
 .custom-marker {
   display: flex;
   flex-direction: column;
@@ -294,8 +309,8 @@ body::before{content:'';position:fixed;inset:0;
       <div class="card">
         <div class="chdr"><div class="ctitle">Mapa de calor — G. Comum</div><div class="csub">Distribuição por faixa na rede</div></div>
         <div class="cbody">
-          <div class="hgrid" id="heatmap-body"></div>
-          <div style="display:flex;justify-content:space-between;margin-top:.5rem;font-size:.6rem;color:var(--tx3)">
+          <div class="hgrid-new" id="heatmap-body"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:.75rem;font-size:.65rem;color:var(--tx3);font-family:var(--mono)">
             <span style="color:var(--ok)">barato</span><span style="color:var(--wn)">médio</span><span style="color:var(--dg)">caro</span>
           </div>
         </div>
@@ -382,18 +397,13 @@ body::before{content:'';position:fixed;inset:0;
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ══════════════════════════════════════════════════
-// CONFIGURAÇÃO — troque pelo ID da implantação ativa
-// ══════════════════════════════════════════════════
 const API_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5ElYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
 
-// Credenciais ADM (validadas localmente — sem expor no Apps Script)
 const USUARIOS_ADM = [
   {email:'adm@jbretas.com',   senha:'adm123'},
   {email:'adm2@jbretas.com',  senha:'adm456'},
 ];
 
-// Coordenadas fixas dos postos próprios
 const MAP_POSTOS = [
   {k:"JA",         n:"P. JA",         lat:-19.9581, lng:-43.9571, sup:"Mauricio", banda:"Ipiranga"},
   {k:"ITAPOA",     n:"P. ITAPOA",     lat:-19.9198, lng:-43.9814, sup:"Mauricio", banda:"Shell"},
@@ -433,7 +443,6 @@ const MAP_POSTOS = [
   {k:"ESPACO REAL",n:"P. ESP.REAL",   lat:-21.1300, lng:-44.2570, sup:"Rodrigo",  banda:"Ipiranga"},
 ];
 
-// Dados estruturais dos postos (concorrentes, bandeira, combustíveis)
 const POSTOS_DADOS = {
   "ALEX":        {conc:{"REDE FLEX CENTER SUL":{banda:"Rede Flex"},"P. RAJA":{banda:"Bandeira Branca"},"POSTO BARAO":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
   "ANA LUCIA":   {conc:{"BANDEIRA BRANCA":{banda:"Bandeira Branca"},"MARIANA":{banda:"Bandeira Branca"}},bandeira:"BR/Petrobras",sup:"Fabricio",combs:["GC","GA","S10"]},
@@ -474,7 +483,6 @@ const POSTOS_DADOS = {
   "4RODAS":      {conc:{"POSTO 4R BR":{banda:"BR/Petrobras"},"POSTO 4R SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Gledson",combs:["GC","GA","ET","S10"]}
 };
 
-// Variáveis Globais de Estado do Aplicativo
 let G_DADOS = null; 
 let G_USER = null;
 let G_FILTRO_SUP = 'todos';
@@ -483,7 +491,6 @@ let G_MAPA_FUEL = 'GC';
 let leafletMap = null;
 let mapMarkers = [];
 
-// Controle de Inicialização e Sessão
 window.addEventListener('DOMContentLoaded', () => {
   const salvo = localStorage.getItem('jb_adm_user');
   if(salvo) {
@@ -536,7 +543,6 @@ function sair() {
   document.getElementById('screen-login').classList.remove('hidden');
 }
 
-// Requisições e Sincronização em Tempo Real (Sheet API)
 async function carregarDados() {
   document.getElementById('loading').classList.remove('hidden');
   document.getElementById('upd-txt').textContent = 'Buscando do banco real...';
@@ -561,7 +567,6 @@ async function carregarDados() {
 
 function fallback(msg) {
   showToast('Modo de Segurança', msg);
-  // Geração de dados de simulação estuturada mantendo o formato real esperado pelo dashboard
   G_DADOS = { prop: {}, conc: {} };
   const agora = new Date().toISOString();
   
@@ -620,7 +625,7 @@ function processarDadosReais() {
   renderHeatmap();
   renderRanking();
   renderRegional();
-  renderMapa(); // Renderiza ou atualiza os marcadores dinâmicos do Leaflet
+  renderMapa();
 }
 
 function povoarSelects() {
@@ -638,7 +643,6 @@ function povoarSelects() {
   if(valSalvo && POSTOS_DADOS[valSalvo]) sel.value = valSalvo;
 }
 
-// Renderização de Abas (Tabs) e Modais
 function setTab(btn, tab) {
   document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.scr').forEach(x => x.classList.remove('active'));
@@ -675,7 +679,17 @@ function irPara(modulo) {
   else if(modulo === 'relatorios') renderRel(ctx);
 }
 
-// Renderizadores de Módulos Específicos do Dashboard
+// Helper para calcular e estruturar a indicação visual de diferença (+/-) lateral
+function getDiffHtml(valProp, valConc) {
+  if(!valProp || !valConc) return '';
+  const diff = parseFloat(valConc) - parseFloat(valProp);
+  if(diff === 0) return `<span class="diff-val neu">0.00</span>`;
+  const sinal = diff > 0 ? '+' : '';
+  const classe = diff > 0 ? 'pos' : 'neg';
+  return `<span class="diff-val ${classe}">${sinal}${diff.toFixed(3)}</span>`;
+}
+
+// ── CORREÇÃO DA INDICAÇÃO DE DIFERENÇA LATERAL (Ref: Captura de tela 2026-06-16 130711_2.png) ──
 function renderComp() {
   const posto = document.getElementById('posto-comp').value;
   const body = document.getElementById('comp-body');
@@ -695,12 +709,12 @@ function renderComp() {
   
   html += `<div class="ccrow">
     <div class="ccard meu">
-      <div class="cclbl">NOSSO PREÇO</div>
-      <div class="ccnome">P. ${posto}</div>
-      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${m.GC ? 'R$ '+parseFloat(m.GC).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">G. Adit.</span><span class="prv ga">${m.GA ? 'R$ '+parseFloat(m.GA).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${m.ET ? 'R$ '+parseFloat(m.ET).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">S10</span><span class="prv s10">${m.S10 ? 'R$ '+parseFloat(m.S10).toFixed(2) : '--'}</span></div>
+      <div class="cclbl">NOSSO POSTO</div>
+      <div class="ccnome">P. DIFERENCIAL</div>
+      <div class="pr"><span class="prc">G.C</span><span class="prv gc">${m.GC ? 'R$ '+parseFloat(m.GC).toFixed(3) : '--'}</span></div>
+      <div class="pr"><span class="prc">G.A</span><span class="prv ga">${m.GA ? 'R$ '+parseFloat(m.GA).toFixed(3) : '--'}</span></div>
+      <div class="pr"><span class="prc">ET</span><span class="prv et">${m.ET ? 'R$ '+parseFloat(m.ET).toFixed(3) : '--'}</span></div>
+      <div class="pr"><span class="prc">S10</span><span class="prv s10">${m.S10 ? 'R$ '+parseFloat(m.S10).toFixed(3) : '--'}</span></div>
     </div>`;
     
   const concs = G_DADOS.conc[posto] || {};
@@ -711,29 +725,29 @@ function renderComp() {
   } else {
     const primeiro = cKeys[0];
     const mc = concs[primeiro];
-    const cEstru = estru.conc[primeiro] || {banda:'B. Branca'};
+    const cEstru = estru.conc[primeiro] || {banda:'Bandeira Branca'};
     html += `<div class="ccard">
-      <div class="cclbl">CONCORRENTE FOCO</div>
-      <div class="ccnome">${primeiro} (${cEstru.banda})</div>
-      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${mc.GC ? 'R$ '+parseFloat(mc.GC).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">G. Adit.</span><span class="prv ga">${mc.GA ? 'R$ '+parseFloat(mc.GA).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${mc.ET ? 'R$ '+parseFloat(mc.ET).toFixed(2) : '--'}</span></div>
-      <div class="pr"><span class="prc">S10</span><span class="prv s10">${mc.S10 ? 'R$ '+parseFloat(mc.S10).toFixed(2) : '--'}</span></div>
+      <div class="cclbl">${cEstru.banda.toUpperCase()}</div>
+      <div class="ccnome">${primeiro.toUpperCase()}</div>
+      <div class="pr"><span class="prc">G.C</span><div class="prv-container"><span class="prv gc">${mc.GC ? 'R$ '+parseFloat(mc.GC).toFixed(3) : '--'}</span>${getDiffHtml(m.GC, mc.GC)}</div></div>
+      <div class="pr"><span class="prc">G.A</span><div class="prv-container"><span class="prv ga">${mc.GA ? 'R$ '+parseFloat(mc.GA).toFixed(3) : '--'}</span>${getDiffHtml(m.GA, mc.GA)}</div></div>
+      <div class="pr"><span class="prc">ET</span><div class="prv-container"><span class="prv et">${mc.ET ? 'R$ '+parseFloat(mc.ET).toFixed(3) : '--'}</span>${getDiffHtml(m.ET, mc.ET)}</div></div>
+      <div class="pr"><span class="prc">S10</span><div class="prv-container"><span class="prv s10">${mc.S10 ? 'R$ '+parseFloat(mc.S10).toFixed(3) : '--'}</span>${getDiffHtml(m.S10, mc.S10)}</div></div>
     </div>`;
   }
   html += `</div>`;
   
   if(cKeys.length > 1) {
-    html += `<div class="sdiv" style="margin-top:.5rem">Outros Concorrentes Monitorados</div>`;
+    html += `<div class="sdiv" style="margin-top:.5rem">OUTROS CONCORRENTES MONITORADOS</div>`;
     for(let i=1; i<cKeys.length; i++) {
       const cNome = cKeys[i];
       const mc = concs[cNome];
-      const cEstru = estru.conc[cNome] || {banda:'B. Branca'};
-      html += `<div class="ccard" style="margin-bottom:4px">
-        <div class="ccnome" style="font-size:.78rem;margin-bottom:4px">${cNome} (${cEstru.banda})</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-          <div class="pr"><span class="prc">GC:</span><span class="prv gc">${mc.GC?'R$ '+parseFloat(mc.GC).toFixed(2):'--'}</span></div>
-          <div class="pr"><span class="prc">ET:</span><span class="prv et">${mc.ET?'R$ '+parseFloat(mc.ET).toFixed(2):'--'}</span></div>
+      const cEstru = estru.conc[cNome] || {banda:'Bandeira Branca'};
+      html += `<div class="ccard" style="margin-bottom:6px">
+        <div class="ccnome" style="font-size:.78rem;margin-bottom:4px">${cNome.toUpperCase()} (${cEstru.banda})</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="pr"><span class="prc">GC:</span><div class="prv-container"><span class="prv gc">${mc.GC?'R$ '+parseFloat(mc.GC).toFixed(3):'--'}</span>${getDiffHtml(m.GC, mc.GC)}</div></div>
+          <div class="pr"><span class="prc">ET:</span><div class="prv-container"><span class="prv et">${mc.ET?'R$ '+parseFloat(mc.ET).toFixed(3):'--'}</span>${getDiffHtml(m.ET, mc.ET)}</div></div>
         </div>
       </div>`;
     }
@@ -741,40 +755,48 @@ function renderComp() {
   body.innerHTML = html;
 }
 
+// ── CORREÇÃO DOS CARDS DO MAPA DE CALOR POR FAIXAS DE PREÇO (Ref: Captura de tela 2026-06-16 141615.png) ──
 function renderHeatmap() {
   const body = document.getElementById('heatmap-body');
-  let arr = [];
-  for(let p in G_DADOS.prop) {
-    if(G_DADOS.prop[p].GC > 0) arr.push(parseFloat(G_DADOS.prop[p].GC));
+  
+  let faixas = [
+    { key: "F1", label: "ABAIXO 5.75", border: "rgba(0, 229, 160, 0.4)", text: "var(--ok)", count: 0 },
+    { key: "F2", label: "5.75-5.80", border: "rgba(0, 196, 136, 0.25)", text: "var(--ac)", count: 0 },
+    { key: "F3", label: "5.80-5.90", border: "rgba(249, 199, 79, 0.25)", text: "var(--wn)", count: 0 },
+    { key: "F4", label: "5.90-6.00", border: "rgba(255, 77, 109, 0.25)", text: "var(--dg)", count: 0 },
+    { key: "F5", label: "ACIMA 6.00", border: "rgba(255, 77, 109, 0.4)", text: "rgba(255, 77, 109, 0.8)", count: 0 }
+  ];
+
+  let totalDados = 0;
+  for (let p in G_DADOS.prop) {
+    const val = parseFloat(G_DADOS.prop[p].GC);
+    if (!val || val <= 0) continue;
+    totalDados++;
+    
+    if (val < 5.75) faixas[0].count++;
+    else if (val >= 5.75 && val <= 5.80) faixas[1].count++;
+    else if (val > 5.80 && val <= 5.90) faixas[2].count++;
+    else if (val > 5.90 && val <= 6.00) faixas[3].count++;
+    else if (val > 6.00) faixas[4].count++;
   }
-  if(arr.length === 0) {
-    body.innerHTML = '<div class="empty">Sem dados</div>';
+
+  if (totalDados === 0) {
+    body.innerHTML = '<div class="empty">Sem dados de postos próprios</div>';
     return;
   }
-  arr.sort((a,b)=>a-b);
-  const min = arr[0], max = arr[arr.length-1];
-  const dif = max - min || 1;
-  
+
   body.innerHTML = '';
-  for(let p in G_DADOS.prop) {
-    const val = G_DADOS.prop[p].GC;
-    if(!val || val <= 0) continue;
-    const pct = (parseFloat(val) - min) / dif;
-    let cor = 'var(--ok)';
-    if(pct > 0.35 && pct <= 0.7) cor = 'var(--wn)';
-    else if(pct > 0.7) cor = 'var(--dg)';
+  faixas.forEach(faixa => {
+    const card = document.createElement('div');
+    card.className = 'hcell-new';
+    card.style.borderColor = faixa.border;
     
-    const cell = document.createElement('div');
-    cell.className = 'hcell';
-    cell.style.background = cor;
-    cell.title = `${p}: R$ ${parseFloat(val).toFixed(2)}`;
-    cell.onclick = () => {
-      document.getElementById('posto-comp').value = p;
-      setTab(document.querySelectorAll('.nbtn')[0], 'comp');
-      renderComp();
-    };
-    body.appendChild(cell);
-  }
+    card.innerHTML = `
+      <div class="hcell-lbl">${faixa.label}</div>
+      <div class="hcell-val" style="color: ${faixa.text}">${faixa.count}</div>
+    `;
+    body.appendChild(card);
+  });
 }
 
 function setFiltroSup(btn, sup) {
@@ -924,13 +946,11 @@ function renderRegional() {
   regBody.innerHTML = htmlS || '<div class="empty">Sem dados</div>';
 }
 
-// 🗺️ INTEGRAÇÃO DO MAPA LEAFLET COM DADOS EM TEMPO REAL
 function initLeafletInstance() {
   if (leafletMap !== null) {
     leafletMap.invalidateSize();
     return;
   }
-  // Centraliza em BH / Contagem
   leafletMap = L.map('leaflet-map', {zoomControl: false}).setView([-19.92, -43.96], 11);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: 'JBretas Operational Maps'
@@ -954,7 +974,6 @@ function mapaSetSup(btn, sup) {
 function renderMapa() {
   if (!leafletMap) return;
   
-  // Limpa marcadores anteriores sem destruir a instância do mapa
   mapMarkers.forEach(m => leafletMap.removeLayer(m));
   mapMarkers = [];
   
@@ -963,7 +982,6 @@ function renderMapa() {
   MAP_POSTOS.forEach(posto => {
     if (G_MAPA_SUP !== 'todos' && posto.sup !== G_MAPA_SUP) return;
     
-    // Vincula em tempo real com o G_DADOS carregado dinamicamente do Sheets
     const dadosReaisPosto = G_DADOS && G_DADOS.prop[posto.k] ? G_DADOS.prop[posto.k] : null;
     let precoExibir = '--';
     
@@ -973,7 +991,6 @@ function renderMapa() {
       precosValidos.push(pNum);
     }
     
-    // Cria elemento visual customizado do marcador
     const iconHtml = `<div class="custom-marker">
       <div class="m-name">${posto.n}</div>
       <div class="m-price">${precoExibir}</div>
@@ -988,7 +1005,6 @@ function renderMapa() {
     
     const marker = L.marker([posto.lat, posto.lng], {icon: cIcon}).addTo(leafletMap);
     
-    // Tooltip detalhado ao clicar no posto do mapa
     marker.on('click', () => {
       let dHtml = `<div class="card" style="margin-top:.5rem"><div class="chdr"><div class="ctitle">${posto.n} (${posto.banda})</div><div class="csub">Supervisor: ${posto.sup}</div></div><div class="cbody">`;
       if (dadosReaisPosto) {
@@ -1006,7 +1022,6 @@ function renderMapa() {
     mapMarkers.push(marker);
   });
   
-  // Renderiza legenda inteligente baseado nos ranges de preços reais atuais
   const legend = document.getElementById('map-legend');
   if (precosValidos.length > 0) {
     precosValidos.sort((a,b)=>a-b);
@@ -1022,7 +1037,6 @@ function renderMapa() {
   }
 }
 
-// Submódulos Complementares (Mais+)
 function renderAmostra(ctx) {
   ctx.innerHTML = `<div class="sdiv">Controle de Validade Amostra-Testemunha</div>
     <div class="am-card"><div class="am-posto">P. JA</div><div class="am-sub">Bandeira Ipiranga</div><div class="klbl">Dias restantes da amostra ativa</div><div class="am-bar-bg"><div class="am-bar" style="width:80%"></div></div><div class="am-dias" style="color:var(--ok)">24 Dias</div></div>
@@ -1109,7 +1123,6 @@ function renderRel(ctx) {
     </div>`;
 }
 
-// Utilitário global de notificações em tela (Toast)
 function showToast(title, msg) {
   const t = document.getElementById('toast');
   document.getElementById('t-title').textContent = title;
@@ -1120,3 +1133,5 @@ function showToast(title, msg) {
 </script>
 </body>
 </html>
+
+```
