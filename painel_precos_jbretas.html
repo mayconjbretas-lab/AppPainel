@@ -697,11 +697,11 @@ function initLeaflet(){
     zoomControl:true
   });
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  attribution: '©<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ©<a href="https://carto.com/">CARTO</a>',
-  subdomains: 'abcd',
-  maxZoom: 19
-}).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; CartoDB &copy; OSM',
+    subdomains:'abcd',
+    maxZoom:19
+  }).addTo(leafletMap);
 
   var concorrentes = {};
   Object.keys(POSTOS_DADOS).forEach(function(posto){
