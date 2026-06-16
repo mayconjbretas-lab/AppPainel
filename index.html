@@ -751,7 +751,20 @@ function renderRegional(){
 // ══════════════════════════════════════════════════
 // MAPA — CartoDB Positron (fundo BRANCO)
 // ══════════════════════════════════════════════════
-// Plota postos próprios — usa lat/lng da API se existir, senão usa MAP_POSTOS
+  function initMapa(){
+  if(leafletMap){
+    leafletMap.invalidateSize();
+    renderLeafletMarkers();
+    return;
+  }
+  var mapEl=document.getElementById('leaflet-map');
+  if(!mapEl||typeof L==='undefined')return;
+  leafletMap=L.map('leaflet-map',{center:[-19.917,-43.960],zoom:11,zoomControl:true});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy;<a href="https://www.openstreetmap.org/copyright">OSM</a> &copy;<a href="https://carto.com/">CARTO</a>',
+    subdomains:'abcd',maxZoom:19
+  }).addTo(leafletMap);
+  renderLeafletMarkers();
 MAP_POSTOS.forEach(function(mp) {
   var filtOk = mapaSupAtual === 'todos' || mp.sup === mapaSupAtual;
   if (!filtOk) return;
