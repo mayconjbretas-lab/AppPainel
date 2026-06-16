@@ -11,6 +11,7 @@
 <link rel="apple-touch-icon" href="./ícone-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- Biblioteca de Ícones Vetoriais Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -98,24 +99,15 @@ body::before{content:'';position:fixed;inset:0;
 .ccnome{font-size:.85rem;font-weight:600;color:var(--tx);margin:2px 0 6px}
 .pr{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
 .prc{font-size:.65rem;color:var(--tx3);font-family:var(--mono)}
-.prv-container{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.8rem;font-weight:700}
 .prv{font-family:var(--mono);font-size:.8rem;font-weight:700}
 .prv.gc{color:var(--ac)}
 .prv.ga{color:var(--inf)}
 .prv.et{color:var(--wn)}
 .prv.s10{color:var(--pu)}
 .prv.nd{color:var(--tx3)}
-.diff-val{font-size:.68rem;font-weight:700;font-family:var(--mono)}
-.diff-val.neg{color:var(--ac)}
-.diff-val.pos{color:var(--dg)}
-.diff-val.neu{color:var(--tx3)}
-
-/* ── NOVO MAPA DE CALOR ESTILO CARD ── */
-.hgrid-new{display:flex;gap:.4rem;width:100%}
-.hcell-new{flex:1;border:1px solid var(--bd);border-radius:8px;padding:.5rem .25rem;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px}
-.hcell-lbl{font-size:.52rem;font-family:var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:0.02em}
-.hcell-val{font-size:1.1rem;font-family:var(--mono);font-weight:700}
-
+.hgrid{display:flex;gap:2px;flex-wrap:wrap}
+.hcell{height:20px;border-radius:3px;flex:1;min-width:8px;cursor:pointer;transition:opacity .2s}
+.hcell:hover{opacity:.7}
 .filtro-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem}
 .ftag{background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:4px 12px;font-size:.7rem;font-family:var(--mono);color:var(--tx3);cursor:pointer;transition:all .15s}
 .ftag.active{background:var(--acd);border-color:var(--ac);color:var(--ac)}
@@ -210,6 +202,7 @@ body::before{content:'';position:fixed;inset:0;
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-txt{font-family:var(--mono);font-size:.75rem;color:var(--tx3)}
 
+/* Custom Map Marker styles */
 .custom-marker {
   display: flex;
   flex-direction: column;
@@ -301,8 +294,8 @@ body::before{content:'';position:fixed;inset:0;
       <div class="card">
         <div class="chdr"><div class="ctitle">Mapa de calor — G. Comum</div><div class="csub">Distribuição por faixa na rede</div></div>
         <div class="cbody">
-          <div class="hgrid-new" id="heatmap-body"></div>
-          <div style="display:flex;justify-content:space-between;margin-top:.75rem;font-size:.65rem;color:var(--tx3);font-family:var(--mono)">
+          <div class="hgrid" id="heatmap-body"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:.5rem;font-size:.6rem;color:var(--tx3)">
             <span style="color:var(--ok)">barato</span><span style="color:var(--wn)">médio</span><span style="color:var(--dg)">caro</span>
           </div>
         </div>
@@ -355,6 +348,41 @@ body::before{content:'';position:fixed;inset:0;
       <div id="mapa-detail"></div>
     </section>
 
+    <section class="scr" id="s-hist">
+      <div class="sdiv">Filtrar posto e período</div>
+      <div class="filtro-row" style="gap:.4rem;margin-bottom:.5rem">
+        <select class="map-sel" id="hist-posto" style="flex:1;padding:6px 8px" onchange="carregarHistorico()">
+          <option value="">Todos os postos</option>
+        </select>
+        <select class="map-sel" id="hist-dias" onchange="carregarHistorico()">
+          <option value="7">7 dias</option>
+          <option value="30" selected>30 dias</option>
+          <option value="90">Trimestre</option>
+        </select>
+        <select class="map-sel" id="hist-fuel" onchange="renderGrafico()">
+          <option value="GC">G. Comum</option>
+          <option value="GA">G. Aditivada</option>
+          <option value="ET">Etanol</option>
+          <option value="S10">Diesel S10</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="chdr"><div class="ctitle">Evolução de Preços</div><div class="csub" id="hist-sub">Selecione um posto</div></div>
+        <div class="cbody" style="padding:.5rem 0">
+          <div id="hist-loading" class="empty hidden"><div class="loading-spin" style="margin:0 auto"></div></div>
+          <canvas id="hist-canvas" style="width:100%;max-height:220px;display:block"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chdr"><div class="ctitle">Resumo do Período</div></div>
+        <div class="cbody" id="hist-resumo"><div class="empty">Carregando...</div></div>
+      </div>
+      <div class="card">
+        <div class="chdr"><div class="ctitle">Registros recentes</div><div class="csub" id="hist-qtd"></div></div>
+        <div class="cbody" id="hist-lista"><div class="empty">Carregando...</div></div>
+      </div>
+    </section>
+
     <section class="scr" id="s-mais">
       <div id="mais-conteudo"><div class="empty">Selecione uma opção no menu Mais+</div></div>
     </section>
@@ -364,8 +392,8 @@ body::before{content:'';position:fixed;inset:0;
   <nav class="bnav">
     <button class="nbtn active" onclick="setTab(this,'comp')"><span class="ni"><i class="fa-solid fa-scale-balanced"></i></span><span class="nl">Compara</span></button>
     <button class="nbtn" onclick="setTab(this,'ranking')"><span class="ni"><i class="fa-solid fa-trophy"></i></span><span class="nl">Ranking</span></button>
-    <button class="nbtn" onclick="setTab(this,'regional')"><span class="ni"><i class="fa-solid fa-location-dot"></i></span><span class="nl">Regional</span></button>
     <button class="nbtn" onclick="setTab(this,'mapa')"><span class="ni"><i class="fa-solid fa-map-location-dot"></i></span><span class="nl">Mapa</span></button>
+    <button class="nbtn" onclick="setTab(this,'hist'); carregarHistorico()"><span class="ni"><i class="fa-solid fa-chart-line"></i></span><span class="nl">Histórico</span></button>
     <button class="nbtn" onclick="abrirMais()"><span class="ni"><i class="fa-solid fa-circle-plus"></i></span><span class="nl">Mais+</span></button>
   </nav>
 </div>
@@ -389,13 +417,18 @@ body::before{content:'';position:fixed;inset:0;
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5ElYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
+// ══════════════════════════════════════════════════
+// CONFIGURAÇÃO — troque pelo ID da implantação ativa
+// ══════════════════════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5EIYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
 
+// Credenciais ADM (validadas localmente — sem expor no Apps Script)
 const USUARIOS_ADM = [
   {email:'adm@jbretas.com',   senha:'adm123'},
   {email:'adm2@jbretas.com',  senha:'adm456'},
 ];
 
+// Coordenadas fixas dos postos próprios
 const MAP_POSTOS = [
   {k:"JA",         n:"P. JA",         lat:-19.9581, lng:-43.9571, sup:"Mauricio", banda:"Ipiranga"},
   {k:"ITAPOA",     n:"P. ITAPOA",     lat:-19.9198, lng:-43.9814, sup:"Mauricio", banda:"Shell"},
@@ -435,6 +468,7 @@ const MAP_POSTOS = [
   {k:"ESPACO REAL",n:"P. ESP.REAL",   lat:-21.1300, lng:-44.2570, sup:"Rodrigo",  banda:"Ipiranga"},
 ];
 
+// Dados estruturais dos postos (concorrentes, bandeira, combustíveis)
 const POSTOS_DADOS = {
   "ALEX":        {conc:{"REDE FLEX CENTER SUL":{banda:"Rede Flex"},"P. RAJA":{banda:"Bandeira Branca"},"POSTO BARAO":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"}},bandeira:"Ipiranga",sup:"Mauricio",combs:["GC","GA","ET","S10"]},
   "ANA LUCIA":   {conc:{"BANDEIRA BRANCA":{banda:"Bandeira Branca"},"MARIANA":{banda:"Bandeira Branca"}},bandeira:"BR/Petrobras",sup:"Fabricio",combs:["GC","GA","S10"]},
@@ -475,6 +509,7 @@ const POSTOS_DADOS = {
   "4RODAS":      {conc:{"POSTO 4R BR":{banda:"BR/Petrobras"},"POSTO 4R SHELL":{banda:"Shell"}},bandeira:"Ipiranga",sup:"Gledson",combs:["GC","GA","ET","S10"]}
 };
 
+// Variáveis Globais de Estado do Aplicativo
 let G_DADOS = null; 
 let G_USER = null;
 let G_FILTRO_SUP = 'todos';
@@ -483,6 +518,7 @@ let G_MAPA_FUEL = 'GC';
 let leafletMap = null;
 let mapMarkers = [];
 
+// Controle de Inicialização e Sessão
 window.addEventListener('DOMContentLoaded', () => {
   const salvo = localStorage.getItem('jb_adm_user');
   if(salvo) {
@@ -535,14 +571,15 @@ function sair() {
   document.getElementById('screen-login').classList.remove('hidden');
 }
 
+// Requisições e Sincronização em Tempo Real (Sheet API)
 async function carregarDados() {
   document.getElementById('loading').classList.remove('hidden');
   document.getElementById('upd-txt').textContent = 'Buscando do banco real...';
   try {
-    const res = await fetch(API_URL + '?action=getPrecos');
+    const res = await fetch(API_URL + '?tipo=precos');
     const json = await res.json();
     
-    if(json && json.success) {
+    if(json && json.success && json.data) {
       G_DADOS = json.data;
       processarDadosReais();
       showToast('Dados Atualizados', 'Informações coletadas em tempo real com sucesso.');
@@ -582,6 +619,35 @@ function fallback(msg) {
 }
 
 function processarDadosReais() {
+  // Reorganiza concorrentes do formato plano {nomeConcorrente: dados}
+  // para aninhado {posto: {nomeConcorrente: dados}} usando POSTOS_DADOS como referência
+  const concPlano = G_DADOS.conc || {};
+  const concAninhado = {};
+  for (let p in POSTOS_DADOS) {
+    concAninhado[p] = {};
+    const concsDoPost = POSTOS_DADOS[p].conc || {};
+    for (let nomeConc in concsDoPost) {
+      // Tenta achar no plano por nome exato ou parcial
+      const chave = Object.keys(concPlano).find(k =>
+        k.toUpperCase() === nomeConc.toUpperCase() ||
+        k.toUpperCase().includes(nomeConc.toUpperCase()) ||
+        nomeConc.toUpperCase().includes(k.replace(/^P\.\s*/i,'').toUpperCase())
+      );
+      if (chave) concAninhado[p][nomeConc] = concPlano[chave];
+    }
+  }
+  G_DADOS.conc = concAninhado;
+
+  // Mapeia postos próprios do formato "P. NOME" para "NOME"
+  const propPlano = G_DADOS.prop || {};
+  const propMapeado = {};
+  for (let k in propPlano) {
+    const chave = k.replace(/^P\.\s*/i,'').trim().toUpperCase();
+    const found = Object.keys(POSTOS_DADOS).find(p => p.toUpperCase() === chave) || chave;
+    propMapeado[found] = propPlano[k];
+  }
+  G_DADOS.prop = propMapeado;
+
   const contProp = Object.keys(G_DADOS.prop || {}).length;
   document.getElementById('kv-proprios').textContent = contProp;
   
@@ -617,7 +683,7 @@ function processarDadosReais() {
   renderHeatmap();
   renderRanking();
   renderRegional();
-  renderMapa();
+  renderMapa(); // Renderiza ou atualiza os marcadores dinâmicos do Leaflet
 }
 
 function povoarSelects() {
@@ -635,15 +701,14 @@ function povoarSelects() {
   if(valSalvo && POSTOS_DADOS[valSalvo]) sel.value = valSalvo;
 }
 
+// Renderização de Abas (Tabs) e Modais
 function setTab(btn, tab) {
   document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.scr').forEach(x => x.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('s-' + tab).classList.add('active');
-  
-  if(tab === 'mapa') {
-    setTimeout(() => { initLeafletInstance(); }, 150);
-  }
+  if(tab === 'mapa') setTimeout(() => { initLeafletInstance(); }, 150);
+  if(tab === 'hist') { povoarHistPosto(); }
 }
 
 function abrirMais() {
@@ -671,17 +736,7 @@ function irPara(modulo) {
   else if(modulo === 'relatorios') renderRel(ctx);
 }
 
-// Helper para calcular e estruturar a indicação visual de diferença (+/-) lateral
-function getDiffHtml(valProp, valConc) {
-  if(!valProp || !valConc) return '';
-  const diff = parseFloat(valConc) - parseFloat(valProp);
-  if(diff === 0) return `<span class="diff-val neu">0.00</span>`;
-  const sinal = diff > 0 ? '+' : '';
-  const classe = diff > 0 ? 'pos' : 'neg';
-  return `<span class="diff-val ${classe}">${sinal}${diff.toFixed(3)}</span>`;
-}
-
-// ── CORREÇÃO DA INDICAÇÃO DE DIFERENÇA LATERAL (Ref: Captura de tela 2026-06-16 130711_2.png) ──
+// Renderizadores de Módulos Específicos do Dashboard
 function renderComp() {
   const posto = document.getElementById('posto-comp').value;
   const body = document.getElementById('comp-body');
@@ -701,12 +756,12 @@ function renderComp() {
   
   html += `<div class="ccrow">
     <div class="ccard meu">
-      <div class="cclbl">NOSSO POSTO</div>
-      <div class="ccnome">P. DIFERENCIAL</div>
-      <div class="pr"><span class="prc">G.C</span><span class="prv gc">${m.GC ? 'R$ '+parseFloat(m.GC).toFixed(3) : '--'}</span></div>
-      <div class="pr"><span class="prc">G.A</span><span class="prv ga">${m.GA ? 'R$ '+parseFloat(m.GA).toFixed(3) : '--'}</span></div>
-      <div class="pr"><span class="prc">ET</span><span class="prv et">${m.ET ? 'R$ '+parseFloat(m.ET).toFixed(3) : '--'}</span></div>
-      <div class="pr"><span class="prc">S10</span><span class="prv s10">${m.S10 ? 'R$ '+parseFloat(m.S10).toFixed(3) : '--'}</span></div>
+      <div class="cclbl">NOSSO PREÇO</div>
+      <div class="ccnome">P. ${posto}</div>
+      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${m.GC ? 'R$ '+parseFloat(m.GC).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">G. Adit.</span><span class="prv ga">${m.GA ? 'R$ '+parseFloat(m.GA).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${m.ET ? 'R$ '+parseFloat(m.ET).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">S10</span><span class="prv s10">${m.S10 ? 'R$ '+parseFloat(m.S10).toFixed(2) : '--'}</span></div>
     </div>`;
     
   const concs = G_DADOS.conc[posto] || {};
@@ -717,29 +772,29 @@ function renderComp() {
   } else {
     const primeiro = cKeys[0];
     const mc = concs[primeiro];
-    const cEstru = estru.conc[primeiro] || {banda:'Bandeira Branca'};
+    const cEstru = estru.conc[primeiro] || {banda:'B. Branca'};
     html += `<div class="ccard">
-      <div class="cclbl">${cEstru.banda.toUpperCase()}</div>
-      <div class="ccnome">${primeiro.toUpperCase()}</div>
-      <div class="pr"><span class="prc">G.C</span><div class="prv-container"><span class="prv gc">${mc.GC ? 'R$ '+parseFloat(mc.GC).toFixed(3) : '--'}</span>${getDiffHtml(m.GC, mc.GC)}</div></div>
-      <div class="pr"><span class="prc">G.A</span><div class="prv-container"><span class="prv ga">${mc.GA ? 'R$ '+parseFloat(mc.GA).toFixed(3) : '--'}</span>${getDiffHtml(m.GA, mc.GA)}</div></div>
-      <div class="pr"><span class="prc">ET</span><div class="prv-container"><span class="prv et">${mc.ET ? 'R$ '+parseFloat(mc.ET).toFixed(3) : '--'}</span>${getDiffHtml(m.ET, mc.ET)}</div></div>
-      <div class="pr"><span class="prc">S10</span><div class="prv-container"><span class="prv s10">${mc.S10 ? 'R$ '+parseFloat(mc.S10).toFixed(3) : '--'}</span>${getDiffHtml(m.S10, mc.S10)}</div></div>
+      <div class="cclbl">CONCORRENTE FOCO</div>
+      <div class="ccnome">${primeiro} (${cEstru.banda})</div>
+      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${mc.GC ? 'R$ '+parseFloat(mc.GC).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">G. Adit.</span><span class="prv ga">${mc.GA ? 'R$ '+parseFloat(mc.GA).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${mc.ET ? 'R$ '+parseFloat(mc.ET).toFixed(2) : '--'}</span></div>
+      <div class="pr"><span class="prc">S10</span><span class="prv s10">${mc.S10 ? 'R$ '+parseFloat(mc.S10).toFixed(2) : '--'}</span></div>
     </div>`;
   }
   html += `</div>`;
   
   if(cKeys.length > 1) {
-    html += `<div class="sdiv" style="margin-top:.5rem">OUTROS CONCORRENTES MONITORADOS</div>`;
+    html += `<div class="sdiv" style="margin-top:.5rem">Outros Concorrentes Monitorados</div>`;
     for(let i=1; i<cKeys.length; i++) {
       const cNome = cKeys[i];
       const mc = concs[cNome];
-      const cEstru = estru.conc[cNome] || {banda:'Bandeira Branca'};
-      html += `<div class="ccard" style="margin-bottom:6px">
-        <div class="ccnome" style="font-size:.78rem;margin-bottom:4px">${cNome.toUpperCase()} (${cEstru.banda})</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="pr"><span class="prc">GC:</span><div class="prv-container"><span class="prv gc">${mc.GC?'R$ '+parseFloat(mc.GC).toFixed(3):'--'}</span>${getDiffHtml(m.GC, mc.GC)}</div></div>
-          <div class="pr"><span class="prc">ET:</span><div class="prv-container"><span class="prv et">${mc.ET?'R$ '+parseFloat(mc.ET).toFixed(3):'--'}</span>${getDiffHtml(m.ET, mc.ET)}</div></div>
+      const cEstru = estru.conc[cNome] || {banda:'B. Branca'};
+      html += `<div class="ccard" style="margin-bottom:4px">
+        <div class="ccnome" style="font-size:.78rem;margin-bottom:4px">${cNome} (${cEstru.banda})</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+          <div class="pr"><span class="prc">GC:</span><span class="prv gc">${mc.GC?'R$ '+parseFloat(mc.GC).toFixed(2):'--'}</span></div>
+          <div class="pr"><span class="prc">ET:</span><span class="prv et">${mc.ET?'R$ '+parseFloat(mc.ET).toFixed(2):'--'}</span></div>
         </div>
       </div>`;
     }
@@ -747,48 +802,40 @@ function renderComp() {
   body.innerHTML = html;
 }
 
-// ── CORREÇÃO DOS CARDS DO MAPA DE CALOR POR FAIXAS DE PREÇO (Ref: Captura de tela 2026-06-16 141615.png) ──
 function renderHeatmap() {
   const body = document.getElementById('heatmap-body');
-  
-  let faixas = [
-    { key: "F1", label: "ABAIXO 5.75", border: "rgba(0, 229, 160, 0.4)", text: "var(--ok)", count: 0 },
-    { key: "F2", label: "5.75-5.80", border: "rgba(0, 196, 136, 0.25)", text: "var(--ac)", count: 0 },
-    { key: "F3", label: "5.80-5.90", border: "rgba(249, 199, 79, 0.25)", text: "var(--wn)", count: 0 },
-    { key: "F4", label: "5.90-6.00", border: "rgba(255, 77, 109, 0.25)", text: "var(--dg)", count: 0 },
-    { key: "F5", label: "ACIMA 6.00", border: "rgba(255, 77, 109, 0.4)", text: "rgba(255, 77, 109, 0.8)", count: 0 }
-  ];
-
-  let totalDados = 0;
-  for (let p in G_DADOS.prop) {
-    const val = parseFloat(G_DADOS.prop[p].GC);
-    if (!val || val <= 0) continue;
-    totalDados++;
-    
-    if (val < 5.75) faixas[0].count++;
-    else if (val >= 5.75 && val <= 5.80) faixas[1].count++;
-    else if (val > 5.80 && val <= 5.90) faixas[2].count++;
-    else if (val > 5.90 && val <= 6.00) faixas[3].count++;
-    else if (val > 6.00) faixas[4].count++;
+  let arr = [];
+  for(let p in G_DADOS.prop) {
+    if(G_DADOS.prop[p].GC > 0) arr.push(parseFloat(G_DADOS.prop[p].GC));
   }
-
-  if (totalDados === 0) {
-    body.innerHTML = '<div class="empty">Sem dados de postos próprios</div>';
+  if(arr.length === 0) {
+    body.innerHTML = '<div class="empty">Sem dados</div>';
     return;
   }
-
+  arr.sort((a,b)=>a-b);
+  const min = arr[0], max = arr[arr.length-1];
+  const dif = max - min || 1;
+  
   body.innerHTML = '';
-  faixas.forEach(faixa => {
-    const card = document.createElement('div');
-    card.className = 'hcell-new';
-    card.style.borderColor = faixa.border;
+  for(let p in G_DADOS.prop) {
+    const val = G_DADOS.prop[p].GC;
+    if(!val || val <= 0) continue;
+    const pct = (parseFloat(val) - min) / dif;
+    let cor = 'var(--ok)';
+    if(pct > 0.35 && pct <= 0.7) cor = 'var(--wn)';
+    else if(pct > 0.7) cor = 'var(--dg)';
     
-    card.innerHTML = `
-      <div class="hcell-lbl">${faixa.label}</div>
-      <div class="hcell-val" style="color: ${faixa.text}">${faixa.count}</div>
-    `;
-    body.appendChild(card);
-  });
+    const cell = document.createElement('div');
+    cell.className = 'hcell';
+    cell.style.background = cor;
+    cell.title = `${p}: R$ ${parseFloat(val).toFixed(2)}`;
+    cell.onclick = () => {
+      document.getElementById('posto-comp').value = p;
+      setTab(document.querySelectorAll('.nbtn')[0], 'comp');
+      renderComp();
+    };
+    body.appendChild(cell);
+  }
 }
 
 function setFiltroSup(btn, sup) {
@@ -938,14 +985,16 @@ function renderRegional() {
   regBody.innerHTML = htmlS || '<div class="empty">Sem dados</div>';
 }
 
+// 🗺️ INTEGRAÇÃO DO MAPA LEAFLET COM DADOS EM TEMPO REAL
 function initLeafletInstance() {
   if (leafletMap !== null) {
     leafletMap.invalidateSize();
     return;
   }
+  // Centraliza em BH / Contagem
   leafletMap = L.map('leaflet-map', {zoomControl: false}).setView([-19.92, -43.96], 11);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: 'JBretas Operational Maps'
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '©OSM ©CARTO', subdomains:'abcd', maxZoom:19
   }).addTo(leafletMap);
   
   renderMapa();
@@ -966,6 +1015,7 @@ function mapaSetSup(btn, sup) {
 function renderMapa() {
   if (!leafletMap) return;
   
+  // Limpa marcadores anteriores sem destruir a instância do mapa
   mapMarkers.forEach(m => leafletMap.removeLayer(m));
   mapMarkers = [];
   
@@ -974,6 +1024,7 @@ function renderMapa() {
   MAP_POSTOS.forEach(posto => {
     if (G_MAPA_SUP !== 'todos' && posto.sup !== G_MAPA_SUP) return;
     
+    // Vincula em tempo real com o G_DADOS carregado dinamicamente do Sheets
     const dadosReaisPosto = G_DADOS && G_DADOS.prop[posto.k] ? G_DADOS.prop[posto.k] : null;
     let precoExibir = '--';
     
@@ -983,6 +1034,7 @@ function renderMapa() {
       precosValidos.push(pNum);
     }
     
+    // Cria elemento visual customizado do marcador
     const iconHtml = `<div class="custom-marker">
       <div class="m-name">${posto.n}</div>
       <div class="m-price">${precoExibir}</div>
@@ -997,6 +1049,7 @@ function renderMapa() {
     
     const marker = L.marker([posto.lat, posto.lng], {icon: cIcon}).addTo(leafletMap);
     
+    // Tooltip detalhado ao clicar no posto do mapa
     marker.on('click', () => {
       let dHtml = `<div class="card" style="margin-top:.5rem"><div class="chdr"><div class="ctitle">${posto.n} (${posto.banda})</div><div class="csub">Supervisor: ${posto.sup}</div></div><div class="cbody">`;
       if (dadosReaisPosto) {
@@ -1014,6 +1067,7 @@ function renderMapa() {
     mapMarkers.push(marker);
   });
   
+  // Renderiza legenda inteligente baseado nos ranges de preços reais atuais
   const legend = document.getElementById('map-legend');
   if (precosValidos.length > 0) {
     precosValidos.sort((a,b)=>a-b);
@@ -1029,6 +1083,7 @@ function renderMapa() {
   }
 }
 
+// Submódulos Complementares (Mais+)
 function renderAmostra(ctx) {
   ctx.innerHTML = `<div class="sdiv">Controle de Validade Amostra-Testemunha</div>
     <div class="am-card"><div class="am-posto">P. JA</div><div class="am-sub">Bandeira Ipiranga</div><div class="klbl">Dias restantes da amostra ativa</div><div class="am-bar-bg"><div class="am-bar" style="width:80%"></div></div><div class="am-dias" style="color:var(--ok)">24 Dias</div></div>
@@ -1115,6 +1170,244 @@ function renderRel(ctx) {
     </div>`;
 }
 
+// Utilitário global de notificações em tela (Toast)
+
+// ══════════════════════════════════════════════════
+// ABA HISTÓRICO — evolução de preços ao longo do tempo
+// ══════════════════════════════════════════════════
+let G_HISTORICO = [];
+let G_CHART = null;
+
+function povoarHistPosto() {
+  const sel = document.getElementById('hist-posto');
+  if (sel.options.length > 1) return; // já preenchido
+  Object.keys(POSTOS_DADOS).sort().forEach(p => {
+    const o = document.createElement('option');
+    o.value = 'P. ' + p;
+    o.textContent = 'P. ' + p;
+    sel.appendChild(o);
+  });
+}
+
+async function carregarHistorico() {
+  povoarHistPosto();
+  const posto = document.getElementById('hist-posto').value;
+  const dias  = document.getElementById('hist-dias').value;
+  const sub   = document.getElementById('hist-sub');
+  const loading = document.getElementById('hist-loading');
+
+  loading.classList.remove('hidden');
+  sub.textContent = 'Carregando...';
+  G_HISTORICO = [];
+
+  try {
+    const url = API_URL + '?tipo=historico&dias=' + dias + (posto ? '&posto=' + encodeURIComponent(posto) : '');
+    const res  = await fetch(url);
+    const json = await res.json();
+    if (json && json.success && json.historico) {
+      G_HISTORICO = json.historico;
+      sub.textContent = (posto || 'Todos os postos') + ' — últimos ' + dias + ' dias';
+    } else {
+      sub.textContent = 'Erro ao carregar histórico.';
+    }
+  } catch(e) {
+    console.warn('Histórico offline:', e);
+    sub.textContent = 'Sem conexão — histórico indisponível.';
+  } finally {
+    loading.classList.add('hidden');
+    renderGrafico();
+    renderResumoHistorico();
+    renderListaHistorico();
+  }
+}
+
+function renderGrafico() {
+  const fuel    = document.getElementById('hist-fuel').value;
+  const canvas  = document.getElementById('hist-canvas');
+  const ctx     = canvas.getContext('2d');
+
+  // Filtrar apenas próprios com o combustível
+  const pontos = G_HISTORICO.filter(r => r.tipo === 'Próprio' && r[fuel] !== null);
+
+  if (pontos.length === 0) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const parent = canvas.parentElement;
+    parent.innerHTML = '<div class="empty">Sem dados de ' + fuel + ' no período selecionado.</div>';
+    return;
+  }
+
+  // Garante canvas no DOM
+  if (!document.getElementById('hist-canvas')) {
+    const parent = document.querySelector('#s-hist .card:nth-child(2) .cbody');
+    const c = document.createElement('canvas');
+    c.id = 'hist-canvas';
+    c.style = 'width:100%;max-height:220px;display:block';
+    parent.innerHTML = '';
+    parent.appendChild(c);
+  }
+
+  // Agrupa por data — média do dia
+  const porData = {};
+  pontos.forEach(r => {
+    if (!porData[r.data]) porData[r.data] = [];
+    porData[r.data].push(parseFloat(r[fuel]));
+  });
+  const datas  = Object.keys(porData).sort((a,b) => {
+    const pa=a.split('/'), pb=b.split('/');
+    return new Date(pa[2],pa[1]-1,pa[0]) - new Date(pb[2],pb[1]-1,pb[0]);
+  });
+  const valores = datas.map(d => {
+    const arr = porData[d];
+    return arr.reduce((s,v)=>s+v,0)/arr.length;
+  });
+
+  // Desenha gráfico de linha simples no canvas
+  const W = canvas.offsetWidth || 340;
+  const H = 200;
+  canvas.width  = W;
+  canvas.height = H;
+  ctx.clearRect(0,0,W,H);
+
+  const pad = {t:20, r:10, b:30, l:50};
+  const gW = W - pad.l - pad.r;
+  const gH = H - pad.t - pad.b;
+
+  const minV = Math.min(...valores) - 0.05;
+  const maxV = Math.max(...valores) + 0.05;
+  const rV   = maxV - minV || 0.1;
+
+  const xOf = (i) => pad.l + (i/(datas.length-1||1))*gW;
+  const yOf = (v) => pad.t + (1-(v-minV)/rV)*gH;
+
+  // Grade
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let i=0; i<=4; i++) {
+    const y = pad.t + (i/4)*gH;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    const val = maxV - (i/4)*rV;
+    ctx.fillStyle = '#5a6478';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('R$'+val.toFixed(2), pad.l-4, y+3);
+  }
+
+  // Linha de preço
+  ctx.strokeStyle = '#00e5a0';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  valores.forEach((v,i) => {
+    const x=xOf(i), y=yOf(v);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Área sob a linha
+  ctx.fillStyle = 'rgba(0,229,160,0.08)';
+  ctx.beginPath();
+  valores.forEach((v,i) => {
+    const x=xOf(i), y=yOf(v);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.lineTo(xOf(valores.length-1), pad.t+gH);
+  ctx.lineTo(xOf(0), pad.t+gH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pontos
+  ctx.fillStyle = '#00e5a0';
+  valores.forEach((v,i) => {
+    ctx.beginPath();
+    ctx.arc(xOf(i), yOf(v), 3, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // Datas no eixo X (só algumas)
+  ctx.fillStyle = '#5a6478';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(datas.length/5));
+  datas.forEach((d,i) => {
+    if (i % step !== 0 && i !== datas.length-1) return;
+    const parts = d.split('/');
+    ctx.fillText(parts[0]+'/'+parts[1], xOf(i), H-8);
+  });
+}
+
+function renderResumoHistorico() {
+  const fuel  = document.getElementById('hist-fuel') ? document.getElementById('hist-fuel').value : 'GC';
+  const body  = document.getElementById('hist-resumo');
+  const prop  = G_HISTORICO.filter(r => r.tipo === 'Próprio' && r[fuel]);
+  const conc  = G_HISTORICO.filter(r => r.tipo !== 'Próprio' && r[fuel]);
+
+  if (!prop.length && !conc.length) {
+    body.innerHTML = '<div class="empty">Sem dados suficientes para resumo.</div>';
+    return;
+  }
+
+  const media = arr => arr.length ? (arr.reduce((s,r)=>s+parseFloat(r[fuel]),0)/arr.length) : null;
+  const min_r = arr => arr.length ? Math.min(...arr.map(r=>parseFloat(r[fuel]))) : null;
+  const max_r = arr => arr.length ? Math.max(...arr.map(r=>parseFloat(r[fuel]))) : null;
+
+  const mp = media(prop), mc = media(conc);
+  const fmt = v => v !== null ? 'R$ '+v.toFixed(3).replace('.',',') : '--';
+
+  body.innerHTML = `
+    <div class="bgrid" style="grid-template-columns:1fr 1fr;gap:.5rem">
+      <div class="bbox">
+        <div class="bbnome" style="color:var(--ac)">Nossos Postos</div>
+        <div class="dbitem"><span>Média</span><span class="dbval">${fmt(mp)}</span></div>
+        <div class="dbitem"><span>Mínimo</span><span class="dbval">${fmt(min_r(prop))}</span></div>
+        <div class="dbitem"><span>Máximo</span><span class="dbval">${fmt(max_r(prop))}</span></div>
+        <div class="dbitem"><span>Registros</span><span class="dbval">${prop.length}</span></div>
+      </div>
+      <div class="bbox">
+        <div class="bbnome" style="color:var(--wn)">Concorrentes</div>
+        <div class="dbitem"><span>Média</span><span class="dbval">${fmt(mc)}</span></div>
+        <div class="dbitem"><span>Mínimo</span><span class="dbval">${fmt(min_r(conc))}</span></div>
+        <div class="dbitem"><span>Máximo</span><span class="dbval">${fmt(max_r(conc))}</span></div>
+        <div class="dbitem"><span>Registros</span><span class="dbval">${conc.length}</span></div>
+      </div>
+    </div>
+    ${mp && mc ? `<div style="margin-top:.5rem;padding:.6rem;background:${mp<mc?'rgba(0,229,160,.08)':'rgba(255,77,109,.08)'};border-radius:8px;font-size:.78rem">
+      ${mp < mc
+        ? `✅ Nosso preço médio está <strong style="color:var(--ok)">R$ ${(mc-mp).toFixed(3)} abaixo</strong> da concorrência no período.`
+        : `⚠️ Nosso preço médio está <strong style="color:var(--dg)">R$ ${(mp-mc).toFixed(3)} acima</strong> da concorrência no período.`}
+    </div>` : ''}
+  `;
+}
+
+function renderListaHistorico() {
+  const body = document.getElementById('hist-lista');
+  const qtd  = document.getElementById('hist-qtd');
+  const fuel = document.getElementById('hist-fuel') ? document.getElementById('hist-fuel').value : 'GC';
+
+  const lista = G_HISTORICO.filter(r => r[fuel]).slice(-50).reverse();
+  qtd.textContent = lista.length + ' registros (mais recentes)';
+
+  if (!lista.length) {
+    body.innerHTML = '<div class="empty">Sem registros no período.</div>';
+    return;
+  }
+
+  body.innerHTML = lista.map(r => {
+    const isProp = r.tipo === 'Próprio';
+    const cor    = isProp ? 'var(--ac)' : 'var(--tx3)';
+    const v      = parseFloat(r[fuel]).toFixed(3).replace('.',',');
+    return `<div class="ritem">
+      <div class="rinfo">
+        <div class="rnome" style="color:${cor}">${r.postoAlvo}</div>
+        <div class="rbanda">${r.data} ${r.hora ? r.hora.substring(0,5) : ''} · ${r.tipo} · ${r.bandeira||''}</div>
+      </div>
+      <div class="rpreco" style="color:${cor}">R$ ${v}</div>
+    </div>`;
+  }).join('');
+}
+
+// Adicionar no setTab: carregar histórico quando necessário
+const _setTabOrig = window.setTab;
+
 function showToast(title, msg) {
   const t = document.getElementById('toast');
   document.getElementById('t-title').textContent = title;
@@ -1125,5 +1418,3 @@ function showToast(title, msg) {
 </script>
 </body>
 </html>
-
-```
