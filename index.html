@@ -427,6 +427,46 @@ const SUPCOR = {"Mauricio":"#00e5a0","Paulo":"#4895ef","Fabricio":"#f9c74f","Gle
 const CL = {GC:"G.C",GA:"G.A",ET:"ET",S10:"S10",S500:"S500",OCT:"G.OCT",PODIUM:"PODIUM"};
 const CC = {GC:"gc",GA:"ga",ET:"et",S10:"s10",S500:"s500",OCT:"gc",PODIUM:"ga"};
 
+// Coordenadas fixas dos postos próprios
+const MAP_POSTOS = [
+  {k:"JA",         n:"P. JA",         lat:-19.9581, lng:-43.9571, sup:"Mauricio", banda:"Ipiranga"},
+  {k:"ITAPOA",     n:"P. ITAPOA",     lat:-19.9198, lng:-43.9814, sup:"Mauricio", banda:"Shell"},
+  {k:"MANGABEIRAS", n:"P. MANGA.",    lat:-19.9600, lng:-43.9610, sup:"Mauricio", banda:"Shell"},
+  {k:"DIFERENCIAL", n:"P. DIFER.",    lat:-19.9182, lng:-43.9368, sup:"Mauricio", banda:"Ipiranga"},
+  {k:"ARAPONGA",   n:"P. ARAPON.",    lat:-19.9620, lng:-43.9500, sup:"Mauricio", banda:"Ipiranga"},
+  {k:"TUNEL",      n:"P. TUNEL",      lat:-19.9050, lng:-43.9470, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"URBANO",     n:"P. URBANO",     lat:-19.9300, lng:-43.9540, sup:"Mauricio", banda:"BR/Petrobras"},
+  {k:"BERNARDO",   n:"P. BERNARDO",   lat:-19.9900, lng:-43.9000, sup:"Mauricio", banda:"Shell"},
+  {k:"TRANCOSO",   n:"P. TRANC.",     lat:-19.9050, lng:-43.9300, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"GLORIA",     n:"P. GLORIA",     lat:-19.9370, lng:-43.9100, sup:"Gledson",  banda:"Shell"},
+  {k:"BRUNA",      n:"P. BRUNA",      lat:-19.8954, lng:-43.9550, sup:"Fabricio", banda:"BR/Petrobras"},
+  {k:"BAHAMAS",    n:"P. BAHAMAS",    lat:-19.9150, lng:-43.9300, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"BOMBOM MATRIZ",n:"BOMBOM M.",   lat:-19.9200, lng:-43.9380, sup:"Mauricio", banda:"Ipiranga"},
+  {k:"BOMBOM FILIAL",n:"BOMBOM F.",   lat:-19.8760, lng:-43.9180, sup:"Paulo",    banda:"Ipiranga"},
+  {k:"SAO BERNARDO",n:"P. SÃO BERN.", lat:-19.8700, lng:-43.9290, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"JOCA",       n:"P. JOCA",       lat:-19.9290, lng:-43.9730, sup:"Paulo",    banda:"Ipiranga"},
+  {k:"FELIPAO",    n:"P. FELIPAO",    lat:-19.9230, lng:-43.9900, sup:"Rodrigo",  banda:"BR/Petrobras"},
+  {k:"DUDU",       n:"P. DUDU",       lat:-19.9330, lng:-44.0030, sup:"Gledson",  banda:"ALE"},
+  {k:"PLANALTO",   n:"P. PLANALTO",   lat:-19.8272, lng:-44.0072, sup:"Paulo",    banda:"BR/Petrobras"},
+  {k:"LOURA",      n:"P. LOURA",      lat:-19.9384, lng:-44.0901, sup:"Paulo",    banda:"Shell"},
+  {k:"SANTA INES", n:"P. STA.INES",   lat:-19.9350, lng:-44.0630, sup:"Paulo",    banda:"Shell"},
+  {k:"JOAQUIM",    n:"P. JOAQUIM",    lat:-19.9380, lng:-44.0650, sup:"Paulo",    banda:"Shell"},
+  {k:"COLIBRI",    n:"P. COLIBRI",    lat:-19.8140, lng:-44.0650, sup:"Fabricio", banda:"Ipiranga"},
+  {k:"TOPAZIO",    n:"P. TOPAZIO",    lat:-19.7740, lng:-44.0530, sup:"Paulo",    banda:"BR/Petrobras"},
+  {k:"4RODAS",     n:"P. 4RODAS",     lat:-19.8670, lng:-44.0580, sup:"Gledson",  banda:"Ipiranga"},
+  {k:"SAO LUIZ",   n:"P. SAO LUIZ",   lat:-19.7470, lng:-44.0830, sup:"Paulo",    banda:"Ipiranga"},
+  {k:"AVIVA",      n:"P. AVIVA",      lat:-19.7820, lng:-44.0750, sup:"Paulo",    banda:"Ipiranga"},
+  {k:"LEANDRO",    n:"P. LEANDRO",    lat:-19.7820, lng:-44.0750, sup:"Gledson",  banda:"Ipiranga"},
+  {k:"SANTA MARIA",n:"P. STA.MARIA",  lat:-19.8000, lng:-44.0750, sup:"Paulo",    banda:"BR/Petrobras"},
+  {k:"MIRAGEM",    n:"P. MIRAGEM",    lat:-19.7820, lng:-43.8850, sup:"Gledson",  banda:"Shell"},
+  {k:"ANA LUCIA",  n:"P. ANA LUCIA",  lat:-19.8900, lng:-43.8260, sup:"Fabricio", banda:"BR/Petrobras"},
+  {k:"SANTA INES MINAS",n:"STA.I.MG", lat:-19.8880, lng:-43.8230, sup:"Paulo",    banda:"Shell"},
+  {k:"RODRIGO",    n:"P. RODRIGO",    lat:-19.9480, lng:-44.1980, sup:"Gledson",  banda:"Shell"},
+  {k:"BEATRIZ",    n:"P. BEATRIZ",    lat:-20.0250, lng:-44.1080, sup:"Rodrigo",  banda:"Shell"},
+  {k:"BIANCA",     n:"P. BIANCA",     lat:-20.0400, lng:-44.1500, sup:"Rodrigo",  banda:"Ipiranga"},
+  {k:"ESPACO REAL",n:"P. ESP.REAL",   lat:-21.1300, lng:-44.2570, sup:"Rodrigo",  banda:"Ipiranga"},
+];
+  
 // Estado
 var MEU = {};   // preços reais dos nossos postos
 var CONC = {};  // preços reais dos concorrentes
@@ -711,20 +751,28 @@ function renderRegional(){
 // ══════════════════════════════════════════════════
 // MAPA — CartoDB Positron (fundo BRANCO)
 // ══════════════════════════════════════════════════
-function initMapa(){
-  if(leafletMap){
-    leafletMap.invalidateSize();
-    renderLeafletMarkers();
-    return;
-  }
-  var mapEl=document.getElementById('leaflet-map');
-  if(!mapEl||typeof L==='undefined')return;
-  leafletMap=L.map('leaflet-map',{center:[-19.917,-43.960],zoom:11,zoomControl:true});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
-    attribution:'&copy;<a href="https://www.openstreetmap.org/copyright">OSM</a> &copy;<a href="https://carto.com/">CARTO</a>',
-    subdomains:'abcd',maxZoom:19
-  }).addTo(leafletMap);
-  renderLeafletMarkers();
+// Plota postos próprios — usa lat/lng da API se existir, senão usa MAP_POSTOS
+MAP_POSTOS.forEach(function(mp) {
+  var filtOk = mapaSupAtual === 'todos' || mp.sup === mapaSupAtual;
+  if (!filtOk) return;
+  
+  var dadosApi = MEU[mp.k] || {};
+  var lat = dadosApi.lat || mp.lat;
+  var lng = dadosApi.lng || mp.lng;
+  var cor = SUPCOR[mp.sup] || '#00e5a0';
+  var preco = dadosApi[mapaFuelAtual];
+  
+  var mk = L.circleMarker([lat, lng], {
+    radius: 10, fillColor: cor, color: '#fff', weight: 2, fillOpacity: .9
+  });
+  mk.bindPopup(
+    '<b style="color:'+cor+'">'+mp.n+'</b><br>' +
+    '<span style="font-size:.7rem">Sup. '+mp.sup+' · '+mp.banda+'</span><br>' +
+    (preco ? '<b>'+fmt(preco)+'</b>' : '<i>sem coleta hoje</i>')
+  );
+  mk.addTo(leafletMap);
+  leafletMarkers.push(mk);
+});
   // Legenda
   var legHtml=Object.keys(SUPCOR).map(function(s){
     return '<span style="color:'+SUPCOR[s]+'">'+s+'</span>';
