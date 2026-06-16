@@ -344,6 +344,12 @@ body::before{content:'';position:fixed;inset:0;
         <button class="map-ftag" id="mbtn-Gledson" onclick="mapaSetSup(this,'Gledson')">Gledson</button>
         <button class="map-ftag" id="mbtn-Rodrigo" onclick="mapaSetSup(this,'Rodrigo')">Rodrigo</button>
       </div>
+      <div class="map-ctrl" style="margin-top:.35rem">
+        <button class="map-ftag on" id="mfiltro-todos" onclick="mapaSetColeta(this,'todos')">📍 Todos</button>
+        <button class="map-ftag" id="mfiltro-coletados" onclick="mapaSetColeta(this,'coletados')">✅ Com coleta</button>
+        <button class="map-ftag" id="mfiltro-semcoleta" onclick="mapaSetColeta(this,'semcoleta')">⏳ Sem coleta</button>
+        <span id="mapa-contador" style="font-size:.62rem;color:var(--tx3);font-family:var(--mono);margin-left:auto"></span>
+      </div>
       <div class="map-wrap"><div id="leaflet-map"></div></div>
       <div class="map-legend" id="map-legend"></div>
       <div id="mapa-detail"></div>
@@ -516,10 +522,32 @@ let G_USER = null;
 let G_FILTRO_SUP = 'todos';
 let G_MAPA_SUP = 'todos';
 let G_MAPA_FUEL = 'GC';
+let G_MAPA_COLETA = 'todos'; // 'todos' | 'coletados' | 'semcoleta'
+
+function mapaSetColeta(btn, val) {
+  document.querySelectorAll('[id^="mfiltro-"]').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  G_MAPA_COLETA = val;
+  renderMapa();
+}
 let leafletMap = null;
 let mapMarkers = [];
 
 // Controle de Inicialização e Sessão
+// Intervalo de atualização automática (5 minutos)
+const INTERVALO_ATUALIZACAO = 5 * 60 * 1000;
+let _autoRefreshTimer = null;
+
+function iniciarAutoRefresh() {
+  if (_autoRefreshTimer) clearInterval(_autoRefreshTimer);
+  _autoRefreshTimer = setInterval(() => {
+    // Só atualiza se o app estiver visível e o usuário logado
+    if (!document.hidden && localStorage.getItem('jb_adm_user')) {
+      carregarDados();
+    }
+  }, INTERVALO_ATUALIZACAO);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   const salvo = localStorage.getItem('jb_adm_user');
   if(salvo) {
@@ -527,9 +555,18 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('screen-login').classList.add('hidden');
     document.getElementById('screen-app').classList.remove('hidden');
     carregarDados();
+    iniciarAutoRefresh();
   } else {
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('screen-login').classList.remove('hidden');
+  }
+});
+
+// Atualiza quando o usuário volta para a aba após ficar ausente
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && localStorage.getItem('jb_adm_user')) {
+    // Se ficou mais de 5 min fora, atualiza ao voltar
+    carregarDados();
   }
 });
 
@@ -677,7 +714,10 @@ function processarDadosReais() {
   document.getElementById('kv-mgc').textContent = cGcProp > 0 ? 'R$ ' + (somaGcProp/cGcProp).toFixed(2) : '--';
   
   const d = new Date();
-  document.getElementById('upd-txt').textContent = `Atualizado às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('upd-txt').textContent = `Atualizado às ${hh}:${mm} · próxima em 5min`;
+  document.getElementById('live-txt').textContent = 'ao vivo';
   
   povoarSelects();
   renderComp();
@@ -1038,80 +1078,140 @@ function renderMapa() {
   mapMarkers = [];
   
   let precosValidos = [];
+  let contColetados = 0, contSemColeta = 0;
   const SUPCOR_MAP = {Mauricio:'#00e5a0',Paulo:'#4895ef',Fabricio:'#f9c74f',Gledson:'#c77dff',Rodrigo:'#ff6b6b'};
 
-  // ── 1. Plota postos PRÓPRIOS com dados reais da API ─────────────
-  // Usa lat/lng reais da planilha quando disponíveis, senão usa MAP_POSTOS como fallback
+  // Índice: chave normalizada → dados da API
   const propDados = (G_DADOS && G_DADOS.prop) ? G_DADOS.prop : {};
   
-  Object.keys(propDados).forEach(chave => {
-    const d = propDados[chave];
-    const lat = d.lat ? parseFloat(d.lat) : null;
-    const lng = d.lng ? parseFloat(d.lng) : null;
+  // Monta índice de lookup: "NOME_SEM_P" → dados
+  const propIndex = {};
+  Object.keys(propDados).forEach(k => {
+    const norm = k.replace(/^P\.\s*/i,'').trim().toUpperCase();
+    propIndex[norm] = propDados[k];
+    propIndex[k.toUpperCase()] = propDados[k]; // também chave original
+  });
+
+  // ── 1. Todos os postos do MAP_POSTOS (base fixa com coordenadas) ──
+  MAP_POSTOS.forEach(posto => {
+    if (G_MAPA_SUP !== 'todos' && posto.sup !== G_MAPA_SUP) return;
+
+    // Lookup: tenta "BERNARDO", "P. BERNARDO", "P. BOMBOM MATRIZ", etc.
+    const d = propIndex[posto.k.toUpperCase()] 
+           || propIndex[('P. ' + posto.k).toUpperCase()]
+           || propIndex[posto.n.toUpperCase()]
+           || null;
+
+    const temColeta = d !== null;
     
-    // Busca no MAP_POSTOS para fallback de coordenadas e info
-    const mapInfo = MAP_POSTOS.find(p => p.k === chave || p.k === chave.replace(/^P\.\s*/i,'').trim());
-    const latFinal = lat || (mapInfo ? mapInfo.lat : null);
-    const lngFinal = lng || (mapInfo ? mapInfo.lng : null);
-    if (!latFinal || !lngFinal || isNaN(latFinal) || isNaN(lngFinal)) return;
-    
-    const sup = d.supervisor || (mapInfo ? mapInfo.sup : '');
-    const banda = d.bandeira || (mapInfo ? mapInfo.banda : '');
-    const nomeExib = chave.replace(/^P\.\s*/i,'').substring(0,10);
-    
-    if (G_MAPA_SUP !== 'todos' && sup !== G_MAPA_SUP) return;
-    
-    const preco = d[G_MAPA_FUEL];
-    const precoExibir = preco ? 'R$ ' + parseFloat(preco).toFixed(2) : '--';
-    if (preco) precosValidos.push(parseFloat(preco));
-    
-    const cor = SUPCOR_MAP[sup] || '#00e5a0';
-    const iconHtml = `<div class="custom-marker" style="border-color:${cor}">
-      <div class="m-name" style="color:${cor}">${nomeExib}</div>
-      <div class="m-price">${precoExibir}</div>
-    </div>`;
-    const cIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [70, 32], iconAnchor: [35, 16] });
-    const marker = L.marker([latFinal, lngFinal], {icon: cIcon}).addTo(leafletMap);
-    
+    // Filtro com/sem coleta
+    if (G_MAPA_COLETA === 'coletados'  && !temColeta) return;
+    if (G_MAPA_COLETA === 'semcoleta'  &&  temColeta) return;
+
+    // Coordenadas: usa lat/lng da API se existir, senão usa as fixas do MAP_POSTOS
+    const lat = (d && d.lat && !isNaN(parseFloat(d.lat))) ? parseFloat(d.lat) : posto.lat;
+    const lng = (d && d.lng && !isNaN(parseFloat(d.lng))) ? parseFloat(d.lng) : posto.lng;
+    if (!lat || !lng) return;
+
+    const sup   = (d && d.supervisor) || posto.sup;
+    const banda = (d && d.bandeira)   || posto.banda;
+    const cor   = SUPCOR_MAP[sup] || '#8892a4';
+
+    let iconHtml, preco;
+    if (temColeta) {
+      contColetados++;
+      preco = d[G_MAPA_FUEL];
+      const precoExibir = preco ? 'R$' + parseFloat(preco).toFixed(2) : '--';
+      if (preco) precosValidos.push(parseFloat(preco));
+      iconHtml = `<div class="custom-marker" style="border-color:${cor};background:#0d1a12">
+        <div class="m-name" style="color:${cor}">${posto.n}</div>
+        <div class="m-price" style="color:#fff">${precoExibir}</div>
+      </div>`;
+    } else {
+      contSemColeta++;
+      iconHtml = `<div class="custom-marker" style="border-color:#333;background:#0d0f12;opacity:.6">
+        <div class="m-name" style="color:#5a6478">${posto.n}</div>
+        <div class="m-price" style="color:#3a4355;font-size:9px">⏳ aguardando</div>
+      </div>`;
+    }
+
+    const cIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [72, 34], iconAnchor: [36, 17] });
+    const marker = L.marker([lat, lng], { icon: cIcon }).addTo(leafletMap);
+
     marker.on('click', () => {
-      const data = d.data ? ` · ${d.data} ${d.hora||''}` : '';
+      const dtxt = (d && d.data) ? ` · ${d.data} ${d.hora||''}` : '';
       let dHtml = `<div class="card" style="margin-top:.5rem"><div class="chdr">
-        <div class="ctitle" style="color:${cor}">${chave}</div>
-        <div class="csub">Sup: ${sup} · ${banda}${data}</div>
+        <div class="ctitle" style="color:${cor}">${posto.n}</div>
+        <div class="csub">Sup: ${sup} · ${banda}${dtxt}</div>
       </div><div class="cbody">`;
-      dHtml += `<div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${d.GC?'R$'+parseFloat(d.GC).toFixed(3):'--'}</span></div>`;
-      dHtml += `<div class="pr"><span class="prc">G. Aditivada</span><span class="prv ga">${d.GA?'R$'+parseFloat(d.GA).toFixed(3):'--'}</span></div>`;
-      dHtml += `<div class="pr"><span class="prc">Etanol</span><span class="prv et">${d.ET?'R$'+parseFloat(d.ET).toFixed(3):'--'}</span></div>`;
-      dHtml += `<div class="pr"><span class="prc">Diesel S10</span><span class="prv s10">${d.S10?'R$'+parseFloat(d.S10).toFixed(3):'--'}</span></div>`;
+      if (temColeta) {
+        const fmt3 = v => v ? 'R$'+parseFloat(v).toFixed(3).replace('.',',') : '--';
+        dHtml += `<div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${fmt3(d.GC)}</span></div>`;
+        dHtml += `<div class="pr"><span class="prc">G. Aditivada</span><span class="prv ga">${fmt3(d.GA)}</span></div>`;
+        dHtml += `<div class="pr"><span class="prc">Etanol</span><span class="prv et">${fmt3(d.ET)}</span></div>`;
+        dHtml += `<div class="pr"><span class="prc">Diesel S10</span><span class="prv s10">${fmt3(d.S10)}</span></div>`;
+        if (d.S500) dHtml += `<div class="pr"><span class="prc">Diesel S500</span><span class="prv s10">${fmt3(d.S500)}</span></div>`;
+      } else {
+        dHtml += `<div class="empty" style="padding:.5rem;font-size:.72rem">⏳ Sem coleta hoje.<br>Aguardando o gerente enviar pelo app.</div>`;
+      }
       dHtml += `</div></div>`;
       document.getElementById('mapa-detail').innerHTML = dHtml;
     });
     mapMarkers.push(marker);
   });
 
-  // ── 2. Plota postos do MAP_POSTOS sem dados na API (fallback) ──
-  MAP_POSTOS.forEach(posto => {
-    const temDados = propDados[posto.k] || propDados['P. ' + posto.k] || 
-                     Object.keys(propDados).find(k => k.replace(/^P\.\s*/i,'').toUpperCase() === posto.k.toUpperCase());
-    if (temDados) return; // já plotado acima
-    if (G_MAPA_SUP !== 'todos' && posto.sup !== G_MAPA_SUP) return;
-    
-    const cor = SUPCOR_MAP[posto.sup] || '#555';
-    const iconHtml = `<div class="custom-marker" style="border-color:${cor};opacity:.5">
-      <div class="m-name" style="color:${cor}">${posto.n}</div>
-      <div class="m-price" style="color:var(--tx3)">sem coleta</div>
+  // ── 2. Postos com coleta mas sem coordenada no MAP_POSTOS ──────
+  // (postos novos ou que a planilha tem lat/lng mas MAP_POSTOS não tem)
+  Object.keys(propDados).forEach(k => {
+    const d = propDados[k];
+    if (!d.lat || !d.lng || isNaN(parseFloat(d.lat))) return;
+    const sup = d.supervisor || '';
+    if (G_MAPA_SUP !== 'todos' && sup !== G_MAPA_SUP) return;
+    if (G_MAPA_COLETA === 'semcoleta') return; // tem coleta, pula
+
+    // Verifica se já foi plotado no passo 1
+    const norm = k.replace(/^P\.\s*/i,'').trim().toUpperCase();
+    const jaPlotado = MAP_POSTOS.some(p => 
+      p.k.toUpperCase() === norm || 
+      ('P. ' + p.k).toUpperCase() === k.toUpperCase()
+    );
+    if (jaPlotado) return;
+
+    const cor  = SUPCOR_MAP[sup] || '#8892a4';
+    const nome = k.replace(/^P\.\s*/i,'P. ').substring(0,12);
+    const preco = d[G_MAPA_FUEL];
+    const precoExibir = preco ? 'R$'+parseFloat(preco).toFixed(2) : '--';
+    if (preco) precosValidos.push(parseFloat(preco));
+    contColetados++;
+
+    const iconHtml = `<div class="custom-marker" style="border-color:${cor};background:#0d1a12">
+      <div class="m-name" style="color:${cor}">${nome}</div>
+      <div class="m-price" style="color:#fff">${precoExibir}</div>
     </div>`;
-    const cIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [70, 32], iconAnchor: [35, 16] });
-    const marker = L.marker([posto.lat, posto.lng], {icon: cIcon}).addTo(leafletMap);
+    const cIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [72, 34], iconAnchor: [36, 17] });
+    const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)], { icon: cIcon }).addTo(leafletMap);
     marker.on('click', () => {
+      const fmt3 = v => v ? 'R$'+parseFloat(v).toFixed(3).replace('.',',') : '--';
       document.getElementById('mapa-detail').innerHTML = 
         `<div class="card" style="margin-top:.5rem"><div class="chdr">
-          <div class="ctitle">${posto.n}</div>
-          <div class="csub">Sup: ${posto.sup} · ${posto.banda}</div>
-        </div><div class="cbody"><div class="empty" style="padding:.5rem">Sem coleta hoje — aguardando dados do gerente.</div></div></div>`;
+          <div class="ctitle" style="color:${cor}">${k}</div>
+          <div class="csub">Sup: ${sup} · ${d.bandeira||''} · ${d.data||''}</div>
+        </div><div class="cbody">
+          <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${fmt3(d.GC)}</span></div>
+          <div class="pr"><span class="prc">G. Aditivada</span><span class="prv ga">${fmt3(d.GA)}</span></div>
+          <div class="pr"><span class="prc">Etanol</span><span class="prv et">${fmt3(d.ET)}</span></div>
+          <div class="pr"><span class="prc">Diesel S10</span><span class="prv s10">${fmt3(d.S10)}</span></div>
+        </div></div>`;
     });
     mapMarkers.push(marker);
   });
+
+  // ── Contador e legenda ─────────────────────────────────────────
+  const contador = document.getElementById('mapa-contador');
+  if (contador) {
+    const total = contColetados + contSemColeta;
+    contador.innerHTML = `<span style="color:var(--ac)">✅ ${contColetados}</span> coletados &nbsp;·&nbsp; <span style="color:var(--tx3)">⏳ ${contSemColeta}</span> aguardando`;
+  }
   
   // Renderiza legenda inteligente baseado nos ranges de preços reais atuais
   const legend = document.getElementById('map-legend');
