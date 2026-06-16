@@ -5,7 +5,7 @@
 // Dados reais via Apps Script (doGet?tipo=precos)
 // ═══════════════════════════════════════════════════════════════════
 
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwwIneDa-sT8GLJ9otPAVhMVxsqBWk2TX6C_pXQe1vjz6L261chb8Jn6WuYs1RHsuLW/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5EIYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
 
 // Credenciais ADM (validadas no cliente — igual ao fechamento)
 const ADM_USERS = [
