@@ -1,6 +1,3 @@
-Aqui está o código completo, unificado e corrigido. As coordenadas geográficas foram inseridas e a lógica do LeafelMap foi integrada perfeitamente ao fluxo de atualização em tempo real (`carregarDados`), garantindo que os marcadores exibam dinamicamente os preços coletados sem travar ou sumir com as informações.
-
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -14,6 +11,8 @@ Aqui está o código completo, unificado e corrigido. As coordenadas geográfica
 <link rel="apple-touch-icon" href="./ícone-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- Biblioteca de Ícones Vetoriais Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -47,7 +46,7 @@ body::before{content:'';position:fixed;inset:0;
 .finput:focus{border-color:var(--ac)}
 .senha-row{display:flex;gap:6px}
 .senha-row .finput{flex:1}
-.olho-btn{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:.75rem .9rem;cursor:pointer;font-size:1rem}
+.olho-btn{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:.75rem .9rem;cursor:pointer;font-size:.9rem;color:var(--tx2);display:flex;align-items:center;justify-content:center;width:42px}
 .btn-entrar{background:var(--ac);color:#0d0f12;border:none;border-radius:10px;padding:.85rem;font-family:var(--mono);font-weight:700;font-size:.85rem;letter-spacing:.08em;cursor:pointer;transition:opacity .15s}
 .btn-entrar:hover{opacity:.85}
 .btn-entrar:disabled{opacity:.5;cursor:not-allowed}
@@ -63,14 +62,16 @@ body::before{content:'';position:fixed;inset:0;
 .live{display:inline-flex;align-items:center;gap:5px;background:var(--acd);border:1px solid rgba(0,229,160,.2);border-radius:20px;color:var(--ac);font-size:.62rem;font-family:var(--mono);padding:3px 9px}
 .ldot{width:5px;height:5px;border-radius:50%;background:var(--ac);animation:pu 2s infinite}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
-.sair-btn{background:transparent;border:1px solid var(--bd);border-radius:8px;padding:5px 8px;color:var(--tx3);cursor:pointer;font-size:.85rem}
+.sair-btn{background:transparent;border:1px solid var(--bd);border-radius:8px;padding:6px 9px;color:var(--tx3);cursor:pointer;font-size:.85rem;transition:all .15s;display:inline-flex;align-items:center;justify-content:center}
+.sair-btn:hover{color:var(--dg);border-color:var(--dg)}
 .main{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:1;padding-bottom:70px}
 .main::-webkit-scrollbar{width:3px}
 .main::-webkit-scrollbar-thumb{background:var(--bd2)}
 .bnav{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bd);display:flex;z-index:100;height:62px}
-.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;background:transparent;border:none;border-top:2px solid transparent;transition:all .15s;padding:6px 4px}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;background:transparent;border:none;border-top:2px solid transparent;transition:all .15s;padding:6px 4px}
 .nbtn.active{border-top-color:var(--ac)}
-.nbtn .ni{font-size:20px;line-height:1}
+.nbtn .ni{font-size:16px;line-height:1;color:var(--tx3);transition:color .15s}
+.nbtn.active .ni{color:var(--ac)}
 .nbtn .nl{font-size:.62rem;font-family:var(--mono);color:var(--tx3);letter-spacing:.04em;text-transform:uppercase}
 .nbtn.active .nl{color:var(--ac)}
 .scr{display:none;padding:.75rem .75rem 0}
@@ -144,7 +145,8 @@ body::before{content:'';position:fixed;inset:0;
 .mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mitem{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.85rem .5rem;text-align:center;cursor:pointer;transition:all .15s}
 .mitem:hover{border-color:var(--ac)}
-.mic{font-size:1.5rem;display:block;margin-bottom:4px}
+.mic{font-size:1.3rem;display:block;margin-bottom:6px;color:var(--tx2)}
+.mitem:hover .mic{color:var(--ac)}
 .mlbl{font-size:.68rem;color:var(--tx);font-weight:500}
 .mbadge{font-size:.55rem;font-family:var(--mono);color:var(--tx3);margin-top:3px}
 .mbadge.imp{color:var(--wn)}
@@ -154,7 +156,7 @@ body::before{content:'';position:fixed;inset:0;
 .ttitle{font-family:var(--mono);font-size:.72rem;color:var(--ac);margin-bottom:2px}
 /* Amostra */
 .am-card{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:.5rem}
-.am-posto{font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--tx)}
+.am-posto{font-family:var(--mono);font-size:-85rem;font-weight:700;color:var(--tx)}
 .am-sub{font-size:.65rem;color:var(--tx3);margin-bottom:.5rem}
 .am-bar-bg{background:var(--sf3);border-radius:4px;height:6px;overflow:hidden;margin:.4rem 0}
 .am-bar{height:100%;border-radius:4px;background:var(--ac);transition:width .6s}
@@ -182,7 +184,7 @@ body::before{content:'';position:fixed;inset:0;
 /* Relatorios */
 .rcard{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:.5rem}
 .rcardtop{display:flex;align-items:center;gap:.65rem;margin-bottom:.6rem}
-.rcardico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.rcardico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;color:var(--ac)}
 .rcardtitle{font-size:.82rem;font-weight:600}
 .rcardsub{font-size:.62rem;color:var(--tx3)}
 .rrows{display:flex;flex-direction:column;gap:4px}
@@ -190,7 +192,7 @@ body::before{content:'';position:fixed;inset:0;
 .rrow:last-child{border-bottom:none}
 /* Notificações */
 .notif-item{display:flex;gap:.65rem;padding:.65rem 0;border-bottom:1px solid var(--bd)}
-.notif-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.notif-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
 .notif-txt{font-size:.78rem;line-height:1.4}
 .notif-sub{font-size:.65rem;color:var(--tx3);margin-top:2px}
 /* Loading */
@@ -252,7 +254,7 @@ body::before{content:'';position:fixed;inset:0;
       <label class="flbl">Senha</label>
       <div class="senha-row">
         <input id="inp-senha" type="password" class="finput" placeholder="••••••••" autocomplete="current-password">
-        <button class="olho-btn" onclick="toggleSenha()" type="button">👁</button>
+        <button class="olho-btn" onclick="toggleSenha()" type="button"><i class="fa-solid fa-eye" id="olho-icone"></i></button>
       </div>
     </div>
     <button class="btn-entrar" id="btn-entrar" onclick="entrar()">ENTRAR</button>
@@ -268,7 +270,7 @@ body::before{content:'';position:fixed;inset:0;
     </div>
     <div class="tb-right">
       <div class="live"><span class="ldot"></span><span id="live-txt">ao vivo</span></div>
-      <button class="sair-btn" onclick="sair()">⏏️</button>
+      <button class="sair-btn" onclick="sair()"><i class="fa-solid fa-right-from-bracket"></i></button>
     </div>
   </header>
 
@@ -353,11 +355,11 @@ body::before{content:'';position:fixed;inset:0;
   </main>
 
   <nav class="bnav">
-    <button class="nbtn active" onclick="setTab(this,'comp')"><span class="ni">⚖️</span><span class="nl">Compara</span></button>
-    <button class="nbtn" onclick="setTab(this,'ranking')"><span class="ni">🏆</span><span class="nl">Ranking</span></button>
-    <button class="nbtn" onclick="setTab(this,'regional')"><span class="ni">📍</span><span class="nl">Regional</span></button>
-    <button class="nbtn" onclick="setTab(this,'mapa')"><span class="ni">🗺️</span><span class="nl">Mapa</span></button>
-    <button class="nbtn" onclick="abrirMais()"><span class="ni">⊕</span><span class="nl">Mais+</span></button>
+    <button class="nbtn active" onclick="setTab(this,'comp')"><span class="ni"><i class="fa-solid fa-scale-balanced"></i></span><span class="nl">Compara</span></button>
+    <button class="nbtn" onclick="setTab(this,'ranking')"><span class="ni"><i class="fa-solid fa-trophy"></i></span><span class="nl">Ranking</span></button>
+    <button class="nbtn" onclick="setTab(this,'regional')"><span class="ni"><i class="fa-solid fa-location-dot"></i></span><span class="nl">Regional</span></button>
+    <button class="nbtn" onclick="setTab(this,'mapa')"><span class="ni"><i class="fa-solid fa-map-location-dot"></i></span><span class="nl">Mapa</span></button>
+    <button class="nbtn" onclick="abrirMais()"><span class="ni"><i class="fa-solid fa-circle-plus"></i></span><span class="nl">Mais+</span></button>
   </nav>
 </div>
 
@@ -366,12 +368,12 @@ body::before{content:'';position:fixed;inset:0;
     <button class="mclose" onclick="fecharMaisBtn()">✕</button>
     <div class="mtitle">Mais funções</div>
     <div class="mgrid">
-      <div class="mitem" onclick="irPara('amostra')"><span class="mic">🧪</span><div class="mlbl">Amostra-Testemunha</div><div class="mbadge imp">importante</div></div>
-      <div class="mitem" onclick="irPara('notif')"><span class="mic">🔔</span><div class="mlbl">Notificações</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('distribuidor')"><span class="mic">🏭</span><div class="mlbl">Distribuidor</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('simulador')"><span class="mic">🧮</span><div class="mlbl">Simulador</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('lancamento')"><span class="mic">✏️</span><div class="mlbl">Lançar Preço</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('relatorios')"><span class="mic">📊</span><div class="mlbl">Relatórios</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('amostra')"><span class="mic"><i class="fa-solid fa-flask-vial"></i></span><div class="mlbl">Amostra-Testemunha</div><div class="mbadge imp">importante</div></div>
+      <div class="mitem" onclick="irPara('notif')"><span class="mic"><i class="fa-solid fa-bell"></i></span><div class="mlbl">Notificações</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('distribuidor')"><span class="mic"><i class="fa-solid fa-industry"></i></span><div class="mlbl">Distribuidor</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('simulador')"><span class="mic"><i class="fa-solid fa-calculator"></i></span><div class="mlbl">Simulador</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('lancamento')"><span class="mic"><i class="fa-solid fa-pen-to-square"></i></span><div class="mlbl">Lançar Preço</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('relatorios')"><span class="mic"><i class="fa-solid fa-chart-bar"></i></span><div class="mlbl">Relatórios</div><div class="mbadge">ativo</div></div>
     </div>
   </div>
 </div>
@@ -497,7 +499,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function toggleSenha() {
   const inp = document.getElementById('inp-senha');
-  inp.type = inp.type === 'password' ? 'text' : 'password';
+  const icone = document.getElementById('olho-icone');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icone.className = 'fa-solid fa-eye-slash';
+  } else {
+    inp.type = 'password';
+    icone.className = 'fa-solid fa-eye';
+  }
 }
 
 function entrar() {
@@ -533,7 +542,7 @@ async function carregarDados() {
   document.getElementById('upd-txt').textContent = 'Buscando do banco real...';
   try {
     const res = await fetch(API_URL + '?action=getPrecos');
-    const json = await res.parse ? await res.json() : JSON.parse(await res.text());
+    const json = await res.json();
     
     if(json && json.success) {
       G_DADOS = json.data;
@@ -1023,8 +1032,8 @@ function renderAmostra(ctx) {
 
 function renderNotif(ctx) {
   ctx.innerHTML = `<div class="sdiv">Histórico de Alertas de Preço</div>
-    <div class="notif-item"><div class="notif-ico" style="background:rgba(255,77,109,0.12);color:var(--dg)">🚨</div><div><div class="notif-txt"><strong>P. BRUNA</strong> está R$ 0.24 acima da média regional para Etanol.</div><div class="notif-sub">Há 14 minutos • Sistema Autônomo</div></div></div>
-    <div class="notif-item"><div class="notif-ico" style="background:var(--acd);color:var(--ac)">✅</div><div><div class="notif-txt">Coleta concluída com sucesso pelo supervisor Maurício na região Centro-Sul.</div><div class="notif-sub">Há 1 hora • App Coletor</div></div></div>`;
+    <div class="notif-item"><div class="notif-ico" style="background:rgba(255,77,109,0.12);color:var(--dg)"><i class="fa-solid fa-triangle-exclamation"></i></div><div><div class="notif-txt"><strong>P. BRUNA</strong> está R$ 0.24 acima da média regional para Etanol.</div><div class="notif-sub">Há 14 minutos • Sistema Autônomo</div></div></div>
+    <div class="notif-item"><div class="notif-ico" style="background:var(--acd);color:var(--ac)"><i class="fa-solid fa-circle-check"></i></div><div><div class="notif-txt">Coleta concluída com sucesso pelo supervisor Maurício na região Centro-Sul.</div><div class="notif-sub">Há 1 hora • App Coletor</div></div></div>`;
 }
 
 function renderDist(ctx) {
@@ -1092,7 +1101,7 @@ async function enviarPreco() {
 function renderRel(ctx) {
   ctx.innerHTML = `<div class="sdiv">Relatórios Analíticos consolidados</div>
     <div class="rcard">
-      <div class="rcardtop"><div class="rcardico" style="background:var(--acd);color:var(--ac)">📈</div><div><div class="rcardtitle">Evolução Semanal de Margem</div><div class="rcardsub">Volumetria vs Elasticidade de Preço</div></div></div>
+      <div class="rcardtop"><div class="rcardico" style="background:var(--acd);color:var(--ac)"><i class="fa-solid fa-chart-line"></i></div><div><div class="rcardtitle">Evolução Semanal de Margem</div><div class="rcardsub">Volumetria vs Elasticidade de Preço</div></div></div>
       <div class="rrows">
         <div class="rrow"><span>Média da Rede (Jan 2026)</span><strong>R$ 0.44 / L</strong></div>
         <div class="rrow"><span>Média da Rede (Atual)</span><strong style="color:var(--ac)">R$ 0.51 / L</strong></div>
@@ -1111,5 +1120,3 @@ function showToast(title, msg) {
 </script>
 </body>
 </html>
-
-```
