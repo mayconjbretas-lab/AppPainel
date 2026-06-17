@@ -37,7 +37,32 @@ function iniciarAutoRefresh() {
   }, INTERVALO_ATUALIZACAO);
 }
 
+// ════════════════════════════════════════════════════════════
+// TEMA CLARO/ESCURO — sol/lua
+// ════════════════════════════════════════════════════════════
+function aplicarTema(tema) {
+  document.documentElement.setAttribute('data-theme', tema);
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.className = tema === 'light' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  localStorage.setItem('jb_theme', tema);
+}
+
+function toggleTheme() {
+  const atual = document.documentElement.getAttribute('data-theme') || 'dark';
+  aplicarTema(atual === 'dark' ? 'light' : 'dark');
+}
+
+// Aplica o tema salvo (ou escuro por padrão) antes de tudo, para evitar flash
+(function() {
+  const temaSalvo = localStorage.getItem('jb_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', temaSalvo);
+})();
+
 window.addEventListener('DOMContentLoaded', () => {
+  // Sincroniza o ícone do botão com o tema já aplicado
+  const temaSalvo = localStorage.getItem('jb_theme') || 'dark';
+  aplicarTema(temaSalvo);
+
   const salvo = localStorage.getItem('jb_adm_user');
   if(salvo) {
     G_USER = JSON.parse(salvo);
@@ -335,7 +360,7 @@ function povoarSelects() {
   const sel = document.getElementById('posto-comp');
   const valSalvo = sel.value;
   sel.innerHTML = '<option value="">Selecione o posto...</option>';
-  
+
   const lista = Object.keys(POSTOS_DADOS).sort();
   lista.forEach(p => {
     const opt = document.createElement('option');
@@ -344,6 +369,20 @@ function povoarSelects() {
     sel.appendChild(opt);
   });
   if(valSalvo && POSTOS_DADOS[valSalvo]) sel.value = valSalvo;
+
+  // Select da tela de Logística (mesma lista de postos)
+  const selLog = document.getElementById('log-sel-posto');
+  if (selLog) {
+    const valSalvoLog = selLog.value;
+    selLog.innerHTML = '<option value="">Selecione um posto...</option>';
+    lista.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = p;
+      selLog.appendChild(opt);
+    });
+    if (valSalvoLog && POSTOS_DADOS[valSalvoLog]) selLog.value = valSalvoLog;
+  }
 }
 
 // Renderização de Abas (Tabs) e Modais
@@ -368,6 +407,15 @@ function fecharMaisBtn() {
 
 function irPara(modulo) {
   fecharMaisBtn();
+
+  // Logística tem seção própria (não é um módulo dentro de "Mais+")
+  if (modulo === 'logistica') {
+    document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.scr').forEach(x => x.classList.remove('active'));
+    document.getElementById('s-logistica').classList.add('active');
+    return;
+  }
+
   document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.scr').forEach(x => x.classList.remove('active'));
   document.getElementById('s-mais').classList.add('active');
@@ -1173,4 +1221,161 @@ function showToast(title, msg) {
   document.getElementById('t-msg').textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3500);
+}
+// ════════════════════════════════════════════════════════════
+// LOGÍSTICA — resumo do dia + pedido de amanhã (por grupo de tanque)
+// ════════════════════════════════════════════════════════════
+let G_LOG_DADOS = null; // resumo carregado da API para o posto atual
+let G_LOG_PEDIDOS = {}; // { combustivel: valorDigitado }
+
+async function carregarLogistica(posto) {
+  const empty   = document.getElementById('log-empty');
+  const content = document.getElementById('log-content');
+  const cardsEl = document.getElementById('log-cards');
+
+  if (!posto) {
+    empty.classList.remove('hidden');
+    empty.textContent = 'Selecione um posto acima para ver o resumo do dia.';
+    content.style.display = 'none';
+    return;
+  }
+
+  empty.classList.remove('hidden');
+  empty.textContent = 'Carregando dados do posto...';
+  content.style.display = 'none';
+  G_LOG_PEDIDOS = {};
+
+  try {
+    const url = API_URL + '?tipo=resumoDia&posto=' + encodeURIComponent(posto);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    const json = await res.json();
+
+    if (!json || !json.success || !json.resumo || json.resumo.erro) {
+      empty.textContent = (json && json.resumo && json.resumo.erro) || 'Não foi possível carregar os dados deste posto.';
+      return;
+    }
+
+    G_LOG_DADOS = json.resumo;
+    empty.classList.add('hidden');
+    content.style.display = 'block';
+
+    document.getElementById('log-posto-nome').textContent = G_LOG_DADOS.posto;
+    document.getElementById('log-data-ref').textContent = 'Fechamento de hoje · ' + G_LOG_DADOS.data;
+
+    renderCardsLogistica();
+  } catch (e) {
+    console.warn('Logística erro:', e.name, e.message);
+    empty.textContent = e.name === 'AbortError'
+      ? 'Tempo esgotado ao buscar dados. Tente novamente.'
+      : 'Erro ao carregar dados do posto.';
+  }
+}
+
+function fmtL(v) {
+  if (v === null || v === undefined || v === '') return '—';
+  return Math.round(v).toLocaleString('pt-BR') + ' L';
+}
+
+function renderCardsLogistica() {
+  const cardsEl = document.getElementById('log-cards');
+  if (!G_LOG_DADOS || !G_LOG_DADOS.grupos || !G_LOG_DADOS.grupos.length) {
+    cardsEl.innerHTML = '<div class="empty">Sem grupos de tanque cadastrados para este posto.</div>';
+    return;
+  }
+
+  cardsEl.innerHTML = G_LOG_DADOS.grupos.map((g, i) => {
+    const diffVal = g.diferencaHoje;
+    const diffCor = diffVal === null ? 'var(--tx3)' : (Math.abs(diffVal) <= g.margem ? 'var(--ok)' : 'var(--dg)');
+    const diffTxt = diffVal === null ? '—' : (diffVal >= 0 ? '+' : '') + Math.round(diffVal).toLocaleString('pt-BR') + ' L';
+    const pctOcup = g.capacidade ? Math.min(100, Math.round(((g.medicaoHoje||0) / g.capacidade) * 100)) : 0;
+
+    const valorAtualPedido = G_LOG_PEDIDOS[g.combustivel] !== undefined
+      ? G_LOG_PEDIDOS[g.combustivel]
+      : (g.pedidoAmanha !== null ? g.pedidoAmanha : '');
+
+    return `
+    <div class="log-card">
+      <div class="log-card-hdr">
+        <div class="log-card-titulo">${g.combustivel}</div>
+        <div class="log-card-cap">${(g.capacidade||0).toLocaleString('pt-BR')} L cap.</div>
+      </div>
+
+      <div class="log-barra-wrap">
+        <div class="log-barra"><div class="log-barra-fill" style="width:${pctOcup}%"></div></div>
+        <div class="log-barra-lbl">${pctOcup}% do tanque (medição de hoje)</div>
+      </div>
+
+      <div class="log-grid4">
+        <div class="log-item"><div class="log-item-lbl">Medição</div><div class="log-item-val">${fmtL(g.medicaoHoje)}</div></div>
+        <div class="log-item"><div class="log-item-lbl">Venda hoje</div><div class="log-item-val" style="color:var(--dg)">${fmtL(g.vendaHoje)}</div></div>
+        <div class="log-item"><div class="log-item-lbl">Carga hoje</div><div class="log-item-val" style="color:var(--ok)">${fmtL(g.cargaHoje)}</div></div>
+        <div class="log-item"><div class="log-item-lbl">Diferença</div><div class="log-item-val" style="color:${diffCor}">${diffTxt}</div></div>
+      </div>
+
+      <div class="log-prev-row">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Previsão para amanhã: <strong>${fmtL(g.previsaoAmanha)}</strong></span>
+      </div>
+
+      <div class="log-pedido-row">
+        <label class="log-pedido-lbl">Pedido para amanhã (L)</label>
+        <input type="number" inputmode="numeric" class="log-pedido-input"
+               placeholder="Ex: 5000"
+               value="${valorAtualPedido}"
+               oninput="atualizarPedidoLogistica('${g.combustivel.replace(/'/g,"\\'")}', this.value)">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function atualizarPedidoLogistica(combustivel, valor) {
+  G_LOG_PEDIDOS[combustivel] = valor === '' ? '' : parseFloat(valor);
+}
+
+async function salvarPedidosLogistica() {
+  if (!G_LOG_DADOS) return;
+
+  const pedidos = Object.keys(G_LOG_PEDIDOS)
+    .filter(k => G_LOG_PEDIDOS[k] !== '' && G_LOG_PEDIDOS[k] !== null && !isNaN(G_LOG_PEDIDOS[k]))
+    .map(k => ({ combustivel: k, valor: G_LOG_PEDIDOS[k] }));
+
+  if (!pedidos.length) {
+    showToast('Nada para enviar', 'Preencha ao menos um pedido antes de enviar.');
+    return;
+  }
+
+  const btn = document.getElementById('log-btn-salvar');
+  const txtOriginal = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        tipo: 'pedido_logistica',
+        posto: G_LOG_DADOS.posto,
+        pedidos: pedidos,
+        user: (G_USER && G_USER.email) || 'ADM'
+      })
+    });
+    const json = await res.json();
+
+    if (json && json.success !== false) {
+      showToast('Pedido enviado ✅', pedidos.length + ' grupo(s) atualizado(s) na planilha.');
+      carregarLogistica(G_LOG_DADOS.posto); // recarrega para confirmar gravação
+    } else {
+      showToast('Erro ao enviar', (json && json.message) || 'Tente novamente em instantes.');
+    }
+  } catch (e) {
+    console.warn('Salvar pedido erro:', e);
+    showToast('Erro ao enviar', 'Verifique sua conexão e tente novamente.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = txtOriginal;
+  }
 }
