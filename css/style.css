@@ -8,8 +8,15 @@
   --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
   --r:10px;--rl:16px;
 }
+html[data-theme="light"]{
+  --bg:#f5f6f8;--sf:#ffffff;--sf2:#f0f2f5;--sf3:#e6e9ee;
+  --bd:#dde1e8;--bd2:#c8cdd6;
+  --ac:#00a876;--ac2:#008f63;--acd:rgba(0,168,118,0.10);
+  --tx:#1a1d24;--tx2:#5a6478;--tx3:#8892a4;
+  --dg:#e0334f;--wn:#c78a00;--inf:#2f6fd1;--ok:#00a876;--pu:#9550d6;
+}
 html,body{height:100%;overflow:hidden}
-body{font-family:var(--sans);background:var(--bg);color:var(--tx);display:flex;flex-direction:column;position:relative}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);display:flex;flex-direction:column;position:relative;transition:background .2s,color .2s}
 body::before{content:'';position:fixed;inset:0;
   background-image:linear-gradient(rgba(0,229,160,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,0.03) 1px,transparent 1px);
   background-size:40px 40px;pointer-events:none;z-index:0}
@@ -47,16 +54,18 @@ body::before{content:'';position:fixed;inset:0;
 .ldot{width:5px;height:5px;border-radius:50%;background:var(--ac);animation:pu 2s infinite}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
 .sair-btn{background:transparent;border:1px solid var(--bd);border-radius:8px;padding:6px 9px;color:var(--tx3);cursor:pointer;font-size:.85rem;transition:all .15s;display:inline-flex;align-items:center;justify-content:center}
+.theme-btn{background:transparent;border:1px solid var(--bd);border-radius:8px;padding:6px 9px;color:var(--tx3);cursor:pointer;font-size:.85rem;transition:all .15s;display:inline-flex;align-items:center;justify-content:center}
+.theme-btn:hover{color:var(--ac);border-color:var(--ac)}
 .sair-btn:hover{color:var(--dg);border-color:var(--dg)}
 .main{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:1;padding-bottom:70px}
 .main::-webkit-scrollbar{width:3px}
 .main::-webkit-scrollbar-thumb{background:var(--bd2)}
 .bnav{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bd);display:flex;z-index:100;height:62px}
-.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;background:transparent;border:none;border-top:2px solid transparent;transition:all .15s;padding:6px 4px}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;background:transparent;border:none;border-top:2px solid transparent;transition:all .15s;padding:6px 2px}
 .nbtn.active{border-top-color:var(--ac)}
-.nbtn .ni{font-size:16px;line-height:1;color:var(--tx3);transition:color .15s}
+.nbtn .ni{font-size:15px;line-height:1;color:var(--tx3);transition:color .15s}
 .nbtn.active .ni{color:var(--ac)}
-.nbtn .nl{font-size:.62rem;font-family:var(--mono);color:var(--tx3);letter-spacing:.04em;text-transform:uppercase}
+.nbtn .nl{font-size:.56rem;font-family:var(--mono);color:var(--tx3);letter-spacing:.02em;text-transform:uppercase}
 .nbtn.active .nl{color:var(--ac)}
 .scr{display:none;padding:.75rem .75rem 0}
 .scr.active{display:block}
@@ -128,8 +137,8 @@ body::before{content:'';position:fixed;inset:0;
 .mtitle{font-family:var(--mono);font-size:.75rem;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem}
 .mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mitem{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:.85rem .5rem;text-align:center;cursor:pointer;transition:all .15s}
-.mitem:hover{border-color:var(--ac)}
-.mic{font-size:1.3rem;display:block;margin-bottom:6px;color:var(--tx2)}
+.mitem:hover{border-color:var(--ac);background:var(--acd)}
+.mic{font-size:1.3rem;display:block;margin-bottom:6px;color:var(--ac)}
 .mitem:hover .mic{color:var(--ac)}
 .mlbl{font-size:.68rem;color:var(--tx);font-weight:500}
 .mbadge{font-size:.55rem;font-family:var(--mono);color:var(--tx3);margin-top:3px}
@@ -211,4 +220,41 @@ body::before{content:'';position:fixed;inset:0;
   font-family: var(--mono);
   font-weight: 700;
   color: #fff;
+}
+/* ════════════════════════════════════════════════════════════
+   LOGÍSTICA — cards modernos por grupo de tanque
+   ════════════════════════════════════════════════════════════ */
+.log-headcard{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);padding:1rem;margin-bottom:.8rem}
+.log-head-row{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+.log-posto-nome{font-family:var(--mono);font-weight:700;font-size:1rem;color:var(--ac)}
+
+.log-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);padding:1rem;margin-bottom:.8rem;transition:border-color .15s}
+.log-card:hover{border-color:var(--bd2)}
+
+.log-card-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.7rem}
+.log-card-titulo{font-weight:700;font-size:.95rem;color:var(--tx)}
+.log-card-cap{font-family:var(--mono);font-size:.65rem;color:var(--tx3)}
+
+.log-barra-wrap{margin-bottom:.85rem}
+.log-barra{width:100%;height:8px;background:var(--sf3);border-radius:99px;overflow:hidden}
+.log-barra-fill{height:100%;background:linear-gradient(90deg,var(--ac2),var(--ac));border-radius:99px;transition:width .4s ease}
+.log-barra-lbl{font-size:.62rem;color:var(--tx3);margin-top:.3rem;font-family:var(--mono)}
+
+.log-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:.85rem}
+.log-item{background:var(--sf2);border-radius:8px;padding:.5rem .4rem;text-align:center}
+.log-item-lbl{font-size:.55rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px;font-family:var(--mono)}
+.log-item-val{font-family:var(--mono);font-weight:700;font-size:.78rem;color:var(--tx)}
+
+.log-prev-row{display:flex;align-items:center;gap:.5rem;background:var(--acd);border:1px solid rgba(0,229,160,.2);border-radius:8px;padding:.55rem .7rem;margin-bottom:.85rem;font-size:.78rem;color:var(--tx2)}
+.log-prev-row i{color:var(--ac)}
+.log-prev-row strong{color:var(--ac);font-family:var(--mono)}
+
+.log-pedido-row{display:flex;flex-direction:column;gap:.4rem}
+.log-pedido-lbl{font-size:.68rem;color:var(--tx2);font-weight:600}
+.log-pedido-input{width:100%;background:var(--sf2);border:1.5px solid var(--bd2);border-radius:8px;padding:.7rem .8rem;color:var(--tx);font-family:var(--mono);font-size:.95rem;font-weight:700;outline:none;transition:border-color .15s}
+.log-pedido-input:focus{border-color:var(--ac)}
+.log-pedido-input::placeholder{color:var(--tx3);font-weight:400}
+
+@media (max-width:380px){
+  .log-grid4{grid-template-columns:repeat(2,1fr)}
 }
