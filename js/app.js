@@ -145,7 +145,118 @@ function fallback(msg) {
   processarDadosReais();
 }
 
-function processarDadosReais() {
+// ════════════════════════════════════════════════════════════
+// MÉDIA HIERÁRQUICA — posto → supervisor (regional) → geral
+// ────────────────────────────────────────────────────────────
+// Por que não é média simples de todos os registros:
+// um posto com 7 concorrentes não pode pesar 3,5x mais que um
+// posto com 2, e uma região com mais postos coletados não pode
+// puxar a média geral para o seu lado. Cada nível conta 1x.
+//
+// Nível 1 — por posto:       média de GC dos concorrentes daquele posto
+// Nível 2 — por supervisor:  média das médias dos postos daquele supervisor
+// Nível 3 — geral da rede:   média das médias dos supervisores
+//
+// O nosso próprio preço (G_DADOS.prop) nunca entra aqui —
+// esta função só recebe concPlano (concorrentes).
+// ════════════════════════════════════════════════════════════
+function calcularMediaHierarquica(concPlano) {
+  // Nível 1: agrupa GC dos concorrentes por POSTO (campo "bloco")
+  const porPosto = {}; // { bloco: [gc1, gc2, ...] }
+  for (let nome in concPlano) {
+    const item = concPlano[nome];
+    if (!item || !item.GC) continue;
+    const bloco = item.bloco || 'SEM_BLOCO';
+    if (!porPosto[bloco]) porPosto[bloco] = { valores: [], sup: item.supervisor || '', nomes: [] };
+    porPosto[bloco].valores.push(parseFloat(item.GC));
+    porPosto[bloco].nomes.push(nome);
+  }
+
+  // Nível 1 → calcula a média de cada posto
+  const mediaPorPosto = {}; // { bloco: { media, sup, qtd, nomes } }
+  for (let bloco in porPosto) {
+    const arr = porPosto[bloco].valores;
+    const media = arr.reduce((s, v) => s + v, 0) / arr.length;
+    mediaPorPosto[bloco] = { media, sup: porPosto[bloco].sup, qtd: arr.length, nomes: porPosto[bloco].nomes };
+  }
+
+  // Nível 2: agrupa as médias de posto por SUPERVISOR
+  const porSupervisor = {}; // { sup: [{bloco, media}, ...] }
+  for (let bloco in mediaPorPosto) {
+    const { media, sup } = mediaPorPosto[bloco];
+    if (!sup) continue;
+    if (!porSupervisor[sup]) porSupervisor[sup] = [];
+    porSupervisor[sup].push({ bloco, media });
+  }
+
+  // Nível 2 → calcula a média regional de cada supervisor
+  const mediaPorSupervisor = {}; // { sup: { media, postos: [...] } }
+  for (let sup in porSupervisor) {
+    const arr = porSupervisor[sup];
+    const media = arr.reduce((s, x) => s + x.media, 0) / arr.length;
+    mediaPorSupervisor[sup] = { media, postos: arr };
+  }
+
+  // Nível 3: média geral = média das médias regionais
+  const supKeys = Object.keys(mediaPorSupervisor);
+  if (supKeys.length === 0) {
+    G_MEDIA_DETALHE = null;
+    return null;
+  }
+  const mediaGeral = supKeys.reduce((s, k) => s + mediaPorSupervisor[k].media, 0) / supKeys.length;
+
+  // Salva o detalhamento completo para exibição no modal
+  G_MEDIA_DETALHE = { mediaPorPosto, mediaPorSupervisor, mediaGeral };
+  return mediaGeral;
+}
+
+let G_MEDIA_DETALHE = null;
+
+function abrirDetalheMedia() {
+  document.getElementById('modal-media').classList.add('open');
+  renderDetalheMedia();
+}
+function fecharMedia(e) {
+  if (e.target.id === 'modal-media') fecharMediaBtn();
+}
+function fecharMediaBtn() {
+  document.getElementById('modal-media').classList.remove('open');
+}
+
+function renderDetalheMedia() {
+  const body = document.getElementById('media-detalhe-body');
+  if (!G_MEDIA_DETALHE) {
+    body.innerHTML = '<div class="empty">Sem dados de concorrentes coletados hoje.</div>';
+    return;
+  }
+  const { mediaPorSupervisor, mediaGeral } = G_MEDIA_DETALHE;
+  const SUPCOR = {Mauricio:'#00e5a0',Paulo:'#4895ef',Fabricio:'#f9c74f',Gledson:'#c77dff',Rodrigo:'#ff6b6b'};
+
+  let html = `<div class="ccard" style="margin-bottom:.6rem;text-align:center">
+    <div class="cclbl">MÉDIA GERAL DA REDE (Nível 3)</div>
+    <div style="font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--inf)">R$ ${mediaGeral.toFixed(3).replace('.',',')}</div>
+    <div style="font-size:.62rem;color:var(--tx3)">Média das ${Object.keys(mediaPorSupervisor).length} médias regionais abaixo</div>
+  </div>`;
+
+  for (let sup in mediaPorSupervisor) {
+    const { media, postos } = mediaPorSupervisor[sup];
+    const cor = SUPCOR[sup] || '#8892a4';
+    html += `<div class="reg-sup" style="margin-bottom:.5rem">
+      <div class="reg-sup-hdr">
+        <div class="reg-sup-nome" style="color:${cor}">${sup} <span style="font-size:.6rem;color:var(--tx3);font-weight:400">(Nível 2 — regional)</span></div>
+        <div style="font-family:var(--mono);font-weight:700;color:${cor}">R$ ${media.toFixed(3).replace('.',',')}</div>
+      </div>
+      <div class="reg-posto-list">`;
+    postos.forEach(p => {
+      html += `<div class="reg-posto"><span>P. ${p.bloco}</span><span style="font-family:var(--mono)">R$ ${p.media.toFixed(3).replace('.',',')}</span></div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+
   // ── Postos próprios: normaliza chave removendo "P. " ──────────
   const propPlano = G_DADOS.prop || {};
   const propMapeado = {};
@@ -191,15 +302,19 @@ function processarDadosReais() {
   document.getElementById('kv-proprios').textContent = Object.keys(propPlano).length;
   document.getElementById('kv-concs').textContent = contConc;
 
-  let somaGcConc = 0, cGcConc = 0;
+  // ── Média GC Concorrentes — hierárquica (posto → supervisor → geral) ──
+  // Evita que um posto com 7 concorrentes pese mais que um com 2,
+  // e que uma região com mais postos pese mais que outra.
+  // Nosso próprio preço NUNCA entra nessa conta — só concorrentes.
+  const mediaGcConcorrentes = calcularMediaHierarquica(concPlano);
+  document.getElementById('kv-gc').textContent = mediaGcConcorrentes !== null
+    ? 'R$ ' + mediaGcConcorrentes.toFixed(2) : '--';
+
+  // ── Nosso GC médio — média simples dos postos próprios coletados ──
   let somaGcProp = 0, cGcProp = 0;
-  for (let k in concPlano) {
-    if (concPlano[k].GC) { somaGcConc += parseFloat(concPlano[k].GC); cGcConc++; }
-  }
   for (let k in propPlano) {
     if (propPlano[k].GC) { somaGcProp += parseFloat(propPlano[k].GC); cGcProp++; }
   }
-  document.getElementById('kv-gc').textContent  = cGcConc > 0 ? 'R$ ' + (somaGcConc/cGcConc).toFixed(2) : '--';
   document.getElementById('kv-mgc').textContent = cGcProp > 0 ? 'R$ ' + (somaGcProp/cGcProp).toFixed(2) : '--';
   
   const d = new Date();
@@ -613,13 +728,13 @@ function renderMapa() {
       const precoExibir = preco ? 'R$' + parseFloat(preco).toFixed(2) : '--';
       if (preco) precosValidos.push(parseFloat(preco));
       iconHtml = `<div class="custom-marker" style="border-color:${cor};background:#0d1a12">
-        <div class="m-name" style="color:${cor}">${posto.n}</div>
+        <div class="m-name" style="color:${cor}">${posto.ap}</div>
         <div class="m-price" style="color:#fff">${precoExibir}</div>
       </div>`;
     } else {
       contSemColeta++;
       iconHtml = `<div class="custom-marker" style="border-color:#333;background:#0d0f12;opacity:.6">
-        <div class="m-name" style="color:#5a6478">${posto.n}</div>
+        <div class="m-name" style="color:#5a6478">${posto.ap}</div>
         <div class="m-price" style="color:#3a4355;font-size:9px">⏳ aguardando</div>
       </div>`;
     }
@@ -630,7 +745,7 @@ function renderMapa() {
     marker.on('click', () => {
       const dtxt = (d && d.data) ? ` · ${d.data} ${d.hora||''}` : '';
       let dHtml = `<div class="card" style="margin-top:.5rem"><div class="chdr">
-        <div class="ctitle" style="color:${cor}">${posto.n}</div>
+        <div class="ctitle" style="color:${cor}">${posto.ap}</div>
         <div class="csub">Sup: ${sup} · ${banda}${dtxt}</div>
       </div><div class="cbody">`;
       if (temColeta) {
@@ -995,7 +1110,7 @@ function renderResumoHistorico() {
   const max_r = arr => arr.length ? Math.max(...arr.map(r=>parseFloat(r[fuel]))) : null;
 
   const mp = media(prop), mc = media(conc);
-  const fmt = v => v !== null ? 'R$ '+v.toFixed(3).replace('.',',') : '--';
+  const fmt = v => v !== null ? 'R$ '+v.toFixed(2).replace('.',',') : '--';
 
   body.innerHTML = `
     <div class="bgrid" style="grid-template-columns:1fr 1fr;gap:.5rem">
@@ -1016,8 +1131,8 @@ function renderResumoHistorico() {
     </div>
     ${mp && mc ? `<div style="margin-top:.5rem;padding:.6rem;background:${mp<mc?'rgba(0,229,160,.08)':'rgba(255,77,109,.08)'};border-radius:8px;font-size:.78rem">
       ${mp < mc
-        ? `✅ Nosso preço médio está <strong style="color:var(--ok)">R$ ${(mc-mp).toFixed(3)} abaixo</strong> da concorrência no período.`
-        : `⚠️ Nosso preço médio está <strong style="color:var(--dg)">R$ ${(mp-mc).toFixed(3)} acima</strong> da concorrência no período.`}
+        ? `✅ Nosso preço médio está <strong style="color:var(--ok)">R$ ${(mc-mp).toFixed(2)} abaixo</strong> da concorrência no período.`
+        : `⚠️ Nosso preço médio está <strong style="color:var(--dg)">R$ ${(mp-mc).toFixed(2)} acima</strong> da concorrência no período.`}
     </div>` : ''}
   `;
 }
@@ -1038,7 +1153,7 @@ function renderListaHistorico() {
   body.innerHTML = lista.map(r => {
     const isProp = r.tipo === 'Próprio';
     const cor    = isProp ? 'var(--ac)' : 'var(--tx3)';
-    const v      = parseFloat(r[fuel]).toFixed(3).replace('.',',');
+    const v      = parseFloat(r[fuel]).toFixed(2).replace('.',',');
     return `<div class="ritem">
       <div class="rinfo">
         <div class="rnome" style="color:${cor}">${r.postoAlvo}</div>
