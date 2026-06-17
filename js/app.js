@@ -324,7 +324,13 @@ function processarDadosReais() {
   // ── KPIs ──────────────────────────────────────────────────────
   const contProp = Object.keys(G_DADOS.prop).filter(k => propPlano[k]).length || Object.keys(propPlano).length;
   const contConc = Object.keys(concPlano).length;
+  const totalPostosRede = Object.keys(POSTOS_DADOS).length; // total cadastrado (37)
   document.getElementById('kv-proprios').textContent = Object.keys(propPlano).length;
+  const subEl = document.getElementById('kv-proprios-sub');
+  if (subEl) {
+    const faltam = totalPostosRede - Object.keys(propPlano).length;
+    subEl.textContent = faltam > 0 ? `de ${totalPostosRede} · faltam ${faltam}` : `de ${totalPostosRede} · completo ✓`;
+  }
   document.getElementById('kv-concs').textContent = contConc;
 
   // ── Média GC Concorrentes — hierárquica (posto → supervisor → geral) ──
