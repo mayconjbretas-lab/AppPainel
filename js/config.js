@@ -51,6 +51,7 @@ const MAP_POSTOS = [
   {k:"ESPACO REAL",          ap:"P. ESPACO REAL",           lat:-21.1300, lng:-44.2570, sup:"Rodrigo",  banda:"BR/Petrobras"},
   {k:"FELIPAO",              ap:"P. FELIPAO",               lat:-19.9230, lng:-43.9900, sup:"Rodrigo",  banda:"BR/Petrobras"},
   {k:"OURO BRANCO",          ap:"P. OURO BRANCO",           lat:-20.5200, lng:-43.7300, sup:"Rodrigo",  banda:"Bandeira Branca"},
+  {k:"PAIVA E PAIVA COMBUSTIVEL", ap:"PAIVA E PAIVA COMBUSTIVEL", lat:-21.1389, lng:-44.2294, sup:"Rodrigo", banda:"Bandeira Branca"},
 ];
 
 // POSTOS_DADOS — concorrentes reais conforme Apps Script CONCORRENTES_AS
@@ -86,7 +87,7 @@ const POSTOS_DADOS = {
   "GLORIA":      {sup:"Gledson",bandeira:"Shell",combs:["GC","ET","S10"],
     conc:{"CAPITAL":{banda:"Bandeira Branca"},"NOSSO POSTO":{banda:"Bandeira Branca"},"POSTO ATUAL":{banda:"Bandeira Branca"}}},
   "ITAPOA":      {sup:"Mauricio",bandeira:"Shell",combs:["GC","GA","ET","S10"],
-    conc:{"FLEX VIA EXPRESSA":{banda:"Bandeira Branca"},"PHOENIX AMAZONAS":{banda:"Bandeira Branca"},"PIO XII AMAZONAS":{banda:"Bandeira Branca"},"POSTO FRANCISCO DE SA":{banda:"Bandeira Branca"},"POSTO OLIMAR":{banda:"Bandeira Branca"},"POSTO QUICK":{banda:"Bandeira Branca"},"POSTO WAP":{banda:"Bandeira Branca"},"ZEP VIA EXPRESSA":{banda:"Bandeira Branca"},"REDE FLEX AMAZONAS":{banda:"Rede Flex"}}},
+    conc:{"FLEX VIA EXPRESSA":{banda:"Bandeira Branca"},"PHOENIX AMAZONAS":{banda:"Bandeira Branca"},"PIO XII AMAZONAS":{banda:"Bandeira Branca"},"POSTO FRANCISCO DE SA":{banda:"Bandeira Branca"},"POSTO OLIMAR":{banda:"Bandeira Branca"},"POSTO QUICK":{banda:"Bandeira Branca"},"POSTO WAP":{banda:"Bandeira Branca"},"REDE FLEX AMAZONAS":{banda:"Rede Flex"},"POSTO ITAPOA":{banda:"Bandeira Branca"}}},
   "JA":          {sup:"Mauricio",bandeira:"Ipiranga",combs:["GC","GA","ET","S10","OCT"],
     conc:{"P. RAJA":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"},"REDE FLEX CENTER SUL":{banda:"Rede Flex"}}},
   "JOCA":        {sup:"Paulo",bandeira:"Ipiranga",combs:["GC","ET","S10"],
@@ -101,8 +102,10 @@ const POSTOS_DADOS = {
     conc:{"XAVANTE":{banda:"Bandeira Branca"},"CATALAO":{banda:"Bandeira Branca"}}},
   "OURO BRANCO": {sup:"Rodrigo",bandeira:"Bandeira Branca",combs:["GC","GA","ET","S10"],
     conc:{"POSTO PRAIA 01":{banda:"Ipiranga"},"POSTO CHAMPION":{banda:"Bandeira Branca"},"POSTO PRAIA 02":{banda:"Ipiranga"},"POSTO REDE SANTANA":{banda:"Bandeira Branca"}}},
+  "PAIVA E PAIVA COMBUSTIVEL": {sup:"Rodrigo",bandeira:"Bandeira Branca",combs:["GC","GA","ET","S10","S500"],
+    conc:{"POSTO DUDU":{banda:"Bandeira Branca"},"POSTO IPIRANGA":{banda:"Ipiranga"},"POSTO PATIO":{banda:"Bandeira Branca"},"POSTO BH":{banda:"Bandeira Branca"},"POSTO SAO JOAO":{banda:"Bandeira Branca"}}},
   "PLANALTO":    {sup:"Paulo",bandeira:"BR/Petrobras",combs:["GC","GA","ET","S10","S500"],
-    conc:{"ALE SENT. BAIRRO":{banda:"ALE"},"BR OLIMPIO MOURAO":{banda:"BR/Petrobras"},"CAMOES":{banda:"Bandeira Branca"},"P. ENTRADA OBRIGATORIA":{banda:"Bandeira Branca"},"SAO BERNARDO":{banda:"Bandeira Branca"}}},
+    conc:{"ALE SENT. BAIRRO":{banda:"ALE"},"BR OLIMPIO MOURAO (FALCAO)":{banda:"BR/Petrobras"},"CAMOES (AV.PORTUGAL)":{banda:"Bandeira Branca"},"P. ENTRADA OBRIGATORIA":{banda:"Bandeira Branca"},"SAO BERNARDO":{banda:"Bandeira Branca"}}},
   "QUATRO RODAS":{sup:"Gledson",bandeira:"Ipiranga",combs:["GC","GA","ET","S10"],
     conc:{"REDE FLEX PORTAL":{banda:"Rede Flex"},"POSTO VILA":{banda:"Bandeira Branca"},"REDE FLEX TROVAO":{banda:"Rede Flex"},"POSTO NOVO":{banda:"Bandeira Branca"},"REDE AQUI":{banda:"Rede Aqui"}}},
   "RODRIGO":     {sup:"Gledson",bandeira:"Shell",combs:["GC","GA","ET","S10","S500"],
