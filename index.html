@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
-<link rel="stylesheet" href="./jbretas2.css">
+<link rel="stylesheet" href="./jbretas3.css">
 <script>
   // Aplica o tema salvo IMEDIATAMENTE, antes do primeiro paint, para evitar flash de tema errado
   (function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('jb_theme') || 'dark'); })();
@@ -65,7 +65,7 @@
 
     <section class="scr active" id="s-comp">
       <div class="kgrid">
-        <div class="kbox"><div class="klbl">Postos próprios</div><div class="kval ac" id="kv-proprios">--</div></div>
+        <div class="kbox"><div class="klbl">Lançaram hoje</div><div class="kval ac" id="kv-proprios">--</div><div class="csub" id="kv-proprios-sub" style="margin-top:2px"></div></div>
         <div class="kbox"><div class="klbl">Concorrentes</div><div class="kval" id="kv-concs">--</div></div>
         <div class="kbox" onclick="abrirDetalheMedia()" style="cursor:pointer"><div class="klbl">Média GC conc. <i class="fa-solid fa-circle-info" style="font-size:.55rem;opacity:.6"></i></div><div class="kval inf" id="kv-gc">--</div></div>
         <div class="kbox"><div class="klbl">Nosso GC médio</div><div class="kval ac" id="kv-mgc">--</div></div>
