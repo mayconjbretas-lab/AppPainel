@@ -281,7 +281,7 @@ function renderDetalheMedia() {
   body.innerHTML = html;
 }
 
-
+function processarDadosReais() {
   // ── Postos próprios: normaliza chave removendo "P. " ──────────
   const propPlano = G_DADOS.prop || {};
   const propMapeado = {};
