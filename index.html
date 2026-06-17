@@ -13,6 +13,10 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 <link rel="stylesheet" href="./CSS/painel.css">
+<script>
+  // Aplica o tema salvo IMEDIATAMENTE, antes do primeiro paint, para evitar flash de tema errado
+  (function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('jb_theme') || 'dark'); })();
+</script>
 </head>
 <body>
 
@@ -52,6 +56,7 @@
     </div>
     <div class="tb-right">
       <div class="live"><span class="ldot"></span><span id="live-txt">ao vivo</span></div>
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Alternar tema claro/escuro"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
       <button class="sair-btn" onclick="sair()"><i class="fa-solid fa-right-from-bracket"></i></button>
     </div>
   </header>
@@ -62,7 +67,7 @@
       <div class="kgrid">
         <div class="kbox"><div class="klbl">Postos próprios</div><div class="kval ac" id="kv-proprios">--</div></div>
         <div class="kbox"><div class="klbl">Concorrentes</div><div class="kval" id="kv-concs">--</div></div>
-        <div class="kbox"><div class="klbl">Média GC conc.</div><div class="kval inf" id="kv-gc">--</div></div>
+        <div class="kbox" onclick="abrirDetalheMedia()" style="cursor:pointer"><div class="klbl">Média GC conc. <i class="fa-solid fa-circle-info" style="font-size:.55rem;opacity:.6"></i></div><div class="kval inf" id="kv-gc">--</div></div>
         <div class="kbox"><div class="klbl">Nosso GC médio</div><div class="kval ac" id="kv-mgc">--</div></div>
       </div>
       <div class="upd-row"><span id="upd-txt">Carregando...</span><button class="refresh-btn" onclick="carregarDados()">↻</button></div>
@@ -171,6 +176,31 @@
       </div>
     </section>
 
+    <section class="scr" id="s-logistica">
+      <div class="sdiv">Selecione o posto</div>
+      <select class="sel" id="log-sel-posto" onchange="carregarLogistica(this.value)">
+        <option value="">Selecione um posto...</option>
+      </select>
+
+      <div id="log-empty" class="empty">Selecione um posto acima para ver o resumo do dia.</div>
+
+      <div id="log-content" style="display:none">
+        <div class="log-headcard">
+          <div class="log-head-row">
+            <div>
+              <div class="log-posto-nome" id="log-posto-nome">--</div>
+              <div class="csub" id="log-data-ref">--</div>
+            </div>
+            <button class="btn-enviar" id="log-btn-salvar" style="width:auto;padding:.6rem 1.1rem;margin:0" onclick="salvarPedidosLogistica()">
+              <i class="fa-solid fa-paper-plane"></i> Enviar pedido
+            </button>
+          </div>
+        </div>
+
+        <div id="log-cards"></div>
+      </div>
+    </section>
+
     <section class="scr" id="s-mais">
       <div id="mais-conteudo"><div class="empty">Selecione uma opção no menu Mais+</div></div>
     </section>
@@ -180,6 +210,7 @@
   <nav class="bnav">
     <button class="nbtn active" onclick="setTab(this,'comp')"><span class="ni"><i class="fa-solid fa-scale-balanced"></i></span><span class="nl">Compara</span></button>
     <button class="nbtn" onclick="setTab(this,'ranking')"><span class="ni"><i class="fa-solid fa-trophy"></i></span><span class="nl">Ranking</span></button>
+    <button class="nbtn" onclick="setTab(this,'regional')"><span class="ni"><i class="fa-solid fa-map"></i></span><span class="nl">Regional</span></button>
     <button class="nbtn" onclick="setTab(this,'mapa')"><span class="ni"><i class="fa-solid fa-map-location-dot"></i></span><span class="nl">Mapa</span></button>
     <button class="nbtn" onclick="setTab(this,'hist'); carregarHistorico()"><span class="ni"><i class="fa-solid fa-chart-line"></i></span><span class="nl">Histórico</span></button>
     <button class="nbtn" onclick="abrirMais()"><span class="ni"><i class="fa-solid fa-circle-plus"></i></span><span class="nl">Mais+</span></button>
@@ -196,8 +227,18 @@
       <div class="mitem" onclick="irPara('distribuidor')"><span class="mic"><i class="fa-solid fa-industry"></i></span><div class="mlbl">Distribuidor</div><div class="mbadge">ativo</div></div>
       <div class="mitem" onclick="irPara('simulador')"><span class="mic"><i class="fa-solid fa-calculator"></i></span><div class="mlbl">Simulador</div><div class="mbadge">ativo</div></div>
       <div class="mitem" onclick="irPara('lancamento')"><span class="mic"><i class="fa-solid fa-pen-to-square"></i></span><div class="mlbl">Lançar Preço</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('logistica')"><span class="mic"><i class="fa-solid fa-truck-fast"></i></span><div class="mlbl">Logística</div><div class="mbadge">novo</div></div>
       <div class="mitem" onclick="irPara('relatorios')"><span class="mic"><i class="fa-solid fa-chart-bar"></i></span><div class="mlbl">Relatórios</div><div class="mbadge">ativo</div></div>
     </div>
+  </div>
+</div>
+
+<div class="moverlay" id="modal-media" onclick="fecharMedia(event)">
+  <div class="msheet">
+    <button class="mclose" onclick="fecharMediaBtn()">✕</button>
+    <div class="mtitle">Como a média é calculada</div>
+    <div class="csub" style="margin-bottom:.6rem">Posto → Regional (supervisor) → Geral. Cada nível conta 1x, sem peso por quantidade de concorrentes.</div>
+    <div id="media-detalhe-body"><div class="empty">Carregando...</div></div>
   </div>
 </div>
 
