@@ -355,7 +355,7 @@ function processarDadosReais() {
   document.getElementById('live-txt').textContent = 'ao vivo';
   
   povoarSelects();
-  renderComp();
+  renderComparar();
   renderHeatmap();
   renderRanking();
   renderRegional();
@@ -363,18 +363,7 @@ function processarDadosReais() {
 }
 
 function povoarSelects() {
-  const sel = document.getElementById('posto-comp');
-  const valSalvo = sel.value;
-  sel.innerHTML = '<option value="">Selecione o posto...</option>';
-
   const lista = Object.keys(POSTOS_DADOS).sort();
-  lista.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p;
-    opt.textContent = p;
-    sel.appendChild(opt);
-  });
-  if(valSalvo && POSTOS_DADOS[valSalvo]) sel.value = valSalvo;
 
   // Select da tela de Logística (mesma lista de postos)
   const selLog = document.getElementById('log-sel-posto');
@@ -388,6 +377,22 @@ function povoarSelects() {
       selLog.appendChild(opt);
     });
     if (valSalvoLog && POSTOS_DADOS[valSalvoLog]) selLog.value = valSalvoLog;
+  }
+
+  // Filtros da nova aba Comparar: supervisor e bandeira
+  const selSup = document.getElementById('cmp-sup');
+  if (selSup) {
+    const valSalvo = selSup.value;
+    const sups = [...new Set(lista.map(p => POSTOS_DADOS[p].sup).filter(Boolean))].sort();
+    selSup.innerHTML = '<option value="">Todos supervisores</option>' + sups.map(s => `<option value="${s}">${s}</option>`).join('');
+    if (valSalvo && sups.includes(valSalvo)) selSup.value = valSalvo;
+  }
+  const selBand = document.getElementById('cmp-band');
+  if (selBand) {
+    const valSalvo = selBand.value;
+    const bands = [...new Set(lista.map(p => POSTOS_DADOS[p].bandeira).filter(Boolean))].sort();
+    selBand.innerHTML = '<option value="">Todas bandeiras</option>' + bands.map(b => `<option value="${b}">${b}</option>`).join('');
+    if (valSalvo && bands.includes(valSalvo)) selBand.value = valSalvo;
   }
 }
 
@@ -435,92 +440,168 @@ function irPara(modulo) {
   else if(modulo === 'relatorios') renderRel(ctx);
 }
 
-// Renderizadores de Módulos Específicos do Dashboard
-function renderComp() {
-  const posto = document.getElementById('posto-comp').value;
-  const body  = document.getElementById('comp-body');
-  const sub   = document.getElementById('comp-sub');
-  
-  if (!posto) {
-    sub.textContent = 'Selecione um posto';
-    body.innerHTML  = '<div class="empty">Selecione um posto acima</div>';
-    return;
-  }
-  
-  const estru = POSTOS_DADOS[posto] || {};
-  const sup   = estru.sup || '';
-  const banda = estru.bandeira || '';
-  sub.textContent = `Supervisor: ${sup} | Bandeira: ${banda}`;
-  
-  // Busca preço do próprio: tenta "POSTO" e "P. POSTO"
-  const dadosProp = G_DADOS.prop[posto] || G_DADOS.prop['P. '+posto] || {};
-  const dataTxt   = dadosProp.data ? ` · ${dadosProp.data}` : '';
-  
-  const fmt = (v) => v ? 'R$'+parseFloat(v).toFixed(3).replace('.',',') : '--';
-  
-  let html = `<div class="ccrow">
-    <div class="ccard meu">
-      <div class="cclbl">NOSSO PREÇO${dataTxt}</div>
-      <div class="ccnome">P. ${posto}</div>
-      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${fmt(dadosProp.GC)}</span></div>
-      <div class="pr"><span class="prc">G. Aditivada</span><span class="prv ga">${fmt(dadosProp.GA)}</span></div>
-      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${fmt(dadosProp.ET)}</span></div>
-      <div class="pr"><span class="prc">Diesel S10</span><span class="prv s10">${fmt(dadosProp.S10)}</span></div>
-    </div>`;
+// ════════════════════════════════════════════════════════════
+// COMPARAR — Monitor de Preços (fuel tabs, estratégia, cards por posto)
+// ════════════════════════════════════════════════════════════
+// Nota: "Rede" do modelo de referência foi unificado com "Bandeira" aqui,
+// porque na base real (POSTOS_DADOS / Coleta de Preços) os concorrentes
+// só carregam um único campo de bandeira — não existe um campo separado
+// de rede independente (ex: "Rede Flex") distinto da bandeira oficial.
+const CMP_FUELS = [
+  {key:'ET',   label:'Etanol'},
+  {key:'GC',   label:'Comum'},
+  {key:'GA',   label:'Aditiv.'},
+  {key:'S10',  label:'Diesel S10'},
+  {key:'S500', label:'Diesel S500'},
+];
+const CMP_STRATS = [
+  {key:'agg',  label:'Agressivo', desc:'1 centavo abaixo do concorrente mais barato — ganha volume.'},
+  {key:'avg',  label:'Na média',  desc:'Média dos concorrentes coletados — equilíbrio.'},
+  {key:'prem', label:'Premium',   desc:'1 centavo acima do mais caro — protege margem.'},
+];
+let G_CMP_FUEL  = 'GC';
+let G_CMP_STRAT = 'avg';
+let G_CMP_SUP   = '';
+let G_CMP_BAND  = '';
 
-  // Busca concorrentes: primeiro tenta pelo mapeamento por posto,
-  // depois busca diretamente no plano filtrando por bloco
-  const concPorPosto  = (G_DADOS.concPorPosto  && G_DADOS.concPorPosto[posto])  ? G_DADOS.concPorPosto[posto]  : {};
-  const concPorBloco  = (G_DADOS.concPorBloco  && G_DADOS.concPorBloco[estru.bloco || posto]) ? G_DADOS.concPorBloco[estru.bloco || posto] : {};
-  
-  // Merge: prioriza por posto, complementa por bloco
-  const concMerge = Object.assign({}, concPorBloco, concPorPosto);
-  const cKeys = Object.keys(concMerge);
+function montarFuelTabsComparar() {
+  const wrap = document.getElementById('cmp-fuel-tabs');
+  if (!wrap) return;
+  wrap.innerHTML = CMP_FUELS.map(f =>
+    `<button class="fueltab${f.key===G_CMP_FUEL?' active':''}" onclick="cmpSetFuel('${f.key}')">${f.label}</button>`
+  ).join('');
+}
 
-  if (cKeys.length === 0) {
-    html += `<div class="ccard"><div class="empty" style="font-size:.72rem">Sem coleta de concorrentes hoje para este posto.</div></div>`;
-  } else {
-    // Primeiro concorrente = destaque
-    const primeiro = cKeys[0];
-    const mc       = concMerge[primeiro];
-    const banda1   = mc.bandeira || (estru.conc && estru.conc[primeiro] ? estru.conc[primeiro].banda : 'B. Branca');
-    html += `<div class="ccard">
-      <div class="cclbl">CONCORRENTE FOCO</div>
-      <div class="ccnome">${primeiro}</div>
-      <div style="font-size:.6rem;color:var(--wn);font-family:var(--mono);margin-bottom:4px">${banda1}</div>
-      <div class="pr"><span class="prc">G. Comum</span><span class="prv gc">${fmt(mc.GC)}</span></div>
-      <div class="pr"><span class="prc">G. Aditivada</span><span class="prv ga">${fmt(mc.GA)}</span></div>
-      <div class="pr"><span class="prc">Etanol</span><span class="prv et">${fmt(mc.ET)}</span></div>
-      <div class="pr"><span class="prc">Diesel S10</span><span class="prv s10">${fmt(mc.S10)}</span></div>
-    </div>`;
-  }
-  html += `</div>`;
+function montarStratTabsComparar() {
+  const wrap = document.getElementById('cmp-strat-tabs');
+  if (!wrap) return;
+  wrap.innerHTML = CMP_STRATS.map(s =>
+    `<button class="strat-tab${s.key===G_CMP_STRAT?' active':''}" onclick="cmpSetStrat('${s.key}')">${s.label}</button>`
+  ).join('');
+  const atual = CMP_STRATS.find(s => s.key === G_CMP_STRAT);
+  const descEl = document.getElementById('cmp-strat-desc');
+  if (descEl) descEl.textContent = atual ? atual.desc : '';
+}
 
-  // Demais concorrentes
-  if (cKeys.length > 1) {
-    html += `<div class="sdiv" style="margin-top:.5rem">Todos os concorrentes coletados hoje (${cKeys.length})</div>`;
-    for (let i = 1; i < cKeys.length; i++) {
-      const nome = cKeys[i];
-      const mc   = concMerge[nome];
-      const b    = mc.bandeira || (estru.conc && estru.conc[nome] ? estru.conc[nome].banda : '');
-      const gcDiff = (dadosProp.GC && mc.GC) ? (parseFloat(mc.GC) - parseFloat(dadosProp.GC)) : null;
-      const diffHtml = gcDiff !== null
-        ? `<span style="font-size:.6rem;color:${gcDiff>0?'var(--dg)':'var(--ok)'}"> (${gcDiff>=0?'+':''}${gcDiff.toFixed(3)})</span>`
-        : '';
-      html += `<div class="ccard" style="margin-bottom:4px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <div><div class="ccnome" style="font-size:.78rem">${nome}</div>
-          <div style="font-size:.6rem;color:var(--tx3)">${b}</div></div>
-          <div style="font-family:var(--mono);font-size:.8rem;color:var(--wn)">${fmt(mc.GC)}${diffHtml}</div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">
-          <div class="pr"><span class="prc">ET</span><span class="prv et">${fmt(mc.ET)}</span></div>
-          <div class="pr"><span class="prc">S10</span><span class="prv s10">${fmt(mc.S10)}</span></div>
-        </div>
-      </div>`;
+function cmpSetFuel(key)  { G_CMP_FUEL  = key; renderComparar(); }
+function cmpSetStrat(key) { G_CMP_STRAT = key; renderComparar(); }
+function cmpSetSup(val)   { G_CMP_SUP   = val; renderComparar(); }
+function cmpSetBand(val)  { G_CMP_BAND  = val; renderComparar(); }
+
+function cmpCalcularSugerido(min, avg, max) {
+  if (G_CMP_STRAT === 'agg')  return min - 0.01;
+  if (G_CMP_STRAT === 'prem') return max + 0.01;
+  return avg;
+}
+
+function renderComparar() {
+  montarFuelTabsComparar();
+  montarStratTabsComparar();
+  if (!G_DADOS) return;
+
+  const fuel = G_CMP_FUEL;
+  const fuelLabel = (CMP_FUELS.find(f => f.key === fuel) || {}).label || fuel;
+
+  const postos = Object.keys(POSTOS_DADOS).filter(p => {
+    const e = POSTOS_DADOS[p];
+    if (G_CMP_SUP  && e.sup       !== G_CMP_SUP)  return false;
+    if (G_CMP_BAND && e.bandeira  !== G_CMP_BAND) return false;
+    return true;
+  }).sort();
+
+  let somaMinha = 0, contMinha = 0;
+  let somaConc  = 0, contConc  = 0;
+  let cardsHtml = '';
+
+  postos.forEach(posto => {
+    const estru = POSTOS_DADOS[posto] || {};
+    const dadosProp = G_DADOS.prop[posto] || G_DADOS.prop['P. '+posto] || null;
+    const ownVal = (dadosProp && dadosProp[fuel]) ? parseFloat(dadosProp[fuel]) : null;
+
+    // Mesma lógica de busca de concorrentes que o painel já usava: por posto, complementado por bloco
+    const concPorPosto = (G_DADOS.concPorPosto && G_DADOS.concPorPosto[posto]) ? G_DADOS.concPorPosto[posto] : {};
+    const concPorBloco = (G_DADOS.concPorBloco && G_DADOS.concPorBloco[estru.bloco || posto]) ? G_DADOS.concPorBloco[estru.bloco || posto] : {};
+    const concMerge = Object.assign({}, concPorBloco, concPorPosto);
+
+    const competidores = Object.keys(concMerge)
+      .map(nome => ({ nome, preco: concMerge[nome][fuel] ? parseFloat(concMerge[nome][fuel]) : null }))
+      .filter(c => c.preco !== null)
+      .sort((a, b) => a.preco - b.preco);
+
+    if (ownVal === null && competidores.length === 0) return; // nada pra mostrar nesse combustível, pula o card
+
+    if (ownVal !== null) { somaMinha += ownVal; contMinha++; }
+    competidores.forEach(c => { somaConc += c.preco; contConc++; });
+
+    const precos = competidores.map(c => c.preco);
+    const min = precos.length ? Math.min(...precos) : null;
+    const max = precos.length ? Math.max(...precos) : null;
+    const avg = precos.length ? precos.reduce((a, b) => a + b, 0) / precos.length : null;
+    const perdendo = ownVal !== null && min !== null && ownVal > min;
+
+    const badgeHtml = ownVal !== null
+      ? `<span class="region-badge ${perdendo ? 'perdendo' : 'ganhando'}">Você: R$ ${ownVal.toFixed(2)}</span>`
+      : '';
+
+    let listHtml = '';
+    if (competidores.length) {
+      competidores.forEach(c => {
+        let diffHtml = '';
+        if (ownVal !== null) {
+          const d = c.preco - ownVal;
+          const igual = Math.abs(d) < 0.005;
+          const cor = igual ? 'var(--wn)' : (d < 0 ? 'var(--dg)' : 'var(--ok)');
+          const txt = igual ? 'igual' : (d > 0 ? '+' : '') + Math.round(d * 100) + 'c';
+          diffHtml = `<span class="complist-diff" style="color:${cor}">${txt}</span>`;
+        }
+        listHtml += `<div class="complist-row"><span class="complist-nome">${c.nome}</span><span><span class="complist-preco">R$ ${c.preco.toFixed(2)}</span>${diffHtml}</span></div>`;
+      });
+    } else {
+      listHtml = `<div class="empty" style="padding:.4rem 0;font-size:.74rem;text-align:left">Sem concorrente coletado hoje para ${fuelLabel.toLowerCase()}</div>`;
     }
+
+    let sugeridoHtml = '';
+    if (ownVal !== null && precos.length) {
+      const alvo = cmpCalcularSugerido(min, avg, max);
+      const mover = alvo - ownVal;
+      const moverIgual = Math.abs(mover) < 0.005;
+      const corMover = moverIgual ? 'var(--tx3)' : (mover < 0 ? 'var(--dg)' : 'var(--ok)');
+      const txtMover = moverIgual ? 'manter' : (mover > 0 ? '+' : '') + Math.round(mover * 100) + 'c';
+      sugeridoHtml = `<div class="sugerido-row"><span class="sugerido-lbl">Sugerido</span><span><span class="sugerido-val">R$ ${alvo.toFixed(2)}</span><span class="sugerido-move" style="color:${corMover}">${txtMover}</span></span></div>`;
+    }
+
+    cardsHtml += `<div class="region-card" id="cmp-card-${posto.replace(/[^a-zA-Z0-9]/g, '_')}">
+      <div class="region-hdr"><span class="region-nome">P. ${posto}</span>${badgeHtml}</div>
+      ${listHtml}
+      ${sugeridoHtml}
+    </div>`;
+  });
+
+  const regionsEl = document.getElementById('cmp-regions');
+  if (regionsEl) regionsEl.innerHTML = cardsHtml || '<div class="empty">Nenhuma coleta para esse filtro hoje.</div>';
+
+  const minhaAvg = contMinha ? somaMinha / contMinha : null;
+  const concAvg  = contConc  ? somaConc  / contConc  : null;
+  let diffTxt = '-', diffCor = 'var(--tx3)';
+  if (minhaAvg !== null && concAvg !== null) {
+    const d = minhaAvg - concAvg;
+    diffCor = d > 0 ? 'var(--dg)' : 'var(--ok)';
+    diffTxt = (d > 0 ? '+' : '') + 'R$ ' + Math.abs(d).toFixed(2) + (d > 0 ? ' acima' : ' abaixo');
   }
-  body.innerHTML = html;
+  const myAvgEl = document.getElementById('cmp-myavg');
+  if (myAvgEl) {
+    myAvgEl.innerHTML = `
+      <div class="myavg-card mine">
+        <div class="myavg-lbl">Minha média</div>
+        <div class="myavg-val" style="color:var(--ac)">${minhaAvg !== null ? 'R$ ' + minhaAvg.toFixed(2) : '--'}</div>
+        <div class="myavg-sub" style="color:var(--ac)">${contMinha} posto(s)</div>
+      </div>
+      <div class="myavg-card comp">
+        <div class="myavg-lbl">Média concorrência</div>
+        <div class="myavg-val">${concAvg !== null ? 'R$ ' + concAvg.toFixed(2) : '--'}</div>
+        <div class="myavg-sub" style="color:${diffCor}">${diffTxt}</div>
+      </div>`;
+  }
 }
 
 function renderHeatmap() {
@@ -551,9 +632,17 @@ function renderHeatmap() {
     cell.style.background = cor;
     cell.title = `${p}: R$ ${parseFloat(val).toFixed(2)}`;
     cell.onclick = () => {
-      document.getElementById('posto-comp').value = p;
       setTab(document.querySelectorAll('.nbtn')[0], 'comp');
-      renderComp();
+      G_CMP_SUP = '';
+      G_CMP_BAND = '';
+      G_CMP_FUEL = 'GC';
+      const selSup = document.getElementById('cmp-sup'); if (selSup) selSup.value = '';
+      const selBand = document.getElementById('cmp-band'); if (selBand) selBand.value = '';
+      renderComparar();
+      setTimeout(() => {
+        const alvo = document.getElementById('cmp-card-' + p.replace(/[^a-zA-Z0-9]/g, '_'));
+        if (alvo) { alvo.scrollIntoView({ behavior: 'smooth', block: 'center' }); alvo.style.borderColor = 'var(--ac)'; }
+      }, 80);
     };
     body.appendChild(cell);
   }
