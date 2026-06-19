@@ -21,6 +21,9 @@ function mapaSetColeta(btn, val) {
 }
 let leafletMap = null;
 let mapMarkers = [];
+let markerCluster = null; // agrupa marcadores próximos numa bolha — sem isso, postos com
+                           // coordenadas parecidas (mesma região de BH) ficavam empilhados
+                           // um em cima do outro e só o de cima aparecia no mapa
 
 // Controle de Inicialização e Sessão
 // Intervalo de atualização automática (5 minutos)
@@ -134,6 +137,7 @@ async function carregarDados() {
     if(json && json.success && json.data) {
       G_DADOS = json.data;
       processarDadosReais();
+      carregarComparacaoOntem().then(renderComparar); // atualiza os "vs ontem" assim que chegar, sem travar o resto
       showToast('Dados Atualizados', 'Informações coletadas em tempo real com sucesso.');
     } else {
       fallback('Erro na estrutura retornada do Apps Script.');
@@ -379,7 +383,13 @@ function povoarSelects() {
     if (valSalvoLog && POSTOS_DADOS[valSalvoLog]) selLog.value = valSalvoLog;
   }
 
-  // Filtros da nova aba Comparar: supervisor e bandeira
+  // Filtros da nova aba Comparar: posto específico, supervisor e bandeira
+  const selPosto = document.getElementById('cmp-posto');
+  if (selPosto) {
+    const valSalvo = selPosto.value;
+    selPosto.innerHTML = '<option value="">Todos os postos</option>' + lista.map(p => `<option value="${p}">P. ${p}</option>`).join('');
+    if (valSalvo && lista.includes(valSalvo)) selPosto.value = valSalvo;
+  }
   const selSup = document.getElementById('cmp-sup');
   if (selSup) {
     const valSalvo = selSup.value;
@@ -463,6 +473,9 @@ let G_CMP_FUEL  = 'GC';
 let G_CMP_STRAT = 'avg';
 let G_CMP_SUP   = '';
 let G_CMP_BAND  = '';
+let G_CMP_POSTO = '';     // filtro por posto específico — "Minha média" recalcula só pra ele
+let G_CMP_SO_MUDOU = false; // mostra só concorrentes cujo preço mudou desde ontem
+let G_ONTEM_MAP = {};     // { 'GC': {nomeConcorrente: precoOntem}, 'ET': {...}, ... }
 
 function montarFuelTabsComparar() {
   const wrap = document.getElementById('cmp-fuel-tabs');
@@ -487,6 +500,44 @@ function cmpSetFuel(key)  { G_CMP_FUEL  = key; renderComparar(); }
 function cmpSetStrat(key) { G_CMP_STRAT = key; renderComparar(); }
 function cmpSetSup(val)   { G_CMP_SUP   = val; renderComparar(); }
 function cmpSetBand(val)  { G_CMP_BAND  = val; renderComparar(); }
+function cmpSetPosto(val) { G_CMP_POSTO = val; renderComparar(); }
+function cmpToggleSoMudou(chk) { G_CMP_SO_MUDOU = chk.checked; renderComparar(); }
+
+function formatarDataBR(d) {
+  return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+}
+
+// Busca os preços de ONTEM (via tipo=historico, sem filtro de posto) e monta
+// um mapa por combustível → nome do concorrente → preço, pra renderComparar
+// poder calcular "mudou desde ontem" sem precisar de nenhuma coluna nova
+// no Apps Script. Roda em paralelo com carregarDados, não trava a tela.
+async function carregarComparacaoOntem() {
+  try {
+    const res = await fetch(API_URL + '?tipo=historico&dias=3');
+    const json = await res.json();
+    if (!json || !Array.isArray(json.historico)) { G_ONTEM_MAP = {}; return; }
+
+    const ontem = new Date();
+    ontem.setDate(ontem.getDate() - 1);
+    const ontemStr = formatarDataBR(ontem);
+
+    const mapa = {};
+    CMP_FUELS.forEach(f => mapa[f.key] = {});
+
+    json.historico.forEach(r => {
+      if (r.data !== ontemStr) return;
+      if (r.tipo === 'Próprio') return; // comparação é só entre concorrentes
+      CMP_FUELS.forEach(f => {
+        if (r[f.key]) mapa[f.key][r.postoAlvo] = parseFloat(r[f.key]);
+      });
+    });
+
+    G_ONTEM_MAP = mapa;
+  } catch (e) {
+    console.warn('Comparação com ontem indisponível:', e);
+    G_ONTEM_MAP = {};
+  }
+}
 
 function cmpCalcularSugerido(min, avg, max) {
   if (G_CMP_STRAT === 'agg')  return min - 0.01;
@@ -504,6 +555,7 @@ function renderComparar() {
 
   const postos = Object.keys(POSTOS_DADOS).filter(p => {
     const e = POSTOS_DADOS[p];
+    if (G_CMP_POSTO && p !== G_CMP_POSTO)         return false;
     if (G_CMP_SUP  && e.sup       !== G_CMP_SUP)  return false;
     if (G_CMP_BAND && e.bandeira  !== G_CMP_BAND) return false;
     return true;
@@ -524,8 +576,13 @@ function renderComparar() {
     const concMerge = Object.assign({}, concPorBloco, concPorPosto);
 
     const competidores = Object.keys(concMerge)
-      .map(nome => ({ nome, preco: concMerge[nome][fuel] ? parseFloat(concMerge[nome][fuel]) : null }))
+      .map(nome => ({
+        nome,
+        preco: concMerge[nome][fuel] ? parseFloat(concMerge[nome][fuel]) : null,
+        ontem: (G_ONTEM_MAP[fuel] && G_ONTEM_MAP[fuel][nome] !== undefined) ? G_ONTEM_MAP[fuel][nome] : null,
+      }))
       .filter(c => c.preco !== null)
+      .filter(c => !G_CMP_SO_MUDOU || (c.ontem !== null && Math.abs(c.preco - c.ontem) >= 0.005))
       .sort((a, b) => a.preco - b.preco);
 
     if (ownVal === null && competidores.length === 0) return; // nada pra mostrar nesse combustível, pula o card
@@ -554,10 +611,22 @@ function renderComparar() {
           const txt = igual ? 'igual' : (d > 0 ? '+' : '') + Math.round(d * 100) + 'c';
           diffHtml = `<span class="complist-diff" style="color:${cor}">${txt}</span>`;
         }
-        listHtml += `<div class="complist-row"><span class="complist-nome">${c.nome}</span><span><span class="complist-preco">R$ ${c.preco.toFixed(2)}</span>${diffHtml}</span></div>`;
+        let vsOntemHtml = '';
+        if (c.ontem !== null) {
+          const dOntem = c.preco - c.ontem;
+          if (Math.abs(dOntem) >= 0.005) {
+            const corOntem = dOntem > 0 ? 'var(--dg)' : 'var(--ok)';
+            const seta = dOntem > 0 ? '' : '↓';
+            vsOntemHtml = ` <span style="font-size:.62rem;color:${corOntem}">${seta}${Math.abs(Math.round(dOntem*100))}c vs ontem</span>`;
+          }
+        }
+        listHtml += `<div class="complist-row"><span class="complist-nome">${c.nome}${vsOntemHtml}</span><span><span class="complist-preco">R$ ${c.preco.toFixed(2)}</span>${diffHtml}</span></div>`;
       });
     } else {
-      listHtml = `<div class="empty" style="padding:.4rem 0;font-size:.74rem;text-align:left">Sem concorrente coletado hoje para ${fuelLabel.toLowerCase()}</div>`;
+      const msgVazio = G_CMP_SO_MUDOU
+        ? `Nenhum concorrente mudou de preço desde ontem para ${fuelLabel.toLowerCase()}`
+        : `Sem concorrente coletado hoje para ${fuelLabel.toLowerCase()}`;
+      listHtml = `<div class="empty" style="padding:.4rem 0;font-size:.74rem;text-align:left">${msgVazio}</div>`;
     }
 
     let sugeridoHtml = '';
@@ -635,9 +704,11 @@ function renderHeatmap() {
       setTab(document.querySelectorAll('.nbtn')[0], 'comp');
       G_CMP_SUP = '';
       G_CMP_BAND = '';
+      G_CMP_POSTO = '';
       G_CMP_FUEL = 'GC';
       const selSup = document.getElementById('cmp-sup'); if (selSup) selSup.value = '';
       const selBand = document.getElementById('cmp-band'); if (selBand) selBand.value = '';
+      const selPosto = document.getElementById('cmp-posto'); if (selPosto) selPosto.value = '';
       renderComparar();
       setTimeout(() => {
         const alvo = document.getElementById('cmp-card-' + p.replace(/[^a-zA-Z0-9]/g, '_'));
@@ -802,7 +873,12 @@ function initLeafletInstance() {
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '©OSM ©CARTO', subdomains:'abcd', maxZoom:19
   }).addTo(leafletMap);
-  
+
+  markerCluster = (typeof L.markerClusterGroup === 'function')
+    ? L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false })
+    : null;
+  if (markerCluster) leafletMap.addLayer(markerCluster);
+
   renderMapa();
 }
 
@@ -821,7 +897,8 @@ function mapaSetSup(btn, sup) {
 function renderMapa() {
   if (!leafletMap) return;
   
-  mapMarkers.forEach(m => leafletMap.removeLayer(m));
+  if (markerCluster) markerCluster.clearLayers();
+  else mapMarkers.forEach(m => leafletMap.removeLayer(m));
   mapMarkers = [];
   
   let precosValidos = [];
@@ -883,7 +960,8 @@ function renderMapa() {
     }
 
     const cIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [72, 34], iconAnchor: [36, 17] });
-    const marker = L.marker([lat, lng], { icon: cIcon }).addTo(leafletMap);
+    const marker = L.marker([lat, lng], { icon: cIcon });
+    if (markerCluster) markerCluster.addLayer(marker); else marker.addTo(leafletMap);
 
     marker.on('click', () => {
       const dtxt = (d && d.data) ? ` · ${d.data} ${d.hora||''}` : '';
@@ -936,7 +1014,8 @@ function renderMapa() {
       <div class="m-price" style="color:#fff">${precoExibir}</div>
     </div>`;
     const cIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [72, 34], iconAnchor: [36, 17] });
-    const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)], { icon: cIcon }).addTo(leafletMap);
+    const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)], { icon: cIcon });
+    if (markerCluster) markerCluster.addLayer(marker); else marker.addTo(leafletMap);
     marker.on('click', () => {
       const fmt3 = v => v ? 'R$'+parseFloat(v).toFixed(3).replace('.',',') : '--';
       document.getElementById('mapa-detail').innerHTML = 
