@@ -1116,6 +1116,17 @@ function renderMapa() {
   } else {
     legend.innerHTML = `<span>Nenhum preço real carregado para ${G_MAPA_FUEL}</span>`;
   }
+
+  // Enquadra o mapa pra mostrar todos os marcadores desenhados, em vez de
+  // ficar preso numa posição/zoom fixos — assim postos mais distantes
+  // (ex: Paiva e Paiva, ~140km ao sul de BH) ficam visíveis sem precisar
+  // arrastar/dar zoom out manualmente. Só ajusta se tiver pelo menos 1
+  // marcador, e limita o zoom máximo pra não ficar exagerado quando os
+  // postos visíveis estão todos muito próximos uns dos outros.
+  if (mapMarkers.length > 0) {
+    const grupo = L.featureGroup(mapMarkers);
+    leafletMap.fitBounds(grupo.getBounds(), { padding: [30, 30], maxZoom: 12 });
+  }
 }
 
 // Submódulos Complementares (Mais+)
