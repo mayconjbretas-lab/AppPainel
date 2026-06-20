@@ -992,8 +992,12 @@ function renderMapa() {
     if (G_MAPA_COLETA === 'semcoleta'  &&  temColeta) return;
 
     // Coordenadas: usa lat/lng da API se existir, senão usa as fixas do MAP_POSTOS
-    const lat = (d && d.lat && !isNaN(parseFloat(d.lat))) ? parseFloat(d.lat) : posto.lat;
-    const lng = (d && d.lng && !isNaN(parseFloat(d.lng))) ? parseFloat(d.lng) : posto.lng;
+    const latApi = (d && d.lat) ? parseFloat(d.lat) : NaN;
+    const lngApi = (d && d.lng) ? parseFloat(d.lng) : NaN;
+    // lat/lng 0,0 ("ilha nula") nunca é coordenada real do Brasil — trata
+    // como ausente e cai pro fallback fixo do MAP_POSTOS.
+    const lat = (!isNaN(latApi) && latApi !== 0) ? latApi : posto.lat;
+    const lng = (!isNaN(lngApi) && lngApi !== 0) ? lngApi : posto.lng;
     if (!lat || !lng) return;
 
     const sup   = (d && d.supervisor) || posto.sup;
@@ -1046,7 +1050,8 @@ function renderMapa() {
   // (postos novos ou que a planilha tem lat/lng mas MAP_POSTOS não tem)
   Object.keys(propDados).forEach(k => {
     const d = propDados[k];
-    if (!d.lat || !d.lng || isNaN(parseFloat(d.lat))) return;
+    const latV = parseFloat(d.lat), lngV = parseFloat(d.lng);
+    if (!d.lat || !d.lng || isNaN(latV) || isNaN(lngV) || latV === 0 || lngV === 0) return;
     const sup = d.supervisor || '';
     if (G_MAPA_SUP !== 'todos' && sup !== G_MAPA_SUP) return;
     if (G_MAPA_COLETA === 'semcoleta') return; // tem coleta, pula
@@ -1077,7 +1082,7 @@ function renderMapa() {
       <div class="m-price" style="color:#fff">${precoExibir}</div>
     </div>`;
     const cIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [72, 34], iconAnchor: [36, 17] });
-    const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)], { icon: cIcon });
+    const marker = L.marker([latV, lngV], { icon: cIcon });
     if (markerCluster) markerCluster.addLayer(marker); else marker.addTo(leafletMap);
     marker.on('click', () => {
       const fmt3 = v => v ? 'R$'+parseFloat(v).toFixed(3).replace('.',',') : '--';
@@ -1125,7 +1130,10 @@ function renderMapa() {
   // postos visíveis estão todos muito próximos uns dos outros.
   if (mapMarkers.length > 0) {
     const grupo = L.featureGroup(mapMarkers);
-    leafletMap.fitBounds(grupo.getBounds(), { padding: [30, 30], maxZoom: 12 });
+    const bounds = grupo.getBounds();
+    if (bounds.isValid()) {
+      leafletMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
+    }
   }
 }
 
