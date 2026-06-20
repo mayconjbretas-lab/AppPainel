@@ -307,6 +307,17 @@ function normalizarTexto(s) {
 // 3) match por prefixo (resolve nome abreviado tipo "LOURA" → "LOURA EMPREENDIMENTOS"),
 //    só aceito se achar EXATAMENTE 1 candidato — evita casar errado entre dois postos
 //    que comecem parecido.
+// Corrige um bug de origem (provavelmente Code.gs) onde o ponto decimal da
+// coordenada às vezes some — ex: "-19.824757" chega como "-19824757".
+// Coordenada real nunca passa de ±180 (lat/lng), então qualquer valor maior
+// que isso só pode ser esse bug — divide por 1 milhão pra restaurar.
+function corrigirCoordenada(v) {
+  const n = parseFloat(v);
+  if (isNaN(n)) return NaN;
+  if (Math.abs(n) > 180) return n / 1000000;
+  return n;
+}
+
 function encontrarPostoCanonico(nomeOriginal) {
   const semP = String(nomeOriginal).replace(/^P\.\s*/i, '').trim();
   const semPNorm = normalizarTexto(semP);
@@ -992,8 +1003,8 @@ function renderMapa() {
     if (G_MAPA_COLETA === 'semcoleta'  &&  temColeta) return;
 
     // Coordenadas: usa lat/lng da API se existir, senão usa as fixas do MAP_POSTOS
-    const latApi = (d && d.lat) ? parseFloat(d.lat) : NaN;
-    const lngApi = (d && d.lng) ? parseFloat(d.lng) : NaN;
+    const latApi = (d && d.lat) ? corrigirCoordenada(d.lat) : NaN;
+    const lngApi = (d && d.lng) ? corrigirCoordenada(d.lng) : NaN;
     // lat/lng 0,0 ("ilha nula") nunca é coordenada real do Brasil — trata
     // como ausente e cai pro fallback fixo do MAP_POSTOS.
     const lat = (!isNaN(latApi) && latApi !== 0) ? latApi : posto.lat;
@@ -1050,7 +1061,7 @@ function renderMapa() {
   // (postos novos ou que a planilha tem lat/lng mas MAP_POSTOS não tem)
   Object.keys(propDados).forEach(k => {
     const d = propDados[k];
-    const latV = parseFloat(d.lat), lngV = parseFloat(d.lng);
+    const latV = corrigirCoordenada(d.lat), lngV = corrigirCoordenada(d.lng);
     if (!d.lat || !d.lng || isNaN(latV) || isNaN(lngV) || latV === 0 || lngV === 0) return;
     const sup = d.supervisor || '';
     if (G_MAPA_SUP !== 'todos' && sup !== G_MAPA_SUP) return;
