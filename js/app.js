@@ -981,8 +981,13 @@ function renderMapa() {
            || null;
 
     const temColeta = d !== null;
-    
-    // Filtro com/sem coleta
+
+    // Conta o status real de TODOS os postos (sup já filtrado acima),
+    // independente do filtro com/sem coleta — assim "aguardando" sempre
+    // reflete o total da rede, não só o que está sendo desenhado no mapa.
+    if (temColeta) contColetados++; else contSemColeta++;
+
+    // Filtro com/sem coleta (decide só o que vira marcador na tela)
     if (G_MAPA_COLETA === 'coletados'  && !temColeta) return;
     if (G_MAPA_COLETA === 'semcoleta'  &&  temColeta) return;
 
@@ -997,7 +1002,6 @@ function renderMapa() {
 
     let iconHtml, preco;
     if (temColeta) {
-      contColetados++;
       preco = d[G_MAPA_FUEL];
       const precoExibir = preco ? 'R$' + parseFloat(preco).toFixed(2) : '--';
       if (preco) precosValidos.push(parseFloat(preco));
@@ -1006,7 +1010,6 @@ function renderMapa() {
         <div class="m-price" style="color:#fff">${precoExibir}</div>
       </div>`;
     } else {
-      contSemColeta++;
       iconHtml = `<div class="custom-marker" style="border-color:#333;background:#0d0f12;opacity:.6">
         <div class="m-name" style="color:#5a6478">${posto.ap}</div>
         <div class="m-price" style="color:#3a4355;font-size:9px">⏳ aguardando</div>
