@@ -285,6 +285,39 @@ function renderDetalheMedia() {
   body.innerHTML = html;
 }
 
+// Remove acentos pra comparação — "ANA LÚCIA" e "ANA LUCIA" têm que ser
+// reconhecidos como o mesmo posto, mesmo vindo digitados diferente na planilha.
+function normalizarTexto(s) {
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+}
+
+// Acha o nome canônico (chave de POSTOS_DADOS) pra um nome vindo da planilha,
+// em 3 tentativas progressivas:
+// 1) match exato
+// 2) match ignorando acento
+// 3) match por prefixo (resolve nome abreviado tipo "LOURA" → "LOURA EMPREENDIMENTOS"),
+//    só aceito se achar EXATAMENTE 1 candidato — evita casar errado entre dois postos
+//    que comecem parecido.
+function encontrarPostoCanonico(nomeOriginal) {
+  const semP = String(nomeOriginal).replace(/^P\.\s*/i, '').trim();
+  const semPNorm = normalizarTexto(semP);
+  const candidatos = Object.keys(POSTOS_DADOS);
+
+  let found = candidatos.find(p => p.toUpperCase() === semP.toUpperCase());
+  if (found) return found;
+
+  found = candidatos.find(p => normalizarTexto(p) === semPNorm);
+  if (found) return found;
+
+  const prefixados = candidatos.filter(p => {
+    const pn = normalizarTexto(p);
+    return pn.startsWith(semPNorm) || semPNorm.startsWith(pn);
+  });
+  if (prefixados.length === 1) return prefixados[0];
+
+  return null;
+}
+
 function processarDadosReais() {
   // ── Postos próprios: normaliza chave removendo "P. " ──────────
   const propPlano = G_DADOS.prop || {};
@@ -292,8 +325,7 @@ function processarDadosReais() {
   for (let k in propPlano) {
     // Mantém a chave original E uma versão sem "P. " para lookup
     propMapeado[k] = propPlano[k];
-    const semP = k.replace(/^P\.\s*/i,'').trim().toUpperCase();
-    const found = Object.keys(POSTOS_DADOS).find(p => p.toUpperCase() === semP);
+    const found = encontrarPostoCanonico(k);
     if (found && found !== k) propMapeado[found] = propPlano[k];
   }
   G_DADOS.prop = propMapeado;
