@@ -1048,11 +1048,17 @@ function renderMapa() {
     if (G_MAPA_SUP !== 'todos' && sup !== G_MAPA_SUP) return;
     if (G_MAPA_COLETA === 'semcoleta') return; // tem coleta, pula
 
-    // Verifica se já foi plotado no passo 1
+    // Verifica se já foi plotado no passo 1 — usa a mesma resolução de
+    // apelido (encontrarPostoCanonico) usada na hora de montar G_DADOS.prop,
+    // senão um posto com nome abreviado/apelido (ex: "P. LOURA") não bate
+    // com a forma exata aqui embaixo e acaba sendo contado/plotado DUAS
+    // vezes — uma com o nome canônico no passo 1, outra com o nome cru aqui.
     const norm = k.replace(/^P\.\s*/i,'').trim().toUpperCase();
+    const canonico = encontrarPostoCanonico(k);
     const jaPlotado = MAP_POSTOS.some(p => 
       p.k.toUpperCase() === norm || 
-      ('P. ' + p.k).toUpperCase() === k.toUpperCase()
+      ('P. ' + p.k).toUpperCase() === k.toUpperCase() ||
+      (canonico && p.k.toUpperCase() === canonico.toUpperCase())
     );
     if (jaPlotado) return;
 
