@@ -2,7 +2,7 @@ const CACHE = 'jbretas-precos-v1';
 const ASSETS = [
   './index.html',
   './manifest.json',
-  './css/style.css',
+  './jbretas2.css',
   './js/app.js',
 ];
 
