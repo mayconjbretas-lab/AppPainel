@@ -920,7 +920,16 @@ function initLeafletInstance() {
   }).addTo(leafletMap);
 
   markerCluster = (typeof L.markerClusterGroup === 'function')
-    ? L.markerClusterGroup({ maxClusterRadius: 50, spiderfyOnMaxZoom: true, showCoverageOnHover: false })
+    ? L.markerClusterGroup({
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        // Por padrão o plugin some com marcadores fora da área visível atual
+        // (otimização de performance) — com só ~37 postos isso não pesa nada,
+        // e era a causa de postos mais distantes (ex: PAIVA E PAIVA, ~140km
+        // ao sul) nunca aparecerem mesmo estando corretamente no grupo.
+        removeOutsideVisibleBounds: false
+      })
     : null;
   if (markerCluster) leafletMap.addLayer(markerCluster);
 
