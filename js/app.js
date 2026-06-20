@@ -285,6 +285,14 @@ function renderDetalheMedia() {
   body.innerHTML = html;
 }
 
+// Apelidos conhecidos — postos que mudaram de nome ou que a planilha grava
+// diferente do nome cadastrado, sem nenhuma relação de texto pra um match
+// automático (acento/prefixo) conseguir achar sozinho. Chave já em formato
+// normalizado (sem acento, maiúsculo).
+const ALIASES_POSTO = {
+  'BEATRIZ': 'PAIVA E PAIVA COMBUSTIVEL',
+};
+
 // Remove acentos pra comparação — "ANA LÚCIA" e "ANA LUCIA" têm que ser
 // reconhecidos como o mesmo posto, mesmo vindo digitados diferente na planilha.
 function normalizarTexto(s) {
@@ -292,7 +300,8 @@ function normalizarTexto(s) {
 }
 
 // Acha o nome canônico (chave de POSTOS_DADOS) pra um nome vindo da planilha,
-// em 3 tentativas progressivas:
+// em 4 tentativas progressivas:
+// 0) apelido manual cadastrado (ALIASES_POSTO)
 // 1) match exato
 // 2) match ignorando acento
 // 3) match por prefixo (resolve nome abreviado tipo "LOURA" → "LOURA EMPREENDIMENTOS"),
@@ -302,6 +311,10 @@ function encontrarPostoCanonico(nomeOriginal) {
   const semP = String(nomeOriginal).replace(/^P\.\s*/i, '').trim();
   const semPNorm = normalizarTexto(semP);
   const candidatos = Object.keys(POSTOS_DADOS);
+
+  if (ALIASES_POSTO[semPNorm] && POSTOS_DADOS[ALIASES_POSTO[semPNorm]]) {
+    return ALIASES_POSTO[semPNorm];
+  }
 
   let found = candidatos.find(p => p.toUpperCase() === semP.toUpperCase());
   if (found) return found;
