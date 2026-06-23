@@ -1192,15 +1192,106 @@ let LOG_SUB_ATIVA       = 'medicao';
 let LC_TODAS            = [];
 let _logAutoRefreshTimer = null;
 
+// Apenas as 5 seções editáveis — Previsão e Diferença são calculadas
+// automaticamente pela planilha (fórmulas) e não precisam aparecer aqui.
 const LOG_CATEGORIAS = [
-  { chave: 'medicao',   titulo: '🛢️ MEDIÇÃO (L)',        cls: 'lh-med',  cor: '#4895ef', edit: true  },
-  { chave: 'venda',     titulo: '⛽ VENDA DIÁRIA (L)',    cls: 'lh-ven',  cor: '#d4af37', edit: true  },
-  { chave: 'carga',     titulo: '🚚 CARGA RECEBIDA (L)',  cls: 'lh-carg', cor: '#c77dff', edit: true  },
-  { chave: 'prePedido', titulo: '📦 PRÉ-PEDIDO (L)',      cls: 'lh-pre',  cor: '#f9c74f', edit: true  },
-  { chave: 'pedido',    titulo: '📋 PEDIDO FINAL (L)',    cls: 'lh-ped',  cor: '#ff9e00', edit: true  },
-  { chave: 'previsao',  titulo: '📐 PREVISÃO MED. (L)',   cls: 'lh-prev', cor: '#4cc9f0', edit: false },
-  { chave: 'diferenca', titulo: 'Δ DIFERENÇA',            cls: 'lh-dif',  cor: '#ff4d6d', edit: false },
+  { chave: 'medicao',   titulo: '🛢️ MEDIÇÃO (L)',        cls: 'lh-med',  cor: '#4895ef', edit: true },
+  { chave: 'venda',     titulo: '⛽ VENDA DIÁRIA (L)',    cls: 'lh-ven',  cor: '#d4af37', edit: true },
+  { chave: 'carga',     titulo: '🚚 CARGA RECEBIDA (L)',  cls: 'lh-carg', cor: '#c77dff', edit: true },
+  { chave: 'prePedido', titulo: '📦 PRÉ-PEDIDO (L)',      cls: 'lh-pre',  cor: '#f9c74f', edit: true },
+  { chave: 'pedido',    titulo: '📋 PEDIDO FINAL (L)',    cls: 'lh-ped',  cor: '#ff9e00', edit: true },
 ];
+
+// Injeta CSS global para corrigir sticky headers e scrollbar da matriz
+(function injetarCssMatriz() {
+  if (document.getElementById('css-log-matrix')) return;
+  const s = document.createElement('style');
+  s.id = 'css-log-matrix';
+  s.textContent = `
+    /* ── Wrapper da tabela ─────────────────────────── */
+    #log-sub-medicao {
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Scrollbar maior e visível ─────────────────── */
+    #log-sub-medicao::-webkit-scrollbar        { width: 10px; height: 10px; }
+    #log-sub-medicao::-webkit-scrollbar-track  { background: #1a1e2a; border-radius: 6px; }
+    #log-sub-medicao::-webkit-scrollbar-thumb  { background: #3a4560; border-radius: 6px; border: 2px solid #1a1e2a; }
+    #log-sub-medicao::-webkit-scrollbar-thumb:hover { background: #4895ef; }
+    #log-sub-medicao::-webkit-scrollbar-corner { background: #1a1e2a; }
+
+    /* ── Tabela ────────────────────────────────────── */
+    #log-matrix-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: max-content;
+      min-width: 100%;
+    }
+
+    /* ── THEAD sticky — fica fixo ao rolar para baixo ─ */
+    #log-matrix-thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--sf2, #1a1e2a);
+    }
+
+    /* ── Coluna DIA sticky — fica fixo ao rolar para lado ─ */
+    .log-sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 20;        /* acima dos outros headers */
+      background: var(--sf2, #1a1e2a);
+      min-width: 68px;
+      white-space: nowrap;
+    }
+
+    /* Quando DIA está no thead, z-index ainda maior */
+    #log-matrix-thead .log-sticky-col {
+      z-index: 30;
+    }
+
+    /* ── Separadores entre grupos de colunas ──────── */
+    .log-grp-end { border-right: 2px solid #2a3045 !important; }
+    .log-grp-st  { border-left:  2px solid #2a3045 !important; }
+
+    /* ── Células de input na tabela ───────────────── */
+    .log-cell-in {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #2a3045;
+      color: inherit;
+      width: 64px;
+      text-align: right;
+      font-size: .78rem;
+      font-family: var(--mono, monospace);
+      padding: 2px 4px;
+      outline: none;
+    }
+    .log-cell-in:focus {
+      border-bottom-color: #4895ef;
+      background: rgba(72,149,239,.08);
+    }
+    .log-cell-dirty { border-bottom-color: #f9c74f !important; }
+
+    /* ── Headers de grupo (linha 1 do thead) ──────── */
+    .lh-med  { background: rgba(72,149,239,.15); }
+    .lh-ven  { background: rgba(212,175,55,.12); }
+    .lh-carg { background: rgba(199,125,255,.12); }
+    .lh-pre  { background: rgba(249,199,79,.10); }
+    .lh-ped  { background: rgba(255,158,0,.10); }
+
+    /* ── Linha hover ───────────────────────────────── */
+    #log-matrix-tbody tr:hover td { background: rgba(255,255,255,.03); }
+
+    /* ── Linha de hoje destaque ───────────────────── */
+    .log-row-hoje td { background: rgba(72,149,239,.07) !important; }
+  `;
+  // Injeta no head assim que o DOM estiver pronto
+  if (document.head) document.head.appendChild(s);
+  else document.addEventListener('DOMContentLoaded', () => document.head.appendChild(s));
+})();
 
 function logPopularSelects() {
   // Selects já populados no HTML — garante que o value do option bate com o AS
@@ -1308,24 +1399,41 @@ function logColsDaCategoria(chave, grupos, vendaCols) { return chave === 'venda'
 function logMontarCabecalho(grupos, vendaCols) {
   const thead = document.getElementById('log-matrix-thead');
   if (!thead) return;
+
+  // Garante que a <table> tem id para o CSS sticky funcionar
+  const table = thead.closest('table');
+  if (table && !table.id) table.id = 'log-matrix-table';
+
+  const thBase = 'style="background:var(--sf2);font-size:.7rem;padding:.45rem .5rem;white-space:nowrap;border-bottom:1px solid #2a3045"';
+  const thSub  = 'style="background:var(--sf2);font-size:.62rem;padding:.3rem .5rem;border-bottom:2px solid #2a3045"';
+
   const n = LOG_CATEGORIAS.length;
-  let r1 = '<tr><th rowspan="2" class="log-sticky-col" style="background:var(--sf2)">DIA</th>';
+
+  // Linha 1 — grupos (Medição, Venda, Carga, etc.)
+  let r1 = '<tr>';
+  r1 += '<th rowspan="2" class="log-sticky-col" ' + thBase + '>DIA</th>';
   LOG_CATEGORIAS.forEach((cat, ci) => {
     const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
-    const ge = ci < n - 1 ? ' log-grp-end' : '', gs = ci > 0 ? ' log-grp-st' : '';
-    r1 += '<th colspan="' + cols.length + '" class="' + cat.cls + ge + gs + '">' + cat.titulo + '</th>';
+    const ge = ci < n - 1 ? ' log-grp-end' : '';
+    const gs = ci > 0     ? ' log-grp-st'  : '';
+    r1 += '<th colspan="' + cols.length + '" class="' + cat.cls + ge + gs + '" ' + thBase + ' style="background:var(--sf2);font-size:.68rem;padding:.4rem .5rem;white-space:nowrap;border-bottom:1px solid #2a3045;color:' + cat.cor + '">' + cat.titulo + '</th>';
   });
-  r1 += '</tr><tr>';
+  r1 += '</tr>';
+
+  // Linha 2 — nomes dos combustíveis
+  let r2 = '<tr>';
   LOG_CATEGORIAS.forEach((cat, ci) => {
     const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
     cols.forEach((col, gi) => {
       let cls = '';
       if (gi === cols.length - 1) cls += ' log-grp-end';
       if (ci > 0 && gi === 0)    cls += ' log-grp-st';
-      r1 += '<th' + (cls ? ' class="' + cls.trim() + '"' : '') + ' style="color:' + cat.cor + ';font-size:.62rem">' + col.abv + '</th>';
+      r2 += '<th' + (cls ? ' class="' + cls.trim() + '"' : '') + ' ' + thSub + ' style="background:var(--sf2);font-size:.6rem;padding:.3rem .4rem;border-bottom:2px solid #2a3045;color:' + cat.cor + '">' + col.abv + '</th>';
     });
   });
-  thead.innerHTML = r1 + '</tr>';
+  r2 += '</tr>';
+
+  thead.innerHTML = r1 + r2;
 }
 
 function logFmtL(v) {
@@ -1344,65 +1452,72 @@ function logMontarLinhas(dados) {
   const tbody = document.getElementById('log-matrix-tbody');
   if (!tbody) return;
   const grupos = dados.grupos, vendaCols = dados.combustiveisVenda;
+
+  // Dia atual para destacar a linha de hoje
+  const hoje = new Date().getDate();
+
+  // Conta total de colunas para colspan do fallback
+  const totalCols = 1 + LOG_CATEGORIAS.reduce((s, cat) =>
+    s + logColsDaCategoria(cat.chave, grupos, vendaCols).length, 0);
+
+  const tdBase = 'style="padding:.35rem .45rem;font-size:.78rem;font-family:var(--mono,monospace);text-align:right;border-bottom:1px solid #1e2435"';
+
   let html = '';
   dados.dias.forEach((d, diaIdx) => {
-    html += '<tr><td class="log-sticky-col">' + String(d.dia).padStart(2, '0') + '/' + dados.mes + '</td>';
+    const isHoje = d.dia === hoje;
+    const trCls  = isHoje ? ' class="log-row-hoje"' : '';
+    const diaTxt = String(d.dia).padStart(2, '0') + '/' + dados.mes;
+
+    html += '<tr' + trCls + '>';
+    // Coluna DIA — sticky esquerda
+    html += '<td class="log-sticky-col" style="padding:.35rem .5rem;font-size:.75rem;font-family:var(--mono,monospace);border-bottom:1px solid #1e2435;' +
+      (isHoje ? 'color:#4895ef;font-weight:700' : 'color:var(--tx3)') + '">' + diaTxt + '</td>';
+
     LOG_CATEGORIAS.forEach((cat, ci) => {
       const cols   = logColsDaCategoria(cat.chave, grupos, vendaCols);
       const valores = d[cat.chave] || [];
       cols.forEach((col, i) => {
         const val  = valores[i];
         const last = i === cols.length - 1, first = ci > 0 && i === 0;
-        const cls  = (last ? 'log-grp-end' : '') + (first ? ' log-grp-st' : '');
-        const tdA  = cls.trim() ? ' class="' + cls.trim() + '"' : '';
-        if (cat.chave === 'previsao') {
-          html += '<td' + tdA + '><span id="lp_' + diaIdx + '_' + i + '">' + logFmtL(val) + '</span></td>';
-        } else if (cat.chave === 'diferenca') {
-          const cor = val > 0 ? 'var(--ac)' : (val < 0 ? 'var(--dg)' : 'var(--tx3)');
-          html += '<td' + tdA + '><span id="ld_' + diaIdx + '_' + i + '" style="color:' + cor + ';font-weight:700">' +
-            (val === null || val === undefined ? '—' : (val > 0 ? '+' : '') + logFmtL(val)) + '</span></td>';
-        } else {
-          const ca = String(col.comb).replace(/"/g, '&quot;');
-          html += '<td' + tdA + '><input type="text" inputmode="numeric" class="log-cell-in"' +
-            ' data-dia="' + diaIdx + '" data-campo="' + cat.chave + '" data-comb="' + ca + '"' +
-            ' value="' + logFmtL(val).replace('—', '') + '"' +
-            ' oninput="logCelulaEditada(this)" onblur="logCelulaBlur(this)"></td>';
-        }
+        let cls = '';
+        if (last)  cls += ' log-grp-end';
+        if (first) cls += ' log-grp-st';
+        const tdA = cls.trim() ? ' class="' + cls.trim() + '"' : '';
+        const ca  = String(col.comb).replace(/"/g, '&quot;');
+        html += '<td' + tdA + ' ' + tdBase + '>' +
+          '<input type="text" inputmode="numeric" class="log-cell-in"' +
+          ' data-dia="' + diaIdx + '" data-campo="' + cat.chave + '" data-comb="' + ca + '"' +
+          ' value="' + logFmtL(val).replace('—', '') + '"' +
+          ' oninput="logCelulaEditada(this)" onblur="logCelulaBlur(this)"></td>';
       });
     });
     html += '</tr>';
   });
-  tbody.innerHTML = html || '<tr><td colspan="30" style="padding:1.5rem;color:var(--tx3);text-align:center">Sem dados.</td></tr>';
+
+  tbody.innerHTML = html ||
+    '<tr><td colspan="' + totalCols + '" style="padding:1.5rem;color:var(--tx3);text-align:center">Sem dados.</td></tr>';
 }
 
 function logRecalcPrev(diaIdx) {
+  // Previsão e Diferença são calculadas pela planilha (fórmulas).
+  // Esta função mantém os dados em memória atualizados para consistência
+  // mas não precisa mais atualizar o DOM (as colunas não existem na tabela).
   if (!LOG_MAT_DADOS) return;
   const dias = LOG_MAT_DADOS.dias, dia = dias[diaIdx];
   if (!dia) return;
   const diaOntem = dias[diaIdx - 1];
   const grupos = LOG_MAT_DADOS.grupos, vendaCols = LOG_MAT_DADOS.combustiveisVenda;
   grupos.forEach((g, i) => {
-    let prev = null;
-    if (diaOntem) {
-      const medOntem = diaOntem.medicao[i];
-      if (medOntem !== null && medOntem !== undefined) {
-        const carga = Number(dia.carga[i]) || 0;
-        const iV = vendaCols.findIndex(c => c.comb === g.comb);
-        const venda = (iV === -1 || dia.venda[iV] === null) ? 0 : Number(dia.venda[iV]);
-        prev = Number(medOntem) + carga - venda;
-      }
-    }
-    dia.previsao[i] = prev;
+    if (!diaOntem) return;
+    const medOntem = diaOntem.medicao[i];
+    if (medOntem === null || medOntem === undefined) return;
+    const carga = Number(dia.carga[i]) || 0;
+    const iV = vendaCols.findIndex(c => c.comb === g.comb);
+    const venda = (iV === -1 || dia.venda[iV] === null) ? 0 : Number(dia.venda[iV]);
+    dia.previsao[i] = Number(medOntem) + carga - venda;
     const medHoje = dia.medicao[i];
-    const diff = (prev !== null && medHoje !== null && medHoje !== undefined) ? Number(medHoje) - prev : null;
-    dia.diferenca[i] = diff;
-    const elP = document.getElementById('lp_' + diaIdx + '_' + i);
-    if (elP) elP.textContent = logFmtL(prev);
-    const elD = document.getElementById('ld_' + diaIdx + '_' + i);
-    if (elD) {
-      elD.style.color = diff > 0 ? 'var(--ac)' : (diff < 0 ? 'var(--dg)' : 'var(--tx3)');
-      elD.textContent = diff === null ? '—' : (diff > 0 ? '+' : '') + logFmtL(diff);
-    }
+    dia.diferenca[i] = (dia.previsao[i] !== null && medHoje !== null && medHoje !== undefined)
+      ? Number(medHoje) - dia.previsao[i] : null;
   });
 }
 
