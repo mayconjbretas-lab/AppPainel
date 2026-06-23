@@ -1224,10 +1224,10 @@ function logSwitchSub(sub) {
 
 function logOnPostoChange(posto) {
   LC_TODAS = [];
-  // O select pode passar "ALEX" ou "P. ALEX" — normaliza para o formato
-  // que o Apps Script espera ("P. ALEX"), igual ao NOMES_POSTOS do Code.gs.
-  // Se o valor já começar com "P. " deixa como está; senão adiciona o prefixo.
-  const postoCompleto = posto && !posto.startsWith('P. ') ? 'P. ' + posto : posto;
+  // Normaliza: remove "P. " se existir, depois sempre adiciona — garante formato
+  // "P. ALEX" independente do value do select (pode vir "ALEX" ou "P. ALEX")
+  const semP = (posto || '').replace(/^P\.\s*/i, '').trim();
+  const postoCompleto = semP ? 'P. ' + semP : '';
   carregarLogMatriz(postoCompleto);
   if (LOG_SUB_ATIVA === 'coleta') lcCarregar();
 }
@@ -1275,6 +1275,9 @@ async function carregarLogMatriz(posto) {
     LOG_MAT_DADOS = null; LOG_MAT_EDICOES = {};
     logAtualizarBotoes(); return;
   }
+  // Garante formato "P. ALEX" independente do que veio do select
+  const semP = posto.replace(/^P\.\s*/i, '').trim();
+  posto = semP ? 'P. ' + semP : posto;
   LOG_MAT_POSTO_ATUAL = posto;
   LOG_MAT_EDICOES = {};
   if (sub)   sub.textContent = '• Carregando ' + posto + '...';
