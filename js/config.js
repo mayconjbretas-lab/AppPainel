@@ -160,43 +160,4 @@ const SUPERVISOR_BLOCO = {
   "ESPACO REAL":"Rodrigo",   "FELIPAO":"Rodrigo",        "BEATRIZ":"Rodrigo",
 };
 
-// ================================================================
-// ALIASES_POSTO — normaliza nomes que a planilha grava de forma
-// diferente do que está em POSTOS_DADOS
-// FIX v3: P. LOURA, P. MIRAGEM, P. BEATRIZ, PAIVA E PAIVA
-// ================================================================
-const ALIASES_POSTO = {
-  // planilha grava abreviado → chave real em POSTOS_DADOS
-  'LOURA':                    'LOURA EMPREENDIMENTOS',
-  'P. LOURA':                 'LOURA EMPREENDIMENTOS',
-  'MIRAGEM':                  'MIRAGEM JBRETAS',
-  'P. MIRAGEM':               'MIRAGEM JBRETAS',
-  // PAIVA E PAIVA → BEATRIZ (renomeado)
-  'BEATRIZ':                  'BEATRIZ',
-  'P. BEATRIZ':               'BEATRIZ',
-  'PAIVA E PAIVA':            'BEATRIZ',
-  'PAIVA E PAIVA COMBUSTIVEL':'BEATRIZ',
-  // outros aliases úteis
-  'BARBOSA - DUDU':           'BARBOSA - DUDU',
-  'SANTA INES - JOAQUIM':     'SANTA INES - JOAQUIM',
-};
-
-
-// ================================================================
-// NOTA PARA app.js — processarDadosReais()
-// ================================================================
-// Substituir o bloco de montagem de propMapeado por este:
-//
-// function processarDadosReais() {
-//   const propPlano = G_DADOS.prop || {};
-//   const propMapeado = {};
-//   for (let k in propPlano) {
-//     propMapeado[k] = propPlano[k];
-//     const found = encontrarPostoCanonico(k);
-//     if (found && found !== k) propMapeado[found] = propPlano[k];
-//     // Remove a entrada abreviada para não criar duplicata no KPI
-//     if (found && found !== k) delete propMapeado[k];
-//   }
-//   G_DADOS.prop = propMapeado;
-//   ...
-// }
+// ALIASES_POSTO definido em app.js — não redeclarar aqui.
