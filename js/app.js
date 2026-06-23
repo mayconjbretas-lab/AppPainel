@@ -247,11 +247,8 @@ function renderDetalheMedia() {
 
 // ════════════════════════════════════════════════════════════
 // LOOKUP / NORMALIZAÇÃO DE POSTOS
+// (ALIASES_POSTO definido em config.js — não redeclarar aqui)
 // ════════════════════════════════════════════════════════════
-const ALIASES_POSTO = {
-  'BEATRIZ': 'PAIVA E PAIVA COMBUSTIVEL',
-};
-
 function normalizarTexto(s) {
   return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
 }
