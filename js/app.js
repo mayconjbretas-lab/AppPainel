@@ -1381,42 +1381,74 @@ function logParseNum(str) {
 function logMontarCabecalho(grupos, vendaCols) {
   const thead = document.getElementById('log-matrix-thead');
   if (!thead) return;
-
-  // Garante id na table para o CSS sticky funcionar
   const table = thead.closest('table');
   if (table) table.id = 'log-matrix-table';
 
-  // Estilos base
-  const STH  = 'padding:.4rem .5rem;white-space:nowrap;border-bottom:1px solid #2a3045;position:sticky;top:0;z-index:10;';
-  const STH2 = 'padding:.3rem .4rem;white-space:nowrap;border-bottom:2px solid #2a3045;position:sticky;top:0;z-index:10;';
+  // ── LINHA ÚNICA de cabeçalho ─────────────────────────────
+  // thead com 1 só <tr> é o único jeito garantido de sticky
+  // funcionar em todos os browsers sem bugs de rowspan.
+  // Cada coluna mostra "GRUPO\nCOMB" em duas linhas dentro da mesma célula.
+  let r = '<tr>';
 
-  // ── Linha 1: DIA + grupos ──────────────────────────────────
-  let r1 = '<tr>';
-  // Coluna DIA — sticky left E top
-  r1 += '<th rowspan="2" style="' + STH + 'position:sticky;left:0;top:0;z-index:30;background:#12172a;min-width:62px;font-size:.7rem;text-align:center">DIA</th>';
+  // Coluna DIA — sticky left + top
+  r += '<th style="' +
+    'position:sticky;left:0;top:0;z-index:30;' +
+    'background:#0d1120;' +
+    'min-width:62px;padding:.4rem .5rem;' +
+    'font-size:.65rem;text-align:center;' +
+    'border-bottom:2px solid #2a3550;' +
+    'white-space:nowrap;color:#5a6478' +
+    '">DIA</th>';
 
   LOG_CATEGORIAS.forEach((cat, ci) => {
     const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
-    // Separador vazio entre grupos (exceto antes do primeiro)
+
+    // Separador entre grupos (exceto antes do primeiro)
     if (ci > 0) {
-      r1 += '<th rowspan="2" style="' + STH + 'background:#0d1020;width:12px;min-width:12px;border-right:none;border-left:none;padding:0"></th>';
+      r += '<th style="' +
+        'position:sticky;top:0;z-index:10;' +
+        'background:#060810;width:10px;min-width:10px;' +
+        'border:none;padding:0;border-bottom:2px solid #060810' +
+        '"></th>';
     }
-    r1 += '<th colspan="' + cols.length + '" style="' + STH +
-      'background:#12172a;color:' + cat.cor + ';font-size:.68rem;text-align:center">' + cat.titulo + '</th>';
-  });
-  r1 += '</tr>';
 
-  // ── Linha 2: combustíveis por grupo ───────────────────────
-  let r2 = '<tr>';
-  LOG_CATEGORIAS.forEach((cat, ci) => {
-    const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
     cols.forEach((col, gi) => {
-      r2 += '<th style="' + STH2 + 'background:#12172a;color:' + cat.cor + ';font-size:.6rem;text-align:center;min-width:72px">' + col.abv + '</th>';
+      const isFirst = gi === 0;
+      const isLast  = gi === cols.length - 1;
+      // Fundo levemente colorido para identificar o grupo
+      const bgMap = {
+        medicao:'rgba(72,149,239,.12)',
+        venda:'rgba(212,175,55,.10)',
+        carga:'rgba(199,125,255,.10)',
+        prePedido:'rgba(249,199,79,.08)',
+        pedido:'rgba(255,158,0,.08)',
+      };
+      const bg = bgMap[cat.chave] || 'transparent';
+      // Borda esquerda no primeiro col de cada grupo (visual de separação interna)
+      const borderL = isFirst && ci > 0 ? '' : (isFirst ? '' : '');
+      r += '<th style="' +
+        'position:sticky;top:0;z-index:10;' +
+        'background:' + bg + ';' +
+        'min-width:72px;padding:.3rem .4rem;' +
+        'font-size:.6rem;text-align:center;' +
+        'border-bottom:2px solid #2a3550;' +
+        'white-space:nowrap;' +
+        'line-height:1.25' +
+        '">' +
+        // Nome do grupo na linha 1 (só na primeira coluna do grupo)
+        '<span style="display:block;font-size:.55rem;color:' + cat.cor + ';opacity:.8;margin-bottom:1px">' +
+          (isFirst ? cat.titulo.replace(/^[^\s]+\s/, '') : '') +  // remove emoji, mantém texto
+        '</span>' +
+        // Nome do combustível na linha 2
+        '<span style="display:block;font-size:.65rem;color:' + cat.cor + ';font-weight:700">' +
+          col.abv +
+        '</span>' +
+        '</th>';
     });
   });
-  r2 += '</tr>';
 
-  thead.innerHTML = r1 + r2;
+  r += '</tr>';
+  thead.innerHTML = r;
 }
 
 function logMontarLinhas(dados) {
