@@ -87,21 +87,38 @@ function toggleSenha() {
   }
 }
 
-function entrar() {
-  const email = document.getElementById('inp-email').value.trim();
-  const senha = document.getElementById('inp-senha').value.trim();
+async function entrar() {
+  const email  = document.getElementById('inp-email').value.trim();
+  const senha  = document.getElementById('inp-senha').value.trim();
   const errDiv = document.getElementById('login-erro');
+  const btn    = document.getElementById('btn-entrar');
   errDiv.classList.add('hidden');
-  const u = USUARIOS_ADM.find(x => x.email.toLowerCase() === email.toLowerCase() && x.senha === senha);
-  if (u) {
-    G_USER = { email: u.email };
-    localStorage.setItem('jb_adm_user', JSON.stringify(G_USER));
-    document.getElementById('screen-login').classList.add('hidden');
-    document.getElementById('screen-app').classList.remove('hidden');
-    carregarDados();
-  } else {
-    errDiv.textContent = 'Credenciais administrativas inválidas.';
+  btn.disabled  = true;
+  btn.textContent = 'Verificando...';
+  try {
+    const res  = await fetch(API_URL + '?tipo=login&email=' + encodeURIComponent(email) + '&senha=' + encodeURIComponent(senha));
+    const json = await res.json();
+    if (json && json.usuario && (json.usuario.postoKey === 'ADM' || json.usuario.postoKey === 'LOGISTICA')) {
+      G_USER = { email: json.usuario.email, gerente: json.usuario.gerente, postoKey: json.usuario.postoKey };
+      localStorage.setItem('jb_adm_user', JSON.stringify(G_USER));
+      document.getElementById('screen-login').classList.add('hidden');
+      document.getElementById('screen-app').classList.remove('hidden');
+      carregarDados();
+      iniciarAutoRefresh();
+    } else if (json && json.usuario) {
+      // Credencial válida mas não é ADM/LOGISTICA
+      errDiv.textContent = 'Acesso restrito — somente ADM e Logística.';
+      errDiv.classList.remove('hidden');
+    } else {
+      errDiv.textContent = json.erro || 'Credenciais administrativas inválidas.';
+      errDiv.classList.remove('hidden');
+    }
+  } catch (e) {
+    errDiv.textContent = 'Erro de conexão. Tente novamente.';
     errDiv.classList.remove('hidden');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'ENTRAR';
   }
 }
 
