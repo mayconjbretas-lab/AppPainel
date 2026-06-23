@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0e1a">
+<meta name="theme-color" content="#0d1117">
 <title>JBRETAS — Painel de Preços</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./ícone-192.png">
@@ -15,22 +15,33 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 <link rel="stylesheet" href="./jbretas2.css">
+<!-- Aplica tema antes do paint para evitar flash -->
 <script>
-  (function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('jb_theme') || 'dark'); })();
+  (function(){
+    var t = localStorage.getItem('jb_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = t === 'light' ? '#f0f2f5' : '#0d1117';
+  })();
 </script>
 </head>
 <body>
 
+<!-- ═══════════ LOADING ═══════════ -->
 <div class="loading-overlay" id="loading">
   <div class="loading-spin"></div>
   <div class="loading-txt">Carregando dados reais...</div>
 </div>
 
+<!-- ═══════════ LOGIN ═══════════ -->
 <div id="screen-login" class="hidden">
   <div class="login-wrap">
     <div class="login-logo">
       <div class="logo-box"><span>JB</span></div>
-      <div><div class="brand">JBRETAS</div><div class="brand-sub">// Painel de Preços ADM</div></div>
+      <div>
+        <div class="brand">JBRETAS</div>
+        <div class="brand-sub">// Painel de Preços ADM</div>
+      </div>
     </div>
     <div id="login-erro" class="login-erro hidden"></div>
     <div class="field-group">
@@ -41,7 +52,9 @@
       <label class="flbl">Senha</label>
       <div class="senha-row">
         <input id="inp-senha" type="password" class="finput" placeholder="••••••••" autocomplete="current-password">
-        <button class="olho-btn" onclick="toggleSenha()" type="button"><i class="fa-solid fa-eye" id="olho-icone"></i></button>
+        <button class="olho-btn" onclick="toggleSenha()" type="button">
+          <i class="fa-solid fa-eye" id="olho-icone"></i>
+        </button>
       </div>
     </div>
     <button class="btn-entrar" id="btn-entrar" onclick="entrar()">ENTRAR</button>
@@ -49,29 +62,57 @@
   </div>
 </div>
 
+<!-- ═══════════ APP ═══════════ -->
 <div id="screen-app" class="hidden">
+
+  <!-- TOPBAR -->
   <header class="topbar">
-    <div style="display:flex;align-items:center;gap:.6rem">
-      <div style="width:32px;height:32px;background:var(--acd);border:1.5px solid var(--ac);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:var(--ac);font-size:.75rem">JB</div>
-      <div><div class="tbbrand">JBRETAS</div><div class="tbsub">// Painel de Preços</div></div>
+    <div style="display:flex;align-items:center;gap:.55rem">
+      <div style="width:30px;height:30px;background:var(--acd);border:1.5px solid var(--ac);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:var(--ac);font-size:.7rem;box-shadow:0 0 8px var(--ac-glow)">JB</div>
+      <div>
+        <div class="tbbrand">JBRETAS</div>
+        <div class="tbsub">// Painel de Preços</div>
+      </div>
     </div>
     <div class="tb-right">
       <div class="live"><span class="ldot"></span><span id="live-txt">ao vivo</span></div>
-      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Alternar tema"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
-      <button class="sair-btn" onclick="sair()"><i class="fa-solid fa-right-from-bracket"></i></button>
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Alternar tema">
+        <i class="fa-solid fa-moon" id="theme-icon"></i>
+      </button>
+      <button class="sair-btn" onclick="sair()">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>
     </div>
   </header>
 
+  <!-- MAIN -->
   <main class="main" id="main">
 
+    <!-- ═══ ABA: COMPARA ═══ -->
     <section class="scr active" id="s-comp">
       <div class="kgrid">
-        <div class="kbox"><div class="klbl">Lançaram hoje</div><div class="kval ac" id="kv-proprios">--</div><div class="csub" id="kv-proprios-sub" style="margin-top:2px"></div></div>
-        <div class="kbox"><div class="klbl">Concorrentes</div><div class="kval" id="kv-concs">--</div></div>
-        <div class="kbox" onclick="abrirDetalheMedia()" style="cursor:pointer"><div class="klbl">Média GC conc. <i class="fa-solid fa-circle-info" style="font-size:.55rem;opacity:.6"></i></div><div class="kval inf" id="kv-gc">--</div></div>
-        <div class="kbox"><div class="klbl">Nosso GC médio</div><div class="kval ac" id="kv-mgc">--</div></div>
+        <div class="kbox">
+          <div class="klbl">Lançaram hoje</div>
+          <div class="kval ac" id="kv-proprios">--</div>
+          <div class="csub" id="kv-proprios-sub" style="margin-top:2px"></div>
+        </div>
+        <div class="kbox">
+          <div class="klbl">Concorrentes</div>
+          <div class="kval" id="kv-concs">--</div>
+        </div>
+        <div class="kbox" onclick="abrirDetalheMedia()" style="cursor:pointer">
+          <div class="klbl">Média GC conc. <i class="fa-solid fa-circle-info" style="font-size:.52rem;opacity:.55"></i></div>
+          <div class="kval inf" id="kv-gc">--</div>
+        </div>
+        <div class="kbox">
+          <div class="klbl">Nosso GC médio</div>
+          <div class="kval ac" id="kv-mgc">--</div>
+        </div>
       </div>
-      <div class="upd-row"><span id="upd-txt">Carregando...</span><button class="refresh-btn" onclick="carregarDados()">↻</button></div>
+      <div class="upd-row">
+        <span id="upd-txt">Carregando...</span>
+        <button class="refresh-btn" onclick="carregarDados()">↻</button>
+      </div>
       <div class="card">
         <div class="chdr">
           <div class="ctitle">Monitor de Preços</div>
@@ -80,18 +121,33 @@
         <div class="cbody">
           <div class="fueltab-row" id="cmp-fuel-tabs"></div>
           <div class="filtros-comp-grid">
-            <div><label class="filtro-lbl">Posto</label><select class="sel" id="cmp-posto" style="margin-bottom:0" onchange="cmpSetPosto(this.value)"><option value="">Todos os postos</option></select></div>
-            <div><label class="filtro-lbl">Supervisor</label><select class="sel" id="cmp-sup" style="margin-bottom:0" onchange="cmpSetSup(this.value)"><option value="">Todos supervisores</option></select></div>
-            <div><label class="filtro-lbl">Bandeira</label><select class="sel" id="cmp-band" style="margin-bottom:0" onchange="cmpSetBand(this.value)"><option value="">Todas bandeiras</option></select></div>
+            <div>
+              <label class="filtro-lbl">Posto</label>
+              <select class="sel" id="cmp-posto" style="margin-bottom:0" onchange="cmpSetPosto(this.value)">
+                <option value="">Todos os postos</option>
+              </select>
+            </div>
+            <div>
+              <label class="filtro-lbl">Supervisor</label>
+              <select class="sel" id="cmp-sup" style="margin-bottom:0" onchange="cmpSetSup(this.value)">
+                <option value="">Todos supervisores</option>
+              </select>
+            </div>
+            <div>
+              <label class="filtro-lbl">Bandeira</label>
+              <select class="sel" id="cmp-band" style="margin-bottom:0" onchange="cmpSetBand(this.value)">
+                <option value="">Todas bandeiras</option>
+              </select>
+            </div>
           </div>
-          <label style="display:flex;align-items:center;gap:.4rem;font-size:.76rem;color:var(--tx2);margin:.5rem 0">
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:.74rem;color:var(--tx2);margin:.45rem 0">
             <input type="checkbox" id="cmp-so-mudou" onchange="cmpToggleSoMudou(this)"> Só quem mudou desde ontem
           </label>
-          <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">
-            <button class="ftag" id="flt-abaixo" onclick="cmpSetFaixaPreco(this,'abaixo')" title="Mostrar só concorrentes mais baratos que o nosso preço">
+          <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.55rem">
+            <button class="ftag" id="flt-abaixo" onclick="cmpSetFaixaPreco(this,'abaixo')" title="Mostrar só concorrentes mais baratos">
               🔵 Abaixo do nosso
             </button>
-            <button class="ftag" id="flt-acima" onclick="cmpSetFaixaPreco(this,'acima')" title="Mostrar só concorrentes mais caros que o nosso preço">
+            <button class="ftag" id="flt-acima" onclick="cmpSetFaixaPreco(this,'acima')" title="Mostrar só concorrentes mais caros">
               🔴 Acima do nosso
             </button>
             <button class="ftag" id="flt-todos-preco" onclick="cmpSetFaixaPreco(this,'todos')" style="display:none">
@@ -99,7 +155,7 @@
             </button>
           </div>
           <div class="strat-box">
-            <div class="csub" style="margin-bottom:.45rem">Estratégia de preço sugerido</div>
+            <div class="csub" style="margin-bottom:.4rem">Estratégia de preço sugerido</div>
             <div class="strat-row" id="cmp-strat-tabs"></div>
             <div class="strat-desc" id="cmp-strat-desc"></div>
           </div>
@@ -108,16 +164,22 @@
         </div>
       </div>
       <div class="card">
-        <div class="chdr"><div class="ctitle">Mapa de calor — G. Comum</div><div class="csub">Distribuição por faixa na rede</div></div>
+        <div class="chdr">
+          <div class="ctitle">Mapa de calor — G. Comum</div>
+          <div class="csub">Distribuição por faixa na rede</div>
+        </div>
         <div class="cbody">
           <div class="hgrid" id="heatmap-body"></div>
-          <div style="display:flex;justify-content:space-between;margin-top:.5rem;font-size:.6rem;color:var(--tx3)">
-            <span style="color:var(--ok)">barato</span><span style="color:var(--wn)">médio</span><span style="color:var(--dg)">caro</span>
+          <div style="display:flex;justify-content:space-between;margin-top:.45rem;font-size:.58rem;color:var(--tx3)">
+            <span style="color:var(--ok)">barato</span>
+            <span style="color:var(--wn)">médio</span>
+            <span style="color:var(--dg)">caro</span>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- ═══ ABA: RANKING ═══ -->
     <section class="scr" id="s-ranking">
       <div class="sdiv">Filtrar por supervisor</div>
       <div class="filtro-row" id="filtro-sup">
@@ -129,13 +191,23 @@
         <button class="ftag" onclick="setFiltroSup(this,'Rodrigo')">Rodrigo</button>
       </div>
       <div class="sdiv">Concorrentes — G. Comum (mais barato ao mais caro)</div>
-      <div class="card"><div class="chdr"><div class="ctitle">Ranking de preços</div><div class="csub" id="rank-count">--</div></div><div class="cbody" id="rank-body"></div></div>
+      <div class="card">
+        <div class="chdr">
+          <div class="ctitle">Ranking de preços</div>
+          <div class="csub" id="rank-count">--</div>
+        </div>
+        <div class="cbody" id="rank-body"></div>
+      </div>
       <div class="sdiv">Ranking por bandeira</div>
       <div class="card"><div class="cbody"><div class="bgrid" id="band-rank-body"></div></div></div>
       <div class="sdiv">Mais deslocados da média</div>
-      <div class="card"><div class="chdr"><div class="ctitle">Alerta de deslocamento</div></div><div class="cbody" id="deslocado-body"></div></div>
+      <div class="card">
+        <div class="chdr"><div class="ctitle">Alerta de deslocamento</div></div>
+        <div class="cbody" id="deslocado-body"></div>
+      </div>
     </section>
 
+    <!-- ═══ ABA: REGIONAL ═══ -->
     <section class="scr" id="s-regional">
       <div class="sdiv">Por bandeira do concorrente</div>
       <div class="card"><div class="cbody"><div class="bgrid" id="band-body"></div></div></div>
@@ -143,59 +215,85 @@
       <div class="card"><div class="cbody" id="reg-body"></div></div>
     </section>
 
+    <!-- ═══ ABA: MAPA ═══ -->
     <section class="scr" id="s-mapa">
       <div class="sdiv">Mapa de preços — BH / Grande BH</div>
       <div class="map-ctrl">
         <select class="map-sel" id="mf" onchange="mapaFuelChange(this.value)">
-          <option value="GC">G. Comum</option><option value="GA">G. Aditivada</option>
-          <option value="ET">Etanol</option><option value="S10">Diesel S10</option>
+          <option value="GC">G. Comum</option>
+          <option value="GA">G. Aditivada</option>
+          <option value="ET">Etanol</option>
+          <option value="S10">Diesel S10</option>
         </select>
-        <button class="map-ftag on" id="mbtn-todos" onclick="mapaSetSup(this,'todos')">Todos</button>
-        <button class="map-ftag" id="mbtn-Mauricio" onclick="mapaSetSup(this,'Mauricio')">Mauricio</button>
-        <button class="map-ftag" id="mbtn-Paulo" onclick="mapaSetSup(this,'Paulo')">Paulo</button>
-        <button class="map-ftag" id="mbtn-Fabricio" onclick="mapaSetSup(this,'Fabricio')">Fabricio</button>
-        <button class="map-ftag" id="mbtn-Gledson" onclick="mapaSetSup(this,'Gledson')">Gledson</button>
-        <button class="map-ftag" id="mbtn-Rodrigo" onclick="mapaSetSup(this,'Rodrigo')">Rodrigo</button>
+        <button class="map-ftag on" id="mbtn-todos"     onclick="mapaSetSup(this,'todos')">Todos</button>
+        <button class="map-ftag"   id="mbtn-Mauricio"   onclick="mapaSetSup(this,'Mauricio')">Mauricio</button>
+        <button class="map-ftag"   id="mbtn-Paulo"      onclick="mapaSetSup(this,'Paulo')">Paulo</button>
+        <button class="map-ftag"   id="mbtn-Fabricio"   onclick="mapaSetSup(this,'Fabricio')">Fabricio</button>
+        <button class="map-ftag"   id="mbtn-Gledson"    onclick="mapaSetSup(this,'Gledson')">Gledson</button>
+        <button class="map-ftag"   id="mbtn-Rodrigo"    onclick="mapaSetSup(this,'Rodrigo')">Rodrigo</button>
       </div>
-      <div class="map-ctrl" style="margin-top:.35rem">
-        <button class="map-ftag on" id="mfiltro-todos" onclick="mapaSetColeta(this,'todos')">📍 Todos</button>
-        <button class="map-ftag" id="mfiltro-coletados" onclick="mapaSetColeta(this,'coletados')">✅ Com coleta</button>
-        <button class="map-ftag" id="mfiltro-semcoleta" onclick="mapaSetColeta(this,'semcoleta')">⏳ Sem coleta</button>
-        <span id="mapa-contador" style="font-size:.62rem;color:var(--tx3);font-family:var(--mono);margin-left:auto"></span>
+      <div class="map-ctrl" style="margin-top:.3rem">
+        <button class="map-ftag on" id="mfiltro-todos"     onclick="mapaSetColeta(this,'todos')">📍 Todos</button>
+        <button class="map-ftag"    id="mfiltro-coletados"  onclick="mapaSetColeta(this,'coletados')">✅ Com coleta</button>
+        <button class="map-ftag"    id="mfiltro-semcoleta"  onclick="mapaSetColeta(this,'semcoleta')">⏳ Sem coleta</button>
+        <span id="mapa-contador" style="font-size:.6rem;color:var(--tx3);font-family:var(--mono);margin-left:auto"></span>
       </div>
       <div class="map-wrap"><div id="leaflet-map"></div></div>
       <div class="map-legend" id="map-legend"></div>
       <div id="mapa-detail"></div>
     </section>
 
+    <!-- ═══ ABA: HISTÓRICO ═══ -->
     <section class="scr" id="s-hist">
       <div class="sdiv">Filtrar posto e período</div>
-      <div class="filtro-row" style="gap:.4rem;margin-bottom:.5rem">
-        <select class="map-sel" id="hist-posto" style="flex:1;padding:6px 8px" onchange="carregarHistorico()"><option value="">Todos os postos</option></select>
-        <select class="map-sel" id="hist-dias" onchange="carregarHistorico()"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">Trimestre</option></select>
-        <select class="map-sel" id="hist-fuel" onchange="renderGrafico()"><option value="GC">G. Comum</option><option value="GA">G. Aditivada</option><option value="ET">Etanol</option><option value="S10">Diesel S10</option></select>
+      <div class="filtro-row" style="gap:.35rem;margin-bottom:.45rem">
+        <select class="map-sel" id="hist-posto" style="flex:1;padding:6px 8px" onchange="carregarHistorico()">
+          <option value="">Todos os postos</option>
+        </select>
+        <select class="map-sel" id="hist-dias" onchange="carregarHistorico()">
+          <option value="7">7 dias</option>
+          <option value="30" selected>30 dias</option>
+          <option value="90">Trimestre</option>
+        </select>
+        <select class="map-sel" id="hist-fuel" onchange="renderGrafico()">
+          <option value="GC">G. Comum</option>
+          <option value="GA">G. Aditivada</option>
+          <option value="ET">Etanol</option>
+          <option value="S10">Diesel S10</option>
+        </select>
       </div>
       <div class="card">
-        <div class="chdr"><div class="ctitle">Evolução de Preços</div><div class="csub" id="hist-sub">Selecione um posto</div></div>
-        <div class="cbody" style="padding:.5rem 0">
+        <div class="chdr">
+          <div class="ctitle">Evolução de Preços</div>
+          <div class="csub" id="hist-sub">Selecione um posto</div>
+        </div>
+        <div class="cbody" style="padding:.45rem 0">
           <div id="hist-loading" class="empty hidden"><div class="loading-spin" style="margin:0 auto"></div></div>
           <canvas id="hist-canvas" style="width:100%;max-height:220px;display:block"></canvas>
         </div>
       </div>
-      <div class="card"><div class="chdr"><div class="ctitle">Resumo do Período</div></div><div class="cbody" id="hist-resumo"><div class="empty">Carregando...</div></div></div>
-      <div class="card"><div class="chdr"><div class="ctitle">Registros recentes</div><div class="csub" id="hist-qtd"></div></div><div class="cbody" id="hist-lista"><div class="empty">Carregando...</div></div></div>
+      <div class="card">
+        <div class="chdr"><div class="ctitle">Resumo do Período</div></div>
+        <div class="cbody" id="hist-resumo"><div class="empty">Carregando...</div></div>
+      </div>
+      <div class="card">
+        <div class="chdr">
+          <div class="ctitle">Registros recentes</div>
+          <div class="csub" id="hist-qtd"></div>
+        </div>
+        <div class="cbody" id="hist-lista"><div class="empty">Carregando...</div></div>
+      </div>
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
          ABA LOGÍSTICA — Matriz + Coleta integradas (AppPainel ADM)
          ═══════════════════════════════════════════════════════════ -->
-    <section class="scr" id="s-logistica" style="padding:0;display:none;flex-direction:column;height:calc(100vh - 54px - 62px)">
+    <section class="scr" id="s-logistica" style="padding:0;display:none;flex-direction:column;height:calc(100vh - 52px - 60px)">
 
-      <!-- Topbar da seção: posto + sub-abas + ações -->
+      <!-- Topbar da seção: sub-abas + ações -->
       <div class="log-matrix-header">
-        <div style="display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:0">
-          <!-- Sub-abas: Medição / Coleta -->
-          <div style="display:flex;gap:.4rem">
+        <div style="display:flex;flex-direction:column;gap:.28rem;flex:1;min-width:0">
+          <div style="display:flex;gap:.35rem">
             <button class="log-subtab active" id="lsubt-medicao" onclick="logSwitchSub('medicao')">
               <i class="fa-solid fa-calculator" aria-hidden="true"></i> Medição
             </button>
@@ -203,13 +301,13 @@
               <i class="fa-solid fa-tags" aria-hidden="true"></i> Coleta
             </button>
           </div>
-          <span class="log-matrix-sub" id="log-matrix-sub" style="font-size:.6rem">• Selecione um posto</span>
+          <span class="log-matrix-sub" id="log-matrix-sub" style="font-size:.58rem">• Selecione um posto</span>
         </div>
-        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
-          <button class="btn-log-refresh" id="btn-log-refresh" onclick="logRefresh()" title="Atualizar dados">
+        <div style="display:flex;gap:.35rem;align-items:center;flex-wrap:wrap">
+          <button class="btn-log-refresh" id="btn-log-refresh" onclick="logRefresh()" title="Atualizar">
             <i class="fa-solid fa-rotate" id="btn-log-refresh-icon"></i>
           </button>
-          <span id="log-ultima-atualizacao" style="font-size:.56rem;color:var(--tx3);font-family:var(--mono)">—</span>
+          <span id="log-ultima-atualizacao" style="font-size:.54rem;color:var(--tx3);font-family:var(--mono)">—</span>
           <button class="btn-log-action" id="btn-log-salvar" disabled onclick="logSalvarMatriz()" style="display:none">
             <i class="fa-solid fa-floppy-disk"></i> Salvar
           </button>
@@ -219,7 +317,7 @@
         </div>
       </div>
 
-      <!-- Select de posto — opções com "P. " para bater com o Apps Script -->
+      <!-- Select de posto -->
       <select class="sel" id="log-sel-posto" onchange="logOnPostoChange(this.value)"
         style="margin-bottom:0;border-radius:0;border-top:none">
         <option value="">— Selecione um posto —</option>
@@ -262,9 +360,9 @@
         <option value="PAIVA E PAIVA COMBUSTIVEL">PAIVA E PAIVA COMBUSTIVEL</option>
       </select>
 
-      <!-- ── SUB-ABA MEDIÇÃO ── -->
+      <!-- ── SUB-ABA: MEDIÇÃO ── -->
       <div id="log-sub-medicao" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
-        <div style="font-size:.56rem;color:var(--tx3);font-family:var(--mono);text-align:right;padding:3px 8px;background:var(--sf);border:1px solid var(--bd);border-top:none">
+        <div style="font-size:.54rem;color:var(--tx3);font-family:var(--mono);text-align:right;padding:3px 8px;background:var(--sf);border:1px solid var(--bd);border-top:none">
           <i class="fa-solid fa-left-right"></i> SCROLL HORIZONTAL PARA VER TUDO
         </div>
         <div class="log-matrix-frame">
@@ -277,138 +375,188 @@
         </div>
       </div>
 
-      <!-- ── SUB-ABA COLETA DE PREÇOS ── -->
+      <!-- ── SUB-ABA: COLETA DE PREÇOS (mobile-first, 4 colunas) ── -->
       <div id="log-sub-coleta" style="display:none;flex-direction:column;flex:1;overflow:hidden">
-        <!-- Filtros completos igual ao Logistica.html -->
-        <div style="display:flex;flex-wrap:wrap;gap:5px;padding:6px 8px;background:var(--sf);border:1px solid var(--bd);border-top:none">
-          <div style="display:flex;flex-direction:column;gap:2px">
-            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">De</label>
-            <input type="date" id="lc-flt-de" class="map-sel" style="padding:4px 6px;font-size:.7rem" oninput="lcAplicarFiltros()">
+        <!-- Filtros compactos -->
+        <div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 7px;background:var(--sf);border:1px solid var(--bd);border-top:none">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">De</label>
+            <input type="date" id="lc-flt-de" class="map-sel" style="padding:3px 5px;font-size:.65rem" oninput="lcAplicarFiltros()">
           </div>
-          <div style="display:flex;flex-direction:column;gap:2px">
-            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Até</label>
-            <input type="date" id="lc-flt-ate" class="map-sel" style="padding:4px 6px;font-size:.7rem" oninput="lcAplicarFiltros()">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Até</label>
+            <input type="date" id="lc-flt-ate" class="map-sel" style="padding:3px 5px;font-size:.65rem" oninput="lcAplicarFiltros()">
           </div>
-          <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:90px">
-            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Posto Alvo</label>
-            <input type="text" id="lc-flt-posto" class="map-sel" placeholder="Buscar posto..." style="padding:4px 6px;font-size:.7rem;width:100%" oninput="lcAplicarFiltros()">
+          <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:80px">
+            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Posto Alvo</label>
+            <input type="text" id="lc-flt-posto" class="map-sel" placeholder="Buscar..." style="padding:3px 5px;font-size:.65rem;width:100%" oninput="lcAplicarFiltros()">
           </div>
-          <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:90px">
-            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Gerente</label>
-            <input type="text" id="lc-flt-gerente" class="map-sel" placeholder="Buscar gerente..." style="padding:4px 6px;font-size:.7rem;width:100%" oninput="lcAplicarFiltros()">
+          <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:80px">
+            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Gerente</label>
+            <input type="text" id="lc-flt-gerente" class="map-sel" placeholder="Gerente..." style="padding:3px 5px;font-size:.65rem;width:100%" oninput="lcAplicarFiltros()">
           </div>
-          <div style="display:flex;flex-direction:column;gap:2px">
-            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Tipo</label>
-            <select id="lc-flt-tipo" class="map-sel" style="padding:4px 6px;font-size:.7rem" onchange="lcAplicarFiltros()">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Tipo</label>
+            <select id="lc-flt-tipo" class="map-sel" style="padding:3px 5px;font-size:.65rem" onchange="lcAplicarFiltros()">
               <option value="">Todos</option>
               <option value="Próprio">Próprio</option>
               <option value="Concorrente">Concorrente</option>
             </select>
           </div>
-          <div style="display:flex;flex-direction:column;gap:2px">
-            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Supervisor</label>
-            <select id="lc-flt-sup" class="map-sel" style="padding:4px 6px;font-size:.7rem" onchange="lcAplicarFiltros()">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Supervisor</label>
+            <select id="lc-flt-sup" class="map-sel" style="padding:3px 5px;font-size:.65rem" onchange="lcAplicarFiltros()">
               <option value="">Todos</option>
               <option>Mauricio</option><option>Fabricio</option><option>Paulo</option>
               <option>Gledson</option><option>Rodrigo</option>
             </select>
           </div>
-          <div style="display:flex;flex-direction:column;gap:2px">
-            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Período</label>
-            <select id="lc-flt-dias" class="map-sel" style="padding:4px 6px;font-size:.7rem" onchange="lcCarregar()">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Período</label>
+            <select id="lc-flt-dias" class="map-sel" style="padding:3px 5px;font-size:.65rem" onchange="lcCarregar()">
               <option value="7">7 dias</option>
               <option value="15" selected>15 dias</option>
               <option value="30">30 dias</option>
             </select>
           </div>
           <div style="display:flex;align-items:flex-end">
-            <button onclick="lcLimparFiltros()" class="map-sel" style="padding:4px 8px;font-size:.7rem;cursor:pointer;display:flex;align-items:center;gap:4px;color:var(--tx3)">
-              <i class="fa-solid fa-filter-circle-xmark"></i> Limpar
+            <button onclick="lcLimparFiltros()" class="map-sel" style="padding:3px 7px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;gap:3px;color:var(--tx3)">
+              <i class="fa-solid fa-filter-circle-xmark"></i>
             </button>
           </div>
         </div>
-        <div style="font-size:.6rem;color:var(--tx3);font-family:var(--mono);padding:3px 10px;background:var(--sf2);border:1px solid var(--bd);border-top:none" id="lc-status">
+        <!-- Status bar -->
+        <div style="font-size:.58rem;color:var(--tx3);font-family:var(--mono);padding:3px 8px;background:var(--sf2);border:1px solid var(--bd);border-top:none" id="lc-status">
           Selecione um posto para ver as coletas.
         </div>
-        <!-- Tabela coleta -->
+        <!-- Tabela compacta mobile (4 colunas + expansão por toque) -->
         <div style="flex:1;overflow:auto;border:1px solid var(--bd);border-top:none">
-          <table style="border-collapse:collapse;width:100%;min-width:620px;font-size:.76rem">
+          <table class="lc-compact-table" id="lc-compact-table">
             <thead>
-              <tr style="background:var(--sf2);position:sticky;top:0;z-index:5">
-                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd);white-space:nowrap">DATA</th>
-                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">POSTO</th>
-                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">GERENTE</th>
-                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">POSTO ALVO</th>
-                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">SUP.</th>
-                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:#f9c74f;border-bottom:1px solid var(--bd)">ET</th>
-                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:var(--ac);border-bottom:1px solid var(--bd)">GC</th>
-                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:#4895ef;border-bottom:1px solid var(--bd)">GA</th>
-                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:#ff4d6d;border-bottom:1px solid var(--bd)">S10</th>
-                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:#c77dff;border-bottom:1px solid var(--bd)">S500</th>
-                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">FOTO</th>
+              <tr>
+                <th class="lc-th" style="width:46px">DATA</th>
+                <th class="lc-th" style="width:70px">POSTO</th>
+                <th class="lc-th">ALVO</th>
+                <th class="lc-th">PREÇOS</th>
               </tr>
             </thead>
             <tbody id="lc-tbody">
-              <tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--tx3)">Selecione um posto no filtro acima.</td></tr>
+              <tr>
+                <td colspan="4" style="padding:1.5rem;text-align:center;color:var(--tx3)">
+                  Selecione um posto no filtro acima.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
         <!-- Popover foto inline -->
         <div id="lc-popover" style="display:none;position:fixed;z-index:500;background:var(--sf);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);width:240px;pointer-events:none">
-          <div style="background:var(--sf2);padding:.4rem .7rem;border-bottom:1px solid var(--bd);font-size:.65rem;font-family:var(--mono);color:var(--tx2)" id="lc-pop-label">Foto</div>
-          <div style="padding:.4rem;background:#0a0c10"><img id="lc-pop-img" src="" style="width:100%;border-radius:5px"></div>
-          <div style="padding:.35rem .7rem;background:var(--sf2);border-top:1px solid var(--bd)">
-            <a id="lc-pop-link" href="#" target="_blank" style="font-size:.62rem;color:var(--ac);text-decoration:underline">Abrir no Drive</a>
+          <div style="background:var(--sf2);padding:.38rem .65rem;border-bottom:1px solid var(--bd);font-size:.62rem;font-family:var(--mono);color:var(--tx2)" id="lc-pop-label">Foto</div>
+          <div style="padding:.38rem;background:#0a0c10"><img id="lc-pop-img" src="" style="width:100%;border-radius:5px"></div>
+          <div style="padding:.32rem .65rem;background:var(--sf2);border-top:1px solid var(--bd)">
+            <a id="lc-pop-link" href="#" target="_blank" style="font-size:.6rem;color:var(--ac);text-decoration:underline">Abrir no Drive</a>
           </div>
         </div>
       </div>
 
     </section>
 
+    <!-- ═══ ABA: MAIS+ ═══ -->
     <section class="scr" id="s-mais">
       <div id="mais-conteudo"><div class="empty">Selecione uma opção no menu Mais+</div></div>
     </section>
 
   </main>
 
+  <!-- BOTTOM NAV -->
   <nav class="bnav">
-    <button class="nbtn active" onclick="setTab(this,'comp')"><span class="ni"><i class="fa-solid fa-scale-balanced"></i></span><span class="nl">Compara</span></button>
-    <button class="nbtn" onclick="setTab(this,'ranking')"><span class="ni"><i class="fa-solid fa-trophy"></i></span><span class="nl">Ranking</span></button>
-    <button class="nbtn" onclick="setTab(this,'regional')"><span class="ni"><i class="fa-solid fa-map"></i></span><span class="nl">Regional</span></button>
-    <button class="nbtn" onclick="setTab(this,'mapa')"><span class="ni"><i class="fa-solid fa-map-location-dot"></i></span><span class="nl">Mapa</span></button>
-    <button class="nbtn" onclick="setTab(this,'hist'); carregarHistorico()"><span class="ni"><i class="fa-solid fa-chart-line"></i></span><span class="nl">Histórico</span></button>
-    <button class="nbtn" onclick="abrirMais()"><span class="ni"><i class="fa-solid fa-circle-plus"></i></span><span class="nl">Mais+</span></button>
+    <button class="nbtn active" onclick="setTab(this,'comp')">
+      <span class="ni"><i class="fa-solid fa-scale-balanced"></i></span>
+      <span class="nl">Compara</span>
+    </button>
+    <button class="nbtn" onclick="setTab(this,'ranking')">
+      <span class="ni"><i class="fa-solid fa-trophy"></i></span>
+      <span class="nl">Ranking</span>
+    </button>
+    <button class="nbtn" onclick="setTab(this,'regional')">
+      <span class="ni"><i class="fa-solid fa-map"></i></span>
+      <span class="nl">Regional</span>
+    </button>
+    <button class="nbtn" onclick="setTab(this,'mapa')">
+      <span class="ni"><i class="fa-solid fa-map-location-dot"></i></span>
+      <span class="nl">Mapa</span>
+    </button>
+    <button class="nbtn" onclick="setTab(this,'hist'); carregarHistorico()">
+      <span class="ni"><i class="fa-solid fa-chart-line"></i></span>
+      <span class="nl">Histórico</span>
+    </button>
+    <button class="nbtn" onclick="abrirMais()">
+      <span class="ni"><i class="fa-solid fa-circle-plus"></i></span>
+      <span class="nl">Mais+</span>
+    </button>
   </nav>
 </div>
 
-<!-- MODAL MAIS+ -->
+<!-- ═══ MODAL MAIS+ ═══ -->
 <div class="moverlay" id="modal-mais" onclick="fecharMais(event)">
   <div class="msheet">
     <button class="mclose" onclick="fecharMaisBtn()">✕</button>
     <div class="mtitle">Mais funções</div>
     <div class="mgrid">
-      <div class="mitem" onclick="irPara('amostra')"><span class="mic"><i class="fa-solid fa-flask-vial"></i></span><div class="mlbl">Amostra-Testemunha</div><div class="mbadge imp">importante</div></div>
-      <div class="mitem" onclick="irPara('notif')"><span class="mic"><i class="fa-solid fa-bell"></i></span><div class="mlbl">Notificações</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('distribuidor')"><span class="mic"><i class="fa-solid fa-industry"></i></span><div class="mlbl">Distribuidor</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('simulador')"><span class="mic"><i class="fa-solid fa-calculator"></i></span><div class="mlbl">Simulador</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('lancamento')"><span class="mic"><i class="fa-solid fa-pen-to-square"></i></span><div class="mlbl">Lançar Preço</div><div class="mbadge">ativo</div></div>
-      <div class="mitem" onclick="irPara('logistica')"><span class="mic"><i class="fa-solid fa-truck-fast"></i></span><div class="mlbl">Logística</div><div class="mbadge">novo</div></div>
-      <div class="mitem" onclick="irPara('relatorios')"><span class="mic"><i class="fa-solid fa-chart-bar"></i></span><div class="mlbl">Relatórios</div><div class="mbadge">ativo</div></div>
+      <div class="mitem" onclick="irPara('amostra')">
+        <span class="mic"><i class="fa-solid fa-flask-vial"></i></span>
+        <div class="mlbl">Amostra-Testemunha</div>
+        <div class="mbadge imp">importante</div>
+      </div>
+      <div class="mitem" onclick="irPara('notif')">
+        <span class="mic"><i class="fa-solid fa-bell"></i></span>
+        <div class="mlbl">Notificações</div>
+        <div class="mbadge">ativo</div>
+      </div>
+      <div class="mitem" onclick="irPara('distribuidor')">
+        <span class="mic"><i class="fa-solid fa-industry"></i></span>
+        <div class="mlbl">Distribuidor</div>
+        <div class="mbadge">ativo</div>
+      </div>
+      <div class="mitem" onclick="irPara('simulador')">
+        <span class="mic"><i class="fa-solid fa-calculator"></i></span>
+        <div class="mlbl">Simulador</div>
+        <div class="mbadge">ativo</div>
+      </div>
+      <div class="mitem" onclick="irPara('lancamento')">
+        <span class="mic"><i class="fa-solid fa-pen-to-square"></i></span>
+        <div class="mlbl">Lançar Preço</div>
+        <div class="mbadge">ativo</div>
+      </div>
+      <div class="mitem" onclick="irPara('logistica')">
+        <span class="mic"><i class="fa-solid fa-truck-fast"></i></span>
+        <div class="mlbl">Logística</div>
+        <div class="mbadge">novo</div>
+      </div>
+      <div class="mitem" onclick="irPara('relatorios')">
+        <span class="mic"><i class="fa-solid fa-chart-bar"></i></span>
+        <div class="mlbl">Relatórios</div>
+        <div class="mbadge">ativo</div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL MÉDIA -->
+<!-- ═══ MODAL MÉDIA ═══ -->
 <div class="moverlay" id="modal-media" onclick="fecharMedia(event)">
   <div class="msheet">
     <button class="mclose" onclick="fecharMediaBtn()">✕</button>
     <div class="mtitle">Como a média é calculada</div>
-    <div class="csub" style="margin-bottom:.6rem">Posto → Regional (supervisor) → Geral. Cada nível conta 1x.</div>
+    <div class="csub" style="margin-bottom:.55rem">Posto → Regional (supervisor) → Geral. Cada nível conta 1x.</div>
     <div id="media-detalhe-body"><div class="empty">Carregando...</div></div>
   </div>
 </div>
 
-<div class="toast" id="toast"><div class="ttitle" id="t-title"></div><div id="t-msg"></div></div>
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast">
+  <div class="ttitle" id="t-title"></div>
+  <div id="t-msg"></div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
