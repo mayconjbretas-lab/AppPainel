@@ -398,6 +398,17 @@ function irPara(modulo) {
     if (sec) { sec.classList.add('active'); sec.style.display = 'flex'; }
     logPopularSelects();
     logSwitchSub('medicao');
+    // Re-aplica sticky da linha 2 agora que a seção está visível
+    requestAnimationFrame(() => {
+      const thead = document.getElementById('log-matrix-thead');
+      if (!thead) return;
+      const tr1 = thead.querySelector('tr:first-child');
+      if (!tr1) return;
+      const h = tr1.offsetHeight || 36;
+      const topVal = Math.ceil(h) + 'px';
+      thead.querySelectorAll('tr:last-child th').forEach(th => { th.style.top = topVal; });
+      document.documentElement.style.setProperty('--log-thead-h', topVal);
+    });
     return;
   }
   document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
@@ -1462,16 +1473,30 @@ function logMontarCabecalho(grupos, vendaCols) {
 
   thead.innerHTML = r1 + r2;
 
-  // Duplo rAF: garante layout calculado antes de medir.
-  // Aplica top diretamente nos th da linha 2 — não depende de CSS var.
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  // Aplica o top da linha 2 em múltiplos momentos para garantir que funcione
+  // independente do estado de visibilidade da seção.
+  function _aplicarTopLinha2() {
     const tr1 = thead.querySelector('tr:first-child');
-    if (!tr1) return;
-    const h = tr1.getBoundingClientRect().height;
+    if (!tr1) return 0;
+    // offsetHeight funciona mesmo sem o elemento estar no viewport
+    const h = tr1.offsetHeight || tr1.getBoundingClientRect().height || 36;
     const topVal = Math.ceil(h) + 'px';
     thead.querySelectorAll('tr:last-child th').forEach(th => { th.style.top = topVal; });
     document.documentElement.style.setProperty('--log-thead-h', topVal);
-  }));
+    return h;
+  }
+
+  // Tenta imediatamente
+  const h0 = _aplicarTopLinha2();
+  // Se não mediu corretamente (seção oculta), tenta após cada frame
+  if (!h0 || h0 < 10) {
+    requestAnimationFrame(() => {
+      const h1 = _aplicarTopLinha2();
+      if (!h1 || h1 < 10) {
+        requestAnimationFrame(() => _aplicarTopLinha2());
+      }
+    });
+  }
 }
 
 function logMontarLinhas(dados) {
