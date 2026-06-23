@@ -16,7 +16,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
 <link rel="stylesheet" href="./jbretas2.css">
 <script>
-  // Aplica o tema salvo IMEDIATAMENTE, antes do primeiro paint, para evitar flash de tema errado
   (function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('jb_theme') || 'dark'); })();
 </script>
 </head>
@@ -58,7 +57,7 @@
     </div>
     <div class="tb-right">
       <div class="live"><span class="ldot"></span><span id="live-txt">ao vivo</span></div>
-      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Alternar tema claro/escuro"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Alternar tema"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
       <button class="sair-btn" onclick="sair()"><i class="fa-solid fa-right-from-bracket"></i></button>
     </div>
   </header>
@@ -73,7 +72,6 @@
         <div class="kbox"><div class="klbl">Nosso GC médio</div><div class="kval ac" id="kv-mgc">--</div></div>
       </div>
       <div class="upd-row"><span id="upd-txt">Carregando...</span><button class="refresh-btn" onclick="carregarDados()">↻</button></div>
-
       <div class="card">
         <div class="chdr">
           <div class="ctitle">Monitor de Preços</div>
@@ -81,44 +79,23 @@
         </div>
         <div class="cbody">
           <div class="fueltab-row" id="cmp-fuel-tabs"></div>
-
           <div class="filtros-comp-grid">
-            <div>
-              <label class="filtro-lbl">Posto</label>
-              <select class="sel" id="cmp-posto" style="margin-bottom:0" onchange="cmpSetPosto(this.value)">
-                <option value="">Todos os postos</option>
-              </select>
-            </div>
-            <div>
-              <label class="filtro-lbl">Supervisor</label>
-              <select class="sel" id="cmp-sup" style="margin-bottom:0" onchange="cmpSetSup(this.value)">
-                <option value="">Todos supervisores</option>
-              </select>
-            </div>
-            <div>
-              <label class="filtro-lbl">Bandeira</label>
-              <select class="sel" id="cmp-band" style="margin-bottom:0" onchange="cmpSetBand(this.value)">
-                <option value="">Todas bandeiras</option>
-              </select>
-            </div>
+            <div><label class="filtro-lbl">Posto</label><select class="sel" id="cmp-posto" style="margin-bottom:0" onchange="cmpSetPosto(this.value)"><option value="">Todos os postos</option></select></div>
+            <div><label class="filtro-lbl">Supervisor</label><select class="sel" id="cmp-sup" style="margin-bottom:0" onchange="cmpSetSup(this.value)"><option value="">Todos supervisores</option></select></div>
+            <div><label class="filtro-lbl">Bandeira</label><select class="sel" id="cmp-band" style="margin-bottom:0" onchange="cmpSetBand(this.value)"><option value="">Todas bandeiras</option></select></div>
           </div>
-
           <label style="display:flex;align-items:center;gap:.4rem;font-size:.76rem;color:var(--tx2);margin:.5rem 0">
             <input type="checkbox" id="cmp-so-mudou" onchange="cmpToggleSoMudou(this)"> Só quem mudou desde ontem
           </label>
-
           <div class="strat-box">
             <div class="csub" style="margin-bottom:.45rem">Estratégia de preço sugerido</div>
             <div class="strat-row" id="cmp-strat-tabs"></div>
             <div class="strat-desc" id="cmp-strat-desc"></div>
           </div>
-
           <div class="myavg-grid" id="cmp-myavg"></div>
-
           <div id="cmp-regions"></div>
         </div>
       </div>
-
       <div class="card">
         <div class="chdr"><div class="ctitle">Mapa de calor — G. Comum</div><div class="csub">Distribuição por faixa na rede</div></div>
         <div class="cbody">
@@ -159,10 +136,8 @@
       <div class="sdiv">Mapa de preços — BH / Grande BH</div>
       <div class="map-ctrl">
         <select class="map-sel" id="mf" onchange="mapaFuelChange(this.value)">
-          <option value="GC">G. Comum</option>
-          <option value="GA">G. Aditivada</option>
-          <option value="ET">Etanol</option>
-          <option value="S10">Diesel S10</option>
+          <option value="GC">G. Comum</option><option value="GA">G. Aditivada</option>
+          <option value="ET">Etanol</option><option value="S10">Diesel S10</option>
         </select>
         <button class="map-ftag on" id="mbtn-todos" onclick="mapaSetSup(this,'todos')">Todos</button>
         <button class="map-ftag" id="mbtn-Mauricio" onclick="mapaSetSup(this,'Mauricio')">Mauricio</button>
@@ -185,20 +160,9 @@
     <section class="scr" id="s-hist">
       <div class="sdiv">Filtrar posto e período</div>
       <div class="filtro-row" style="gap:.4rem;margin-bottom:.5rem">
-        <select class="map-sel" id="hist-posto" style="flex:1;padding:6px 8px" onchange="carregarHistorico()">
-          <option value="">Todos os postos</option>
-        </select>
-        <select class="map-sel" id="hist-dias" onchange="carregarHistorico()">
-          <option value="7">7 dias</option>
-          <option value="30" selected>30 dias</option>
-          <option value="90">Trimestre</option>
-        </select>
-        <select class="map-sel" id="hist-fuel" onchange="renderGrafico()">
-          <option value="GC">G. Comum</option>
-          <option value="GA">G. Aditivada</option>
-          <option value="ET">Etanol</option>
-          <option value="S10">Diesel S10</option>
-        </select>
+        <select class="map-sel" id="hist-posto" style="flex:1;padding:6px 8px" onchange="carregarHistorico()"><option value="">Todos os postos</option></select>
+        <select class="map-sel" id="hist-dias" onchange="carregarHistorico()"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">Trimestre</option></select>
+        <select class="map-sel" id="hist-fuel" onchange="renderGrafico()"><option value="GC">G. Comum</option><option value="GA">G. Aditivada</option><option value="ET">Etanol</option><option value="S10">Diesel S10</option></select>
       </div>
       <div class="card">
         <div class="chdr"><div class="ctitle">Evolução de Preços</div><div class="csub" id="hist-sub">Selecione um posto</div></div>
@@ -207,38 +171,55 @@
           <canvas id="hist-canvas" style="width:100%;max-height:220px;display:block"></canvas>
         </div>
       </div>
-      <div class="card">
-        <div class="chdr"><div class="ctitle">Resumo do Período</div></div>
-        <div class="cbody" id="hist-resumo"><div class="empty">Carregando...</div></div>
-      </div>
-      <div class="card">
-        <div class="chdr"><div class="ctitle">Registros recentes</div><div class="csub" id="hist-qtd"></div></div>
-        <div class="cbody" id="hist-lista"><div class="empty">Carregando...</div></div>
-      </div>
+      <div class="card"><div class="chdr"><div class="ctitle">Resumo do Período</div></div><div class="cbody" id="hist-resumo"><div class="empty">Carregando...</div></div></div>
+      <div class="card"><div class="chdr"><div class="ctitle">Registros recentes</div><div class="csub" id="hist-qtd"></div></div><div class="cbody" id="hist-lista"><div class="empty">Carregando...</div></div></div>
     </section>
 
-    <section class="scr" id="s-logistica">
-      <div class="sdiv">Selecione o posto</div>
-      <select class="sel" id="log-sel-posto" onchange="carregarLogistica(this.value)">
-        <option value="">Selecione um posto...</option>
+    <!-- ═══════════════════════════════════════════════════════════
+         ABA LOGÍSTICA — Matriz Integrada de Suprimentos (NOVA)
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="scr" id="s-logistica" style="padding:0;display:none;flex-direction:column;height:calc(100vh - 54px - 62px)">
+
+      <!-- Cabeçalho da matriz -->
+      <div class="log-matrix-header">
+        <div class="log-matrix-title">
+          <i class="fa-solid fa-calculator" style="color:var(--ac)"></i>
+          Matriz Integrada de Suprimentos
+          <span class="log-matrix-sub" id="log-matrix-sub">• Selecione um posto</span>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+          <button class="btn-log-refresh" id="btn-log-refresh" onclick="logRefresh()" title="Recarregar dados da planilha">
+            <i class="fa-solid fa-rotate" id="btn-log-refresh-icon"></i>
+          </button>
+          <span id="log-ultima-atualizacao" style="font-size:.58rem;color:var(--tx3);font-family:var(--mono)">—</span>
+          <button class="btn-log-action" id="btn-log-salvar" disabled onclick="logSalvarMatriz()">
+            <i class="fa-solid fa-floppy-disk"></i> Salvar
+          </button>
+          <button class="btn-log-action btn-log-pre" id="btn-log-pre" disabled onclick="logEnviarPrePedido()">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Pré-Pedido
+          </button>
+        </div>
+      </div>
+
+      <!-- Select de posto -->
+      <select class="sel" id="log-sel-posto" onchange="carregarLogMatriz(this.value)"
+        style="margin-bottom:0;border-radius:0;border-top:none;border-left:1px solid var(--bd);border-right:1px solid var(--bd)">
+        <option value="">— Selecione um posto —</option>
       </select>
 
-      <div id="log-empty" class="empty">Selecione um posto acima para ver o resumo do dia.</div>
+      <!-- Scroll hint -->
+      <div style="font-size:.58rem;color:var(--tx3);font-family:var(--mono);text-align:right;padding:3px 8px;background:var(--sf);border:1px solid var(--bd);border-top:none">
+        <i class="fa-solid fa-left-right"></i> SCROLL HORIZONTAL PARA VER TUDO
+      </div>
 
-      <div id="log-content" style="display:none">
-        <div class="log-headcard">
-          <div class="log-head-row">
-            <div>
-              <div class="log-posto-nome" id="log-posto-nome">--</div>
-              <div class="csub" id="log-data-ref">--</div>
-            </div>
-            <button class="btn-enviar" id="log-btn-salvar" style="width:auto;padding:.6rem 1.1rem;margin:0" onclick="salvarPedidosLogistica()">
-              <i class="fa-solid fa-paper-plane"></i> Enviar pedido
-            </button>
-          </div>
-        </div>
-
-        <div id="log-cards"></div>
+      <!-- Tabela com scroll -->
+      <div class="log-matrix-frame">
+        <table class="log-matrix-table">
+          <thead id="log-matrix-thead"></thead>
+          <tbody id="log-matrix-tbody">
+            <tr><td style="padding:1.5rem;color:var(--tx3);text-align:center">Selecione um posto para carregar a matriz do mês.</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -258,6 +239,7 @@
   </nav>
 </div>
 
+<!-- MODAL MAIS+ -->
 <div class="moverlay" id="modal-mais" onclick="fecharMais(event)">
   <div class="msheet">
     <button class="mclose" onclick="fecharMaisBtn()">✕</button>
@@ -269,16 +251,18 @@
       <div class="mitem" onclick="irPara('simulador')"><span class="mic"><i class="fa-solid fa-calculator"></i></span><div class="mlbl">Simulador</div><div class="mbadge">ativo</div></div>
       <div class="mitem" onclick="irPara('lancamento')"><span class="mic"><i class="fa-solid fa-pen-to-square"></i></span><div class="mlbl">Lançar Preço</div><div class="mbadge">ativo</div></div>
       <div class="mitem" onclick="irPara('logistica')"><span class="mic"><i class="fa-solid fa-truck-fast"></i></span><div class="mlbl">Logística</div><div class="mbadge">novo</div></div>
+      <div class="mitem" onclick="irPara('coleta-simples')"><span class="mic"><i class="fa-solid fa-tags"></i></span><div class="mlbl">Coleta de Preços</div><div class="mbadge">novo</div></div>
       <div class="mitem" onclick="irPara('relatorios')"><span class="mic"><i class="fa-solid fa-chart-bar"></i></span><div class="mlbl">Relatórios</div><div class="mbadge">ativo</div></div>
     </div>
   </div>
 </div>
 
+<!-- MODAL MÉDIA -->
 <div class="moverlay" id="modal-media" onclick="fecharMedia(event)">
   <div class="msheet">
     <button class="mclose" onclick="fecharMediaBtn()">✕</button>
     <div class="mtitle">Como a média é calculada</div>
-    <div class="csub" style="margin-bottom:.6rem">Posto → Regional (supervisor) → Geral. Cada nível conta 1x, sem peso por quantidade de concorrentes.</div>
+    <div class="csub" style="margin-bottom:.6rem">Posto → Regional (supervisor) → Geral. Cada nível conta 1x.</div>
     <div id="media-detalhe-body"><div class="empty">Carregando...</div></div>
   </div>
 </div>
