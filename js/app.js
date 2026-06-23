@@ -1384,71 +1384,90 @@ function logMontarCabecalho(grupos, vendaCols) {
   const table = thead.closest('table');
   if (table) table.id = 'log-matrix-table';
 
-  // ── LINHA ÚNICA de cabeçalho ─────────────────────────────
-  // thead com 1 só <tr> é o único jeito garantido de sticky
-  // funcionar em todos os browsers sem bugs de rowspan.
-  // Cada coluna mostra "GRUPO\nCOMB" em duas linhas dentro da mesma célula.
-  let r = '<tr>';
+  // ── Estilos base reutilizados ─────────────────────────────
+  const STICKY_BASE = 'position:sticky;z-index:18;';
+  const TH_BASE     = 'text-align:center;white-space:nowrap;padding:.4rem .5rem;';
+  const BG_MAP = {
+    medicao:   { bg: 'rgba(72,149,239,.13)',  borda: '#4895ef' },
+    venda:     { bg: 'rgba(212,175,55,.12)',   borda: '#d4af37' },
+    carga:     { bg: 'rgba(199,125,255,.11)',  borda: '#c77dff' },
+    prePedido: { bg: 'rgba(249,199,79,.10)',   borda: '#f9c74f' },
+    pedido:    { bg: 'rgba(255,158,0,.10)',    borda: '#ff9e00' },
+  };
 
-  // Coluna DIA — sticky left + top
-  r += '<th style="' +
+  // ── Coluna DIA: rowspan=2, sticky left+top ────────────────
+  const DIA_STYLE =
     'position:sticky;left:0;top:0;z-index:30;' +
     'background:#0d1120;' +
     'min-width:62px;padding:.4rem .5rem;' +
-    'font-size:.65rem;text-align:center;' +
+    'font-size:.68rem;font-weight:700;' +
+    'color:#5a6478;text-align:center;' +
     'border-bottom:2px solid #2a3550;' +
-    'white-space:nowrap;color:#5a6478' +
-    '">DIA</th>';
+    'border-right:2px solid #1e2845;';
+
+  // ── LINHA 1 — grupos (MEDIÇÃO, VENDA, CARGA, PRÉ-PEDIDO, PEDIDO FINAL) ──
+  let r1 = '<tr>';
+  r1 += '<th rowspan="2" style="' + DIA_STYLE + '">DIA</th>';
 
   LOG_CATEGORIAS.forEach((cat, ci) => {
-    const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
-
-    // Separador entre grupos (exceto antes do primeiro)
+    const cols   = logColsDaCategoria(cat.chave, grupos, vendaCols);
+    const span   = cols.length;
+    const m      = BG_MAP[cat.chave] || { bg: 'transparent', borda: '#2a3550' };
+    // Separador visual entre grupos
     if (ci > 0) {
-      r += '<th style="' +
-        'position:sticky;top:0;z-index:10;' +
-        'background:#060810;width:10px;min-width:10px;' +
+      r1 += '<th rowspan="2" style="' +
+        'position:sticky;top:0;z-index:20;' +
+        'background:#060810;width:8px;min-width:8px;' +
         'border:none;padding:0;border-bottom:2px solid #060810' +
         '"></th>';
     }
+    r1 += '<th colspan="' + span + '" style="' +
+      STICKY_BASE + 'top:0;z-index:20;' +
+      'background:' + m.bg + ';' +
+      TH_BASE +
+      'font-family:var(--mono,monospace);font-size:.65rem;font-weight:700;' +
+      'color:' + cat.cor + ';' +
+      'letter-spacing:.03em;text-transform:uppercase;' +
+      'border-bottom:2px solid ' + m.borda + ';' +
+      'border-left:1px solid ' + m.borda + '33;' +
+      '">' + cat.titulo + '</th>';
+  });
+  r1 += '</tr>';
 
+  // ── LINHA 2 — combustíveis (G.C, G.A, ET, DS10 …) ───────
+  let r2 = '<tr>';
+  // (sem DIA — já tem rowspan=2)
+
+  LOG_CATEGORIAS.forEach((cat, ci) => {
+    const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
+    const m    = BG_MAP[cat.chave] || { bg: 'transparent', borda: '#2a3550' };
+    // Separador (já foi emitido no r1 com rowspan=2)
     cols.forEach((col, gi) => {
       const isFirst = gi === 0;
-      const isLast  = gi === cols.length - 1;
-      // Fundo levemente colorido para identificar o grupo
-      const bgMap = {
-        medicao:'rgba(72,149,239,.12)',
-        venda:'rgba(212,175,55,.10)',
-        carga:'rgba(199,125,255,.10)',
-        prePedido:'rgba(249,199,79,.08)',
-        pedido:'rgba(255,158,0,.08)',
-      };
-      const bg = bgMap[cat.chave] || 'transparent';
-      // Borda esquerda no primeiro col de cada grupo (visual de separação interna)
-      const borderL = isFirst && ci > 0 ? '' : (isFirst ? '' : '');
-      r += '<th style="' +
-        'position:sticky;top:0;z-index:10;' +
-        'background:' + bg + ';' +
-        'min-width:72px;padding:.3rem .4rem;' +
-        'font-size:.6rem;text-align:center;' +
-        'border-bottom:2px solid #2a3550;' +
-        'white-space:nowrap;' +
-        'line-height:1.25' +
-        '">' +
-        // Nome do grupo na linha 1 (só na primeira coluna do grupo)
-        '<span style="display:block;font-size:.55rem;color:' + cat.cor + ';opacity:.8;margin-bottom:1px">' +
-          (isFirst ? cat.titulo.replace(/^[^\s]+\s/, '') : '') +  // remove emoji, mantém texto
-        '</span>' +
-        // Nome do combustível na linha 2
-        '<span style="display:block;font-size:.65rem;color:' + cat.cor + ';font-weight:700">' +
-          col.abv +
-        '</span>' +
-        '</th>';
+      r2 += '<th style="' +
+        STICKY_BASE + 'top:var(--log-thead-h,38px);z-index:19;' +
+        'background:' + m.bg + ';' +
+        TH_BASE +
+        'font-family:var(--mono,monospace);font-size:.68rem;font-weight:700;' +
+        'color:' + cat.cor + ';' +
+        'min-width:72px;' +
+        'border-bottom:2px solid ' + m.borda + ';' +
+        (isFirst ? 'border-left:1px solid ' + m.borda + '33;' : '') +
+        '">' + col.abv + '</th>';
     });
   });
+  r2 += '</tr>';
 
-  r += '</tr>';
-  thead.innerHTML = r;
+  thead.innerHTML = r1 + r2;
+
+  // Ajusta --log-thead-h para a 2ª linha de th ficar exatamente embaixo da 1ª
+  requestAnimationFrame(() => {
+    const firstTh = thead.querySelector('tr:first-child th:first-child');
+    if (firstTh) {
+      const h = firstTh.getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--log-thead-h', Math.round(h) + 'px');
+    }
+  });
 }
 
 function logMontarLinhas(dados) {
