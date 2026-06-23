@@ -333,11 +333,16 @@ function povoarSelects() {
     selLog.innerHTML = '<option value="">Selecione um posto...</option>';
     lista.forEach(p => {
       const opt = document.createElement('option');
-      opt.value = p;
-      opt.textContent = p;
+      // value com "P. " para bater com NOMES_POSTOS do Apps Script
+      opt.value = 'P. ' + p;
+      opt.textContent = 'P. ' + p;
       selLog.appendChild(opt);
     });
-    if (valSalvoLog && POSTOS_DADOS[valSalvoLog]) selLog.value = valSalvoLog;
+    // restaura seleção anterior (tanto "ALEX" quanto "P. ALEX")
+    if (valSalvoLog) {
+      const normSalvo = valSalvoLog.startsWith('P. ') ? valSalvoLog : 'P. ' + valSalvoLog;
+      selLog.value = normSalvo;
+    }
   }
   const selPosto = document.getElementById('cmp-posto');
   if (selPosto) {
@@ -1219,7 +1224,11 @@ function logSwitchSub(sub) {
 
 function logOnPostoChange(posto) {
   LC_TODAS = [];
-  carregarLogMatriz(posto);
+  // O select pode passar "ALEX" ou "P. ALEX" — normaliza para o formato
+  // que o Apps Script espera ("P. ALEX"), igual ao NOMES_POSTOS do Code.gs.
+  // Se o valor já começar com "P. " deixa como está; senão adiciona o prefixo.
+  const postoCompleto = posto && !posto.startsWith('P. ') ? 'P. ' + posto : posto;
+  carregarLogMatriz(postoCompleto);
   if (LOG_SUB_ATIVA === 'coleta') lcCarregar();
 }
 
