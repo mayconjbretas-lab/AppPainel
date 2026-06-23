@@ -7,11 +7,7 @@
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5EIYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
 
-const USUARIOS_ADM = [
-  {email:'bretas.fcb@jbretas.com',  senha:'FelipeJbretas'},
-  {email:'eduardo@jbretas.com', senha:'EduardoJbretas'},
-  {email:'adm2@jbretas.com', senha:'adm456'},
-];
+const USUARIOS_ADM = [];
 
 // MAP_POSTOS — coordenadas fixas dos postos próprios
 const MAP_POSTOS = [
