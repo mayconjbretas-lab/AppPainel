@@ -1,4 +1,4 @@
-const CACHE = 'jbretas-precos-v1';
+const CACHE = 'jbretas-precos-v2';
 const ASSETS = [
   './index.html',
   './manifest.json',
