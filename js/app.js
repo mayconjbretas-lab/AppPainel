@@ -1346,16 +1346,36 @@ async function carregarLogMatriz(posto) {
     LOG_MAT_DADOS = null; LOG_MAT_EDICOES = {};
     logAtualizarBotoes(); return;
   }
-  // Usa o nome exatamente como veio — sem remover/recolocar "P. " para não corromper acentos
-  // (P. ANA LÚCIA, P. ESPAÇO REAL, P. GLÓRIA etc. devem ir intactos ao Apps Script)
   LOG_MAT_POSTO_ATUAL = posto;
   LOG_MAT_EDICOES = {};
   if (sub)   sub.textContent = '• Carregando ' + posto + '...';
   if (tbody) tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--tx3);text-align:center"><div class="loading-spin" style="margin:0 auto"></div></td></tr>';
   logAtualizarBotoes();
+
+  // Função que tenta buscar um nome específico
+  async function _tentarBuscar(nomePosto) {
+    const res  = await fetch(API_URL + '?tipo=mesCompleto&posto=' + encodeURIComponent(nomePosto));
+    return await res.json();
+  }
+
+  // Remove acentos para fallback (P. ANA LÚCIA → P. ANA LUCIA)
+  function _semAcento(s) {
+    return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
   try {
-    const res  = await fetch(API_URL + '?tipo=mesCompleto&posto=' + encodeURIComponent(posto));
-    const json = await res.json();
+    let json = await _tentarBuscar(posto);
+
+    // Se não encontrou e o nome tem acento, tenta sem acento
+    if ((json.erro || !json.success) && _semAcento(posto) !== posto) {
+      const postoSemAcento = _semAcento(posto);
+      const json2 = await _tentarBuscar(postoSemAcento);
+      if (json2.success && !json2.erro) {
+        json = json2;
+        LOG_MAT_POSTO_ATUAL = postoSemAcento; // salva o que funcionou
+      }
+    }
+
     if (json.erro || !json.success) {
       if (sub)   sub.textContent = '• Erro: ' + (json.erro || 'Falha');
       if (tbody) tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--dg);text-align:center">' + (json.erro || 'Erro') + '</td></tr>';
