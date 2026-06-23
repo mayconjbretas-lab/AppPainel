@@ -247,8 +247,20 @@ function renderDetalheMedia() {
 
 // ════════════════════════════════════════════════════════════
 // LOOKUP / NORMALIZAÇÃO DE POSTOS
-// (ALIASES_POSTO definido em config.js — não redeclarar aqui)
 // ════════════════════════════════════════════════════════════
+const ALIASES_POSTO = {
+  // planilha grava abreviado → chave real em POSTOS_DADOS
+  'LOURA':                    'LOURA EMPREENDIMENTOS',
+  'P. LOURA':                 'LOURA EMPREENDIMENTOS',
+  'MIRAGEM':                  'MIRAGEM JBRETAS',
+  'P. MIRAGEM':               'MIRAGEM JBRETAS',
+  'BEATRIZ':                  'PAIVA E PAIVA COMBUSTIVEL',
+  'P. BEATRIZ':               'PAIVA E PAIVA COMBUSTIVEL',
+  'PAIVA E PAIVA':            'PAIVA E PAIVA COMBUSTIVEL',
+  'BARBOSA - DUDU':           'BARBOSA - DUDU',
+  'SANTA INES - JOAQUIM':     'SANTA INES - JOAQUIM',
+};
+
 function normalizarTexto(s) {
   return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
 }
