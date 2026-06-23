@@ -1462,14 +1462,16 @@ function logMontarCabecalho(grupos, vendaCols) {
 
   thead.innerHTML = r1 + r2;
 
-  // Ajusta --log-thead-h para a 2ª linha de th ficar exatamente embaixo da 1ª
-  requestAnimationFrame(() => {
-    const firstTh = thead.querySelector('tr:first-child th:first-child');
-    if (firstTh) {
-      const h = firstTh.getBoundingClientRect().height;
-      document.documentElement.style.setProperty('--log-thead-h', Math.round(h) + 'px');
-    }
-  });
+  // Duplo rAF: garante layout calculado antes de medir.
+  // Aplica top diretamente nos th da linha 2 — não depende de CSS var.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const tr1 = thead.querySelector('tr:first-child');
+    if (!tr1) return;
+    const h = tr1.getBoundingClientRect().height;
+    const topVal = Math.ceil(h) + 'px';
+    thead.querySelectorAll('tr:last-child th').forEach(th => { th.style.top = topVal; });
+    document.documentElement.style.setProperty('--log-thead-h', topVal);
+  }));
 }
 
 function logMontarLinhas(dados) {
