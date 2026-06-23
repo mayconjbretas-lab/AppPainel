@@ -1296,10 +1296,9 @@ function logSwitchSub(sub) {
 
 function logOnPostoChange(posto) {
   LC_TODAS = [];
-  // Normaliza: remove "P. " se existir, depois sempre adiciona — garante formato
-  // "P. ALEX" independente do value do select (pode vir "ALEX" ou "P. ALEX")
-  const semP = (posto || '').replace(/^P\.\s*/i, '').trim();
-  const postoCompleto = semP ? 'P. ' + semP : '';
+  // Usa o value do select diretamente — já vem no formato correto "P. ANA LÚCIA"
+  // Só garante que começa com "P. " se não vier vazio
+  const postoCompleto = (posto || '').trim();
   carregarLogMatriz(postoCompleto);
   if (LOG_SUB_ATIVA === 'coleta') lcCarregar();
 }
@@ -1347,9 +1346,8 @@ async function carregarLogMatriz(posto) {
     LOG_MAT_DADOS = null; LOG_MAT_EDICOES = {};
     logAtualizarBotoes(); return;
   }
-  // Garante formato "P. ALEX" independente do que veio do select
-  const semP = posto.replace(/^P\.\s*/i, '').trim();
-  posto = semP ? 'P. ' + semP : posto;
+  // Usa o nome exatamente como veio — sem remover/recolocar "P. " para não corromper acentos
+  // (P. ANA LÚCIA, P. ESPAÇO REAL, P. GLÓRIA etc. devem ir intactos ao Apps Script)
   LOG_MAT_POSTO_ATUAL = posto;
   LOG_MAT_EDICOES = {};
   if (sub)   sub.textContent = '• Carregando ' + posto + '...';
