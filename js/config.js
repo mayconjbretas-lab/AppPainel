@@ -1,7 +1,8 @@
 // ================================================================
-// JBRETAS — config.js v1
+// JBRETAS — config.js v2
 // Dados estruturais: MAP_POSTOS, POSTOS_DADOS, USUARIOS_ADM
 // Concorrentes reais conforme CONCORRENTES_AS do Apps Script v10
+// SUPERVISOR_BLOCO atualizado conforme Code.gs (22/06/2026)
 // ================================================================
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5EIYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
@@ -12,8 +13,6 @@ const USUARIOS_ADM = [
 ];
 
 // MAP_POSTOS — coordenadas fixas dos postos próprios
-// ap = "POSTO ALVO" exato como aparece na planilha (para lookup)
-// k  = chave curta (sem "P. ") para uso interno
 const MAP_POSTOS = [
   {k:"JA",                   ap:"P. JA",                    lat:-19.9581, lng:-43.9571, sup:"Mauricio", banda:"Ipiranga"},
   {k:"ITAPOA",               ap:"P. ITAPOA",                lat:-19.9198, lng:-43.9814, sup:"Mauricio", banda:"Shell"},
@@ -41,6 +40,7 @@ const MAP_POSTOS = [
   {k:"SANTA MARIA",          ap:"P. SANTA MARIA",           lat:-19.8000, lng:-44.0750, sup:"Paulo",    banda:"BR/Petrobras"},
   {k:"BOMBOM FILIAL",        ap:"P. BOMBOM FILIAL",         lat:-19.8760, lng:-43.9180, sup:"Paulo",    banda:"Ipiranga"},
   {k:"SANTA INES MINAS",     ap:"P. SANTA INES MINAS",      lat:-19.8880, lng:-43.8230, sup:"Paulo",    banda:"Shell"},
+  {k:"OURO BRANCO",          ap:"P. OURO BRANCO",           lat:-20.5200, lng:-43.7300, sup:"Paulo",    banda:"Bandeira Branca"},
   {k:"GLORIA",               ap:"P. GLORIA",                lat:-19.9370, lng:-43.9100, sup:"Gledson",  banda:"Shell"},
   {k:"QUATRO RODAS",         ap:"P. QUATRO RODAS",          lat:-19.8670, lng:-44.0580, sup:"Gledson",  banda:"Ipiranga"},
   {k:"RODRIGO",              ap:"P. RODRIGO",               lat:-19.9480, lng:-44.1980, sup:"Gledson",  banda:"Shell"},
@@ -48,9 +48,9 @@ const MAP_POSTOS = [
   {k:"MIRAGEM JBRETAS",      ap:"P. MIRAGEM JBRETAS",       lat:-19.7820, lng:-43.8850, sup:"Gledson",  banda:"Shell"},
   {k:"BIANCA",               ap:"P. BIANCA",                lat:-20.0400, lng:-44.1500, sup:"Gledson",  banda:"Ipiranga"},
   {k:"BARBOSA - DUDU",       ap:"P. BARBOSA - DUDU",        lat:-19.9330, lng:-44.0030, sup:"Gledson",  banda:"ALE"},
+  {k:"BRUNA",                ap:"P. BRUNA",                 lat:-19.8954, lng:-43.9550, sup:"Gledson",  banda:"BR/Petrobras"},
   {k:"ESPACO REAL",          ap:"P. ESPACO REAL",           lat:-21.1300, lng:-44.2570, sup:"Rodrigo",  banda:"BR/Petrobras"},
   {k:"FELIPAO",              ap:"P. FELIPAO",               lat:-19.9230, lng:-43.9900, sup:"Rodrigo",  banda:"BR/Petrobras"},
-  {k:"OURO BRANCO",          ap:"P. OURO BRANCO",           lat:-20.5200, lng:-43.7300, sup:"Rodrigo",  banda:"Bandeira Branca"},
   {k:"PAIVA E PAIVA COMBUSTIVEL", ap:"PAIVA E PAIVA COMBUSTIVEL", lat:-21.1389, lng:-44.2294, sup:"Rodrigo", banda:"Bandeira Branca"},
 ];
 
@@ -76,7 +76,7 @@ const POSTOS_DADOS = {
     conc:{"POSTO SUPRA":{banda:"Bandeira Branca"},"POSTO REDEFLEX":{banda:"ALE"},"POSTO NORTE SUL":{banda:"Bandeira Branca"},"REDE MANUELA":{banda:"BR/Petrobras"},"REDE GP SHELL VILARINHO":{banda:"Shell"}}},
   "BOMBOM MATRIZ":{sup:"Mauricio",bandeira:"Ipiranga",combs:["GC","GA","ET"],
     conc:{"REDE AQUI":{banda:"Shell"},"POSTO DUAS PATRIA":{banda:"Bandeira Branca"}}},
-  "BRUNA":       {sup:"Fabricio",bandeira:"BR/Petrobras",combs:["GC","GA","ET","S10","S500"],
+  "BRUNA":       {sup:"Gledson",bandeira:"BR/Petrobras",combs:["GC","GA","ET","S10","S500"],
     conc:{"PETRO OURO":{banda:"BR/Petrobras"},"POSTO CARIJO SHELL":{banda:"Shell"},"SAO FRANCISCO":{banda:"Bandeira Branca"},"VILA":{banda:"Bandeira Branca"}}},
   "DIFERENCIAL": {sup:"Mauricio",bandeira:"Rede Flex",combs:["GC","GA","ET","S10"],
     conc:{"POSTO BH":{banda:"Bandeira Branca"},"POSTO VILA":{banda:"Bandeira Branca"},"SAO PEDRO":{banda:"Bandeira Branca"},"REDE FLEX LESTE":{banda:"Rede Flex"}}},
@@ -100,7 +100,7 @@ const POSTOS_DADOS = {
     conc:{"VILA":{banda:"Bandeira Branca"},"OURO":{banda:"Bandeira Branca"},"REDE FLEX SIGMA":{banda:"Rede Flex"},"ALTO SION":{banda:"Bandeira Branca"},"PIAZZA":{banda:"Bandeira Branca"},"CORUJAO":{banda:"Bandeira Branca"}}},
   "MIRAGEM JBRETAS":{sup:"Gledson",bandeira:"Shell",combs:["GC","ET","S10","S500"],
     conc:{"XAVANTE":{banda:"Bandeira Branca"},"CATALAO":{banda:"Bandeira Branca"}}},
-  "OURO BRANCO": {sup:"Rodrigo",bandeira:"Bandeira Branca",combs:["GC","GA","ET","S10"],
+  "OURO BRANCO": {sup:"Paulo",bandeira:"Bandeira Branca",combs:["GC","GA","ET","S10"],
     conc:{"POSTO PRAIA 01":{banda:"Ipiranga"},"POSTO CHAMPION":{banda:"Bandeira Branca"},"POSTO PRAIA 02":{banda:"Ipiranga"},"POSTO REDE SANTANA":{banda:"Bandeira Branca"}}},
   "PAIVA E PAIVA COMBUSTIVEL": {sup:"Rodrigo",bandeira:"Bandeira Branca",combs:["GC","GA","ET","S10","S500"],
     conc:{"POSTO DUDU":{banda:"Bandeira Branca"},"POSTO IPIRANGA":{banda:"Ipiranga"},"POSTO PATIO":{banda:"Bandeira Branca"},"POSTO BH":{banda:"Bandeira Branca"},"POSTO SAO JOAO":{banda:"Bandeira Branca"}}},
@@ -114,7 +114,7 @@ const POSTOS_DADOS = {
     conc:{"POSTO BR NOVO":{banda:"BR/Petrobras"},"POSTO CEASA":{banda:"Bandeira Branca"},"POSTO REMO":{banda:"Bandeira Branca"},"SANTANA NOVO":{banda:"Bandeira Branca"},"VILA BETO":{banda:"Bandeira Branca"}}},
   "SANTA INES MINAS":{sup:"Paulo",bandeira:"Shell",combs:["GC","GA","ET","S10"],
     conc:{"TREVINHO":{banda:"Bandeira Branca"},"REDE AQUI":{banda:"Rede Aqui"}}},
-  "SANTA MARIA": {sup:"Paulo",bandeira:"BR/Petrobras",combs:["GC","ET","S10"],
+  "SANTA MARIA": {sup:"Gledson",bandeira:"BR/Petrobras",combs:["GC","ET","S10"],
     conc:{"MANACAS":{banda:"Bandeira Branca"},"POSTO DUO DRIVE":{banda:"Bandeira Branca"}}},
   "SAO BERNARDO":{sup:"Fabricio",bandeira:"Ipiranga",combs:["GC","GA","ET"],
     conc:{"POSTO FLORAMAR":{banda:"Bandeira Branca"},"POSTO MARIO VERNECK":{banda:"Ipiranga"},"POSTO MINEIRO":{banda:"ALE"},"POSTO ESTACAO":{banda:"Bandeira Branca"},"REDE FENIX SENTIDO BH CENTRO":{banda:"Shell"},"REDE FLEX CRISTIANO MACHADO":{banda:"Rede Flex"},"POSTO WAP CRIANO MACHADO":{banda:"Shell"}}},
@@ -134,3 +134,27 @@ const POSTOS_DADOS = {
 // Cores
 const SUPCOR = {Mauricio:'#00e5a0',Paulo:'#4895ef',Fabricio:'#f9c74f',Gledson:'#c77dff',Rodrigo:'#ff6b6b'};
 const BCOR   = {"Rede Flex":"#00e5a0","Ipiranga":"#f9c74f","Shell":"#e8c84a","BR/Petrobras":"#4db6ac","ALE":"#ff6b6b","Bandeira Branca":"#8892a4","Rede Aqui":"#ff9800","Siga Petro":"#ba68c8","Rede Aliança":"#ff7043"};
+
+// ================================================================
+// SUPERVISOR_BLOCO — atualizado conforme Code.gs (22/06/2026)
+// Removidos: CEASA (= SANTA INES), BEATRIZ (= PAIVA E PAIVA)
+// Adicionados: DUDU, BRUNA→Gledson, OURO BRANCO→Paulo,
+//              SANTA MARIA→Gledson, BEATRIZ→Rodrigo
+// ================================================================
+const SUPERVISOR_BLOCO = {
+  "J A":"Mauricio",          "MANGABEIRAS":"Mauricio",   "URBANO":"Mauricio",
+  "DIFERENCIAL":"Mauricio",  "ARAPONGA":"Mauricio",      "ITAPOA":"Mauricio",
+  "ALEX":"Mauricio",         "BERNARDO":"Mauricio",      "BOMBOM MATRIZ":"Mauricio",
+  "TUNEL":"Fabricio",        "TRANCOSO":"Fabricio",      "ANA LUCIA":"Fabricio",
+  "SANTA INES":"Fabricio",   "SAO BERNARDO":"Fabricio",  "BAHAMAS":"Fabricio",
+  "COLIBRI":"Fabricio",      "PLANALTO":"Fabricio",
+  "TOPAZIO":"Paulo",         "JOCA":"Paulo",             "LOURA":"Paulo",
+  "AVIVA":"Paulo",           "SAO LUIZ":"Paulo",
+  "SANTA INES MINAS":"Paulo","OURO BRANCO":"Paulo",
+  "BOMBOM FILIAL":"Paulo",
+  "GLORIA":"Gledson",        "4RODAS":"Gledson",         "RODRIGO":"Gledson",
+  "LEANDRO":"Gledson",       "MIRAGEM":"Gledson",        "BIANCA":"Gledson",
+  "DUDU":"Gledson",          "BRUNA":"Gledson",          "SANTA MARIA":"Gledson",
+  "ESPACO REAL":"Rodrigo",   "FELIPAO":"Rodrigo",        "BEATRIZ":"Rodrigo",
+  "PAIVA PAIVA":"Rodrigo",
+};
