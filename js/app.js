@@ -2237,3 +2237,648 @@ function lcRenderLinhas(registros) {
   });
   tbody.innerHTML=html;
 }
+// ================================================================
+// JBRETAS AppPainel — Patch Logística v2 (SEM DUPLICATAS)
+// Cole TODO este bloco NO FINAL do arquivo js/app.js
+// ================================================================
+
+let G_CMP_FAIXA_PRECO = 'todos'; // 'todos' | 'abaixo' | 'acima'
+
+function cmpSetFaixaPreco(btn, faixa) {
+  G_CMP_FAIXA_PRECO = faixa;
+  // Reseta visuais
+  ['flt-abaixo','flt-acima','flt-todos-preco'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('active'); el.style.display = id === 'flt-todos-preco' ? 'none' : ''; }
+  });
+  if (faixa !== 'todos') {
+    btn.classList.add('active');
+    const limpar = document.getElementById('flt-todos-preco');
+    if (limpar) limpar.style.display = '';
+  }
+  renderComparar();
+}
+
+// ── Estado global da matriz ──────────────────────────────────────
+let LOG_MAT_DADOS       = null;
+let LOG_MAT_EDICOES     = {};
+let LOG_MAT_POSTO_ATUAL = '';
+let LOG_MES_CARREGADO   = '';
+let LOG_SUB_ATIVA       = 'medicao';
+let LC_TODAS            = [];
+let _logAutoRefreshTimer = null;
+
+const LOG_CATEGORIAS = [
+  { chave:'medicao',   titulo:'🛢️ MEDIÇÃO (L)',               cls:'lh-med', cor:'#4895ef', edit:true  },
+  { chave:'venda',     titulo:'⛽ VENDA DIÁRIA (L)',           cls:'lh-ven', cor:'#d4af37', edit:true  },
+  { chave:'carga',     titulo:'🚚 CARGA RECEBIDA (L)',         cls:'lh-carg',cor:'#c77dff', edit:true  },
+  { chave:'prePedido', titulo:'📦 PRÉ-PEDIDO (L)',            cls:'lh-pre', cor:'#f9c74f', edit:true  },
+  { chave:'pedido',    titulo:'📋 PEDIDO FINAL (L)',           cls:'lh-ped', cor:'#ff9e00', edit:true  },
+  { chave:'previsao',  titulo:'📐 PREVISÃO MED. (L)',          cls:'lh-prev',cor:'#4cc9f0', edit:false },
+  { chave:'diferenca', titulo:'Δ DIFERENÇA',                   cls:'lh-dif', cor:'#ff4d6d', edit:false },
+];
+
+// ── Navegação: substituições de irPara e setTab ──────────────────
+function irPara(modulo) {
+  fecharMaisBtn();
+  if (modulo === 'logistica') {
+    document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.scr').forEach(x => {
+      x.classList.remove('active');
+      if (x.id === 's-logistica') x.style.display = 'none';
+    });
+    const sec = document.getElementById('s-logistica');
+    if (sec) { sec.classList.add('active'); sec.style.display = 'flex'; }
+    logPopularSelects();
+    logSwitchSub('medicao');
+    return;
+  }
+  document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.scr').forEach(x => {
+    x.classList.remove('active');
+    if (x.id === 's-logistica') x.style.display = 'none';
+  });
+  document.getElementById('s-mais').classList.add('active');
+  const ctx = document.getElementById('mais-conteudo');
+  if      (modulo === 'amostra')        renderAmostra(ctx);
+  else if (modulo === 'notif')          renderNotif(ctx);
+  else if (modulo === 'distribuidor')   renderDist(ctx);
+  else if (modulo === 'simulador')      renderSim(ctx);
+  else if (modulo === 'lancamento')     renderLanc(ctx);
+  else if (modulo === 'coleta-simples') renderColetaSimples(ctx);
+  else if (modulo === 'relatorios')     renderRel(ctx);
+}
+
+function setTab(btn, tab) {
+  document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.scr').forEach(x => {
+    x.classList.remove('active');
+    if (x.id === 's-logistica') x.style.display = 'none';
+  });
+  btn.classList.add('active');
+  const sec = document.getElementById('s-' + tab);
+  if (sec) sec.classList.add('active');
+  if (tab === 'mapa') setTimeout(() => { initLeafletInstance(); }, 150);
+  if (tab === 'hist') { povoarHistPosto(); }
+}
+
+// ── Popular select de postos ─────────────────────────────────────
+// O select já tem options no HTML com "P. " — esta função só garante
+// que o valor passado vai bater com o nome completo do posto no Apps Script
+function logPopularSelects() {
+  // Selects já populados no HTML — não precisa fazer nada aqui
+  // O valor do option já tem "P. ALEX" etc. para bater com o Apps Script
+}
+
+// ── Sub-abas: Medição / Coleta ───────────────────────────────────
+function logSwitchSub(sub) {
+  LOG_SUB_ATIVA = sub;
+  document.querySelectorAll('.log-subtab').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('lsubt-' + sub);
+  if (btn) btn.classList.add('active');
+  const medEl    = document.getElementById('log-sub-medicao');
+  const coletaEl = document.getElementById('log-sub-coleta');
+  if (medEl)    medEl.style.display    = sub === 'medicao' ? 'flex' : 'none';
+  if (coletaEl) coletaEl.style.display = sub === 'coleta'  ? 'flex' : 'none';
+  ['btn-log-salvar','btn-log-pre'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = sub === 'medicao' ? '' : 'none';
+  });
+  if (sub === 'coleta' && !LC_TODAS.length) lcCarregar();
+}
+
+// ── Mudança de posto: recarrega ambas as sub-abas ────────────────
+function logOnPostoChange(posto) {
+  LC_TODAS = [];
+  carregarLogMatriz(posto);
+  if (LOG_SUB_ATIVA === 'coleta') lcCarregar();
+}
+
+// ── Refresh: atualiza a sub-aba ativa ───────────────────────────
+async function logRefresh() {
+  const btn  = document.getElementById('btn-log-refresh');
+  const icon = document.getElementById('btn-log-refresh-icon');
+  if (btn)  btn.disabled = true;
+  if (icon) icon.classList.add('girando');
+  try {
+    if (LOG_SUB_ATIVA === 'medicao') {
+      if (!LOG_MAT_POSTO_ATUAL) return;
+      const pendentes = Object.keys(LOG_MAT_EDICOES).length;
+      if (pendentes > 0) {
+        const ok = confirm(pendentes + ' alteração(ões) não salva(s).\nRecarregar vai descartá-las. Continuar?');
+        if (!ok) return;
+      }
+      await carregarLogMatriz(LOG_MAT_POSTO_ATUAL);
+    } else {
+      LC_TODAS = [];
+      await lcCarregar();
+    }
+    logRegistrarAtualizacao();
+  } finally {
+    if (btn)  btn.disabled = false;
+    if (icon) icon.classList.remove('girando');
+  }
+}
+
+function logRegistrarAtualizacao() {
+  const el = document.getElementById('log-ultima-atualizacao');
+  if (!el) return;
+  const agora = new Date();
+  el.textContent = 'Atual. ' + String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0');
+}
+
+// ── Carregar matriz do mês completo ─────────────────────────────
+async function carregarLogMatriz(posto) {
+  const sub   = document.getElementById('log-matrix-sub');
+  const tbody = document.getElementById('log-matrix-tbody');
+  const thead = document.getElementById('log-matrix-thead');
+  logPopularSelects();
+  if (!posto) {
+    if (sub)   sub.textContent = '• Selecione um posto';
+    if (tbody) tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--tx3);text-align:center">Selecione um posto para carregar a matriz do mês.</td></tr>';
+    if (thead) thead.innerHTML = '';
+    LOG_MAT_DADOS = null; LOG_MAT_EDICOES = {};
+    logAtualizarBotoes(); return;
+  }
+  LOG_MAT_POSTO_ATUAL = posto;
+  LOG_MAT_EDICOES = {};
+  if (sub)   sub.textContent = '• Carregando ' + posto + '...';
+  if (tbody) tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--tx3);text-align:center"><div class="loading-spin" style="margin:0 auto"></div></td></tr>';
+  logAtualizarBotoes();
+  try {
+    const res  = await fetch(API_URL + '?tipo=mesCompleto&posto=' + encodeURIComponent(posto));
+    const json = await res.json();
+    if (json.erro || !json.success) {
+      if (sub)   sub.textContent = '• Erro: ' + (json.erro || 'Falha');
+      if (tbody) tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--dg);text-align:center">' + (json.erro||'Erro') + '</td></tr>';
+      return;
+    }
+    LOG_MAT_DADOS = json;
+    if (sub) sub.textContent = '• ' + json.posto + ' — ' + json.mes + '/' + json.ano;
+    const MESES_ABV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+    LOG_MES_CARREGADO = json.mes + '/' + String(json.ano).slice(2);
+    logMontarCabecalho(json.grupos, json.combustiveisVenda);
+    logMontarLinhas(json);
+    logRegistrarAtualizacao();
+  } catch(e) {
+    if (sub)   sub.textContent = '• Falha de conexão';
+    if (tbody) tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--dg);text-align:center">Erro: ' + e.message + '</td></tr>';
+  }
+}
+
+function logColsDaCategoria(chave, grupos, vendaCols) {
+  return chave === 'venda' ? vendaCols : grupos;
+}
+
+function logMontarCabecalho(grupos, vendaCols) {
+  const thead = document.getElementById('log-matrix-thead');
+  if (!thead) return;
+  const n = LOG_CATEGORIAS.length;
+  let r1 = '<tr><th rowspan="2" class="log-sticky-col" style="background:var(--sf2)">DIA</th>';
+  LOG_CATEGORIAS.forEach((cat, ci) => {
+    const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
+    const ge = ci < n-1 ? ' log-grp-end' : '';
+    const gs = ci > 0   ? ' log-grp-st'  : '';
+    r1 += '<th colspan="' + cols.length + '" class="' + cat.cls + ge + gs + '">' + cat.titulo + '</th>';
+  });
+  r1 += '</tr><tr>';
+  LOG_CATEGORIAS.forEach((cat, ci) => {
+    const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
+    cols.forEach((col, gi) => {
+      let cls = '';
+      if (gi === cols.length-1) cls += ' log-grp-end';
+      if (ci > 0 && gi === 0)   cls += ' log-grp-st';
+      r1 += '<th' + (cls ? ' class="'+cls.trim()+'"' : '') + ' style="color:' + cat.cor + ';font-size:.62rem">' + col.abv + '</th>';
+    });
+  });
+  thead.innerHTML = r1 + '</tr>';
+  requestAnimationFrame(() => {
+    const th1 = thead.querySelector('tr:first-child th:not(.log-sticky-col)');
+    if (th1) document.documentElement.style.setProperty('--log-thead-h', th1.getBoundingClientRect().height + 'px');
+  });
+}
+
+function logFmtL(v) {
+  if (v === null || v === undefined || v === '') return '—';
+  return Math.round(Number(v)).toLocaleString('pt-BR');
+}
+function logParseNum(str) {
+  if (!str && str !== 0) return null;
+  const s = String(str).replace(/\./g,'').replace(',','.').replace('—','').trim();
+  if (!s) return null;
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function logMontarLinhas(dados) {
+  const tbody = document.getElementById('log-matrix-tbody');
+  if (!tbody) return;
+  const grupos = dados.grupos, vendaCols = dados.combustiveisVenda;
+  let html = '';
+  dados.dias.forEach((d, diaIdx) => {
+    html += '<tr><td class="log-sticky-col">' + String(d.dia).padStart(2,'0') + '/' + dados.mes + '</td>';
+    LOG_CATEGORIAS.forEach((cat, ci) => {
+      const cols   = logColsDaCategoria(cat.chave, grupos, vendaCols);
+      const valores = d[cat.chave] || [];
+      cols.forEach((col, i) => {
+        const val  = valores[i];
+        const last = i === cols.length-1;
+        const first = ci > 0 && i === 0;
+        const cls  = (last ? 'log-grp-end' : '') + (first ? ' log-grp-st' : '');
+        const tdA  = cls.trim() ? ' class="'+cls.trim()+'"' : '';
+        if (cat.chave === 'previsao') {
+          html += '<td' + tdA + '><span id="lp_'+diaIdx+'_'+i+'">' + logFmtL(val) + '</span></td>';
+        } else if (cat.chave === 'diferenca') {
+          const cor = val > 0 ? 'var(--ac)' : (val < 0 ? 'var(--dg)' : 'var(--tx3)');
+          html += '<td' + tdA + '><span id="ld_'+diaIdx+'_'+i+'" style="color:'+cor+';font-weight:700">' +
+            (val === null || val === undefined ? '—' : (val > 0 ? '+' : '') + logFmtL(val)) + '</span></td>';
+        } else {
+          const ca = String(col.comb).replace(/"/g,'&quot;');
+          html += '<td' + tdA + '><input type="text" inputmode="numeric" class="log-cell-in"' +
+            ' data-dia="'+diaIdx+'" data-campo="'+cat.chave+'" data-comb="'+ca+'"' +
+            ' value="'+logFmtL(val).replace('—','')+'"' +
+            ' oninput="logCelulaEditada(this)" onblur="logCelulaBlur(this)"></td>';
+        }
+      });
+    });
+    html += '</tr>';
+  });
+  tbody.innerHTML = html || '<tr><td colspan="30" style="padding:1.5rem;color:var(--tx3);text-align:center">Sem dados.</td></tr>';
+}
+
+function logRecalcPrev(diaIdx) {
+  if (!LOG_MAT_DADOS) return;
+  const dias = LOG_MAT_DADOS.dias, dia = dias[diaIdx];
+  if (!dia) return;
+  const diaOntem = dias[diaIdx-1];
+  const grupos = LOG_MAT_DADOS.grupos, vendaCols = LOG_MAT_DADOS.combustiveisVenda;
+  grupos.forEach((g, i) => {
+    let prev = null;
+    if (diaOntem) {
+      const medOntem = diaOntem.medicao[i];
+      if (medOntem !== null && medOntem !== undefined) {
+        const carga = Number(dia.carga[i]) || 0;
+        const iV = vendaCols.findIndex(c => c.comb === g.comb);
+        const venda = (iV === -1 || dia.venda[iV] === null) ? 0 : Number(dia.venda[iV]);
+        prev = Number(medOntem) + carga - venda;
+      }
+    }
+    dia.previsao[i] = prev;
+    const medHoje = dia.medicao[i];
+    const diff = (prev !== null && medHoje !== null && medHoje !== undefined) ? Number(medHoje) - prev : null;
+    dia.diferenca[i] = diff;
+    const elP = document.getElementById('lp_'+diaIdx+'_'+i);
+    if (elP) elP.textContent = logFmtL(prev);
+    const elD = document.getElementById('ld_'+diaIdx+'_'+i);
+    if (elD) {
+      elD.style.color = diff > 0 ? 'var(--ac)' : (diff < 0 ? 'var(--dg)' : 'var(--tx3)');
+      elD.textContent = diff === null ? '—' : (diff > 0 ? '+' : '') + logFmtL(diff);
+    }
+  });
+}
+
+function logCelulaEditada(inp) {
+  if (!LOG_MAT_DADOS) return;
+  const diaIdx = parseInt(inp.dataset.dia), campo = inp.dataset.campo, comb = inp.dataset.comb;
+  const valor  = logParseNum(inp.value);
+  inp.classList.add('log-cell-dirty');
+  const diaObj = LOG_MAT_DADOS.dias[diaIdx];
+  const cols   = campo === 'venda' ? LOG_MAT_DADOS.combustiveisVenda : LOG_MAT_DADOS.grupos;
+  const idx    = cols.findIndex(c => c.comb === comb);
+  if (idx === -1) return;
+  diaObj[campo][idx] = valor;
+  LOG_MAT_EDICOES[diaIdx+'|'+campo+'|'+comb] = { dia:diaIdx, campo, comb, valor };
+  if (campo === 'medicao')                           logRecalcPrev(diaIdx+1);
+  else if (campo === 'carga' || campo === 'venda')   logRecalcPrev(diaIdx);
+  logAtualizarBotoes();
+}
+function logCelulaBlur(inp) {
+  inp.value = logFmtL(logParseNum(inp.value)).replace('—','');
+}
+
+function logAtualizarBotoes() {
+  const pend   = Object.values(LOG_MAT_EDICOES);
+  const preQtd = pend.filter(e => e.campo === 'prePedido').length;
+  const matQtd = pend.length - preQtd;
+  const btnS = document.getElementById('btn-log-salvar');
+  const btnP = document.getElementById('btn-log-pre');
+  if (btnS) { btnS.disabled = matQtd === 0; btnS.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar' + (matQtd ? ' ('+matQtd+')':''); }
+  if (btnP) { btnP.disabled = preQtd === 0; btnP.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Pré-Pedido' + (preQtd ? ' ('+preQtd+')':''); }
+}
+
+function logLimparDirty() {
+  document.querySelectorAll('#log-matrix-tbody .log-cell-dirty').forEach(el => el.classList.remove('log-cell-dirty'));
+}
+
+async function logSalvarMatriz() {
+  if (!LOG_MAT_DADOS) return;
+  const posto = LOG_MAT_POSTO_ATUAL;
+  const itens = Object.values(LOG_MAT_EDICOES)
+    .filter(e => e.campo !== 'prePedido')
+    .map(e => ({ data: LOG_MAT_DADOS.dias[e.dia].data, campo: e.campo, combustivel: e.comb, valor: e.valor }));
+  if (!itens.length) return;
+  const btn = document.getElementById('btn-log-salvar');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    await fetch(API_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ tipo:'editar_matriz', posto, itens, user:(G_USER&&G_USER.email)||'ADM' }) });
+    Object.keys(LOG_MAT_EDICOES).forEach(k => { if (LOG_MAT_EDICOES[k].campo !== 'prePedido') delete LOG_MAT_EDICOES[k]; });
+    logLimparDirty(); logAtualizarBotoes();
+    showToast('Salvo ✅', itens.length + ' alteração(ões) gravadas.');
+    await carregarLogMatriz(posto);
+  } catch(e) { showToast('Erro', e.message); btn.disabled=false; logAtualizarBotoes(); }
+}
+
+async function logEnviarPrePedido() {
+  if (!LOG_MAT_DADOS) return;
+  const posto = LOG_MAT_POSTO_ATUAL;
+  const itens = Object.values(LOG_MAT_EDICOES)
+    .filter(e => e.campo === 'prePedido')
+    .map(e => ({ data: LOG_MAT_DADOS.dias[e.dia].data, campo:'prePedido', combustivel:e.comb, valor:e.valor }));
+  if (!itens.length) return;
+  const btn = document.getElementById('btn-log-pre');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    await fetch(API_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ tipo:'editar_matriz', posto, itens, user:(G_USER&&G_USER.email)||'ADM' }) });
+    Object.keys(LOG_MAT_EDICOES).forEach(k => { if (LOG_MAT_EDICOES[k].campo === 'prePedido') delete LOG_MAT_EDICOES[k]; });
+    logLimparDirty(); logAtualizarBotoes();
+    showToast('Pré-Pedido salvo ✅', itens.length + ' sugestão(ões) gravadas direto na planilha.');
+    await carregarLogMatriz(posto);
+  } catch(e) { showToast('Erro', e.message); logAtualizarBotoes(); }
+}
+
+// ── Virada de mês ────────────────────────────────────────────────
+function logVerificarViradaMes() {
+  if (!LOG_MAT_POSTO_ATUAL || !LOG_MES_CARREGADO) return false;
+  const MESES_ABV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  const agora = new Date();
+  const mesHoje = MESES_ABV[agora.getMonth()] + '/' + String(agora.getFullYear()).slice(2);
+  return mesHoje !== LOG_MES_CARREGADO;
+}
+
+function logIniciarAutoRefresh() {
+  if (_logAutoRefreshTimer) clearInterval(_logAutoRefreshTimer);
+  _logAutoRefreshTimer = setInterval(async () => {
+    const sec = document.getElementById('s-logistica');
+    if (!sec || !sec.classList.contains('active')) return;
+    if (!LOG_MAT_POSTO_ATUAL) return;
+    if (logVerificarViradaMes()) {
+      const MESES_ABV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+      const agora = new Date();
+      const novoMes = MESES_ABV[agora.getMonth()] + '/' + String(agora.getFullYear()).slice(2);
+      showToast('📅 Novo mês!', 'Recarregando na aba ' + novoMes);
+      await carregarLogMatriz(LOG_MAT_POSTO_ATUAL);
+    }
+  }, 3 * 60 * 1000);
+}
+logIniciarAutoRefresh();
+
+// ── Coleta de Preços: renderiza no Mais+ (coleta-simples) ────────
+function renderColetaSimples(ctx) {
+  ctx.innerHTML = `
+    <div class="sdiv">Coleta de Preços — Visão Auditora</div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">
+      <input type="text" id="cs-flt-posto" class="map-sel" placeholder="Posto alvo..." style="flex:1;min-width:110px" oninput="csAplicarFiltros()">
+      <select id="cs-flt-sup" class="map-sel" onchange="csAplicarFiltros()">
+        <option value="">Todos supervisores</option>
+        <option>Mauricio</option><option>Fabricio</option><option>Paulo</option><option>Gledson</option><option>Rodrigo</option>
+      </select>
+      <select id="cs-flt-dias" class="map-sel" onchange="csCarregar()">
+        <option value="7">7 dias</option><option value="15" selected>15 dias</option><option value="30">30 dias</option>
+      </select>
+    </div>
+    <div id="cs-status" style="font-size:.65rem;color:var(--tx3);font-family:var(--mono);margin-bottom:.4rem">Carregando...</div>
+    <div style="overflow-x:auto;border:1px solid var(--bd);border-radius:var(--r)">
+      <table style="border-collapse:collapse;width:100%;min-width:700px;font-size:.75rem">
+        <thead><tr style="background:var(--sf2)">
+          <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">DATA</th>
+          <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">POSTO</th>
+          <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">GERENTE</th>
+          <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">POSTO ALVO</th>
+          <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">SUPERVISOR</th>
+          <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:#f9c74f;border-bottom:1px solid var(--bd)">ET</th>
+          <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:var(--ac);border-bottom:1px solid var(--bd)">GC</th>
+          <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:#4895ef;border-bottom:1px solid var(--bd)">GA</th>
+          <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:#ff4d6d;border-bottom:1px solid var(--bd)">S10</th>
+          <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:#c77dff;border-bottom:1px solid var(--bd)">S500</th>
+          <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">FOTO</th>
+        </tr></thead>
+        <tbody id="cs-tbody"><tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--tx3)"><div class="loading-spin" style="margin:0 auto"></div></td></tr></tbody>
+      </table>
+    </div>
+    <div id="cs-popover" style="display:none;position:fixed;z-index:500;background:var(--sf);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);width:260px;pointer-events:none">
+      <div style="background:var(--sf2);padding:.4rem .7rem;border-bottom:1px solid var(--bd);font-size:.7rem;font-family:var(--mono)" id="cs-pop-label">Foto</div>
+      <div style="padding:.4rem;background:#0a0c10"><img id="cs-pop-img" src="" style="width:100%;border-radius:6px"></div>
+      <div style="padding:.35rem .7rem;background:var(--sf2);border-top:1px solid var(--bd)"><a id="cs-pop-link" href="#" target="_blank" style="font-size:.62rem;color:var(--ac);text-decoration:underline">Abrir no Drive</a></div>
+    </div>`;
+  csCarregar();
+}
+
+let CS_TODAS = [];
+async function csCarregar() {
+  const dias = (document.getElementById('cs-flt-dias')||{value:'15'}).value;
+  const tbody = document.getElementById('cs-tbody');
+  const statusEl = document.getElementById('cs-status');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--tx3)"><div class="loading-spin" style="margin:0 auto"></div></td></tr>';
+  if (statusEl) statusEl.textContent = 'Carregando...';
+  try {
+    const res  = await fetch(API_URL + '?tipo=coletaRecentes&dias=' + dias);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.registros)) { CS_TODAS = json.registros; csAplicarFiltros(); }
+    else tbody.innerHTML = '<tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--dg)">Erro ao carregar.</td></tr>';
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--dg)">Erro: '+e.message+'</td></tr>'; }
+}
+function csAplicarFiltros() {
+  const fP = ((document.getElementById('cs-flt-posto')||{value:''}).value).trim().toUpperCase();
+  const fS = (document.getElementById('cs-flt-sup')||{value:''}).value;
+  const el = document.getElementById('cs-status');
+  const f  = CS_TODAS.filter(r => {
+    if (fP && !String(r.postoAlvo||'').toUpperCase().includes(fP)) return false;
+    if (fS && r.supervisor !== fS) return false;
+    return true;
+  });
+  if (el) el.textContent = f.length + ' de ' + CS_TODAS.length + ' registros';
+  csRenderLinhas(f);
+}
+function csP(v) {
+  if (v===null||v===undefined||isNaN(v)) return '<span style="color:var(--tx3)">—</span>';
+  return '<span style="font-family:var(--mono);font-weight:700">'+Number(v).toFixed(2).replace('.',',')+'</span>';
+}
+function csDriveThumb(url) { const m=url&&url.match(/[-\w]{25,}/); return m?'https://lh3.googleusercontent.com/d/'+m[0]+'=w300':''; }
+function csShowPhoto(event,url,label) {
+  const pop=document.getElementById('cs-popover'); if(!pop) return;
+  document.getElementById('cs-pop-label').textContent=label||'Foto';
+  document.getElementById('cs-pop-img').src=csDriveThumb(url);
+  document.getElementById('cs-pop-link').href=url;
+  pop.style.display='block';
+  const x=Math.min(event.clientX-130,window.innerWidth-270), y=Math.min(event.clientY-80,window.innerHeight-300);
+  pop.style.left=Math.max(4,x)+'px'; pop.style.top=Math.max(4,y)+'px';
+}
+function csHidePhoto() { const p=document.getElementById('cs-popover'); if(p) p.style.display='none'; }
+function csRenderLinhas(registros) {
+  const tbody=document.getElementById('cs-tbody'); if(!tbody) return;
+  if (!registros.length) { tbody.innerHTML='<tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--tx3)">Nenhum registro.</td></tr>'; return; }
+  const SC={Mauricio:'var(--ac)',Paulo:'#4895ef',Fabricio:'#f9c74f',Gledson:'#c77dff',Rodrigo:'#ff6b6b'};
+  let html='';
+  registros.forEach(r => {
+    const isProp=r.tipo==='Próprio', corN=isProp?'var(--ac)':'var(--tx)', supC=SC[r.supervisor]||'var(--tx3)';
+    const temFoto=r.foto&&String(r.foto).startsWith('http');
+    const fS=temFoto?r.foto.replace(/'/g,''):'', lS=(r.postoAlvo||'').replace(/'/g,'');
+    const fotoCell=temFoto?`<span style="cursor:pointer;color:#4895ef;font-family:var(--mono);font-size:.7rem;text-decoration:underline" onmouseenter="csShowPhoto(event,'${fS}','${lS}')" onmouseleave="csHidePhoto()" onclick="csShowPhoto(event,'${fS}','${lS}')">📷 Ver</span>`:'<span style="color:var(--tx3)">—</span>';
+    html+=`<tr style="border-bottom:1px solid var(--bd)">
+      <td style="padding:.45rem .65rem;font-family:var(--mono);font-size:.7rem;color:var(--tx3);white-space:nowrap">${r.data||'—'}</td>
+      <td style="padding:.45rem .65rem;font-size:.78rem;color:var(--tx2)">${r.posto||'—'}</td>
+      <td style="padding:.45rem .65rem;font-size:.75rem;color:var(--tx3)">${r.gerente||'—'}</td>
+      <td style="padding:.45rem .65rem;font-size:.82rem;font-weight:600;color:${corN}">${r.postoAlvo||'—'}</td>
+      <td style="padding:.45rem .65rem;font-size:.72rem;font-family:var(--mono);color:${supC}">${r.supervisor||'—'}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.ET)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.GC)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.GA)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.S10)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.S500)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${fotoCell}</td>
+    </tr>`;
+  });
+  tbody.innerHTML=html;
+}
+
+// ── Coleta integrada na sub-aba Logística ────────────────────────
+async function lcCarregar() {
+  const dias = (document.getElementById('lc-flt-dias')||{value:'15'}).value;
+  const tbody = document.getElementById('lc-tbody');
+  const statusEl = document.getElementById('lc-status');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="11" style="padding:1.2rem;text-align:center;color:var(--tx3)"><div class="loading-spin" style="margin:0 auto;width:24px;height:24px"></div></td></tr>';
+  if (statusEl) statusEl.textContent = 'Carregando...';
+  try {
+    const res  = await fetch(API_URL + '?tipo=coletaRecentes&dias=' + dias);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.registros)) { LC_TODAS = json.registros; lcAplicarFiltros(); }
+    else tbody.innerHTML = '<tr><td colspan="11" style="padding:1.2rem;text-align:center;color:var(--dg)">Erro ao carregar.</td></tr>';
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="11" style="padding:1.2rem;text-align:center;color:var(--dg)">Erro: '+e.message+'</td></tr>'; }
+}
+
+function lcAplicarFiltros() {
+  const fPosto   = (document.getElementById('lc-flt-posto')  ||{value:''}).value.trim().toUpperCase();
+  const fGerente = (document.getElementById('lc-flt-gerente')||{value:''}).value.trim().toUpperCase();
+  const fTipo    = (document.getElementById('lc-flt-tipo')   ||{value:''}).value;
+  const fSup     = (document.getElementById('lc-flt-sup')    ||{value:''}).value;
+  const fDe      = (document.getElementById('lc-flt-de')     ||{value:''}).value;
+  const fAte     = (document.getElementById('lc-flt-ate')    ||{value:''}).value;
+  const statusEl = document.getElementById('lc-status');
+  const dataDe   = fDe  ? new Date(fDe  + 'T00:00:00') : null;
+  const dataAte  = fAte ? new Date(fAte + 'T23:59:59') : null;
+  const filtrados = LC_TODAS.filter(r => {
+    if (fPosto   && !String(r.postoAlvo||'').toUpperCase().includes(fPosto))   return false;
+    if (fGerente && !String(r.gerente||'').toUpperCase().includes(fGerente))   return false;
+    if (fTipo    && r.tipo !== fTipo)                                          return false;
+    if (fSup     && r.supervisor !== fSup)                                     return false;
+    if (dataDe || dataAte) {
+      const p = String(r.data||'').split('/');
+      if (p.length !== 3) return false;
+      const d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+      if (dataDe && d < dataDe) return false;
+      if (dataAte && d > dataAte) return false;
+    }
+    return true;
+  });
+  const ativos = !!(fPosto||fGerente||fTipo||fSup||fDe||fAte);
+  if (statusEl) statusEl.textContent = ativos
+    ? filtrados.length + ' de ' + LC_TODAS.length + ' registros (filtro ativo)'
+    : filtrados.length + ' registros';
+  lcRenderLinhas(filtrados);
+}
+
+function lcLimparFiltros() {
+  ['lc-flt-de','lc-flt-ate','lc-flt-posto','lc-flt-gerente','lc-flt-tipo','lc-flt-sup'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  lcAplicarFiltros();
+}
+
+function lcP(v) {
+  if (v===null||v===undefined||isNaN(v)) return '<span style="color:var(--tx3)">—</span>';
+  return '<span style="font-family:var(--mono);font-weight:700">'+Number(v).toFixed(2).replace('.',',')+'</span>';
+}
+function lcDriveThumb(url) { const m=url&&url.match(/[-\w]{25,}/); return m?'https://lh3.googleusercontent.com/d/'+m[0]+'=w280':''; }
+function lcShowPhoto(event,url,label) {
+  const pop=document.getElementById('lc-popover'); if(!pop) return;
+  document.getElementById('lc-pop-label').textContent=label||'Foto';
+  document.getElementById('lc-pop-img').src=lcDriveThumb(url);
+  document.getElementById('lc-pop-link').href=url;
+  pop.style.display='block';
+  const x=Math.min(event.clientX-120,window.innerWidth-250), y=Math.min(event.clientY-70,window.innerHeight-280);
+  pop.style.left=Math.max(4,x)+'px'; pop.style.top=Math.max(4,y)+'px';
+}
+function lcHidePhoto() { const p=document.getElementById('lc-popover'); if(p) p.style.display='none'; }
+function lcRenderLinhas(registros) {
+  const tbody=document.getElementById('lc-tbody'); if(!tbody) return;
+  if (!registros.length) { tbody.innerHTML='<tr><td colspan="11" style="padding:1.2rem;text-align:center;color:var(--tx3)">Nenhum registro.</td></tr>'; return; }
+  const SC={Mauricio:'var(--ac)',Paulo:'#4895ef',Fabricio:'#f9c74f',Gledson:'#c77dff',Rodrigo:'#ff6b6b'};
+  let html='';
+  registros.forEach(r => {
+    const isProp=r.tipo==='Próprio', corN=isProp?'var(--ac)':'var(--tx)', supC=SC[r.supervisor]||'var(--tx3)';
+    const temFoto=r.foto&&String(r.foto).startsWith('http');
+    const fS=temFoto?r.foto.replace(/'/g,''):'', lS=(r.postoAlvo||'').replace(/'/g,'');
+    const fotoCell=temFoto?`<span style="cursor:pointer;color:#4895ef;font-family:var(--mono);font-size:.65rem;text-decoration:underline" onmouseenter="lcShowPhoto(event,'${fS}','${lS}')" onmouseleave="lcHidePhoto()" onclick="lcShowPhoto(event,'${fS}','${lS}')">📷 Ver</span>`:'<span style="color:var(--tx3)">—</span>';
+    html+=`<tr style="border-bottom:1px solid var(--bd)">
+      <td style="padding:.4rem .6rem;font-family:var(--mono);font-size:.65rem;color:var(--tx3);white-space:nowrap">${r.data||'—'}</td>
+      <td style="padding:.4rem .6rem;font-size:.72rem;color:var(--tx2);white-space:nowrap">${r.posto||'—'}</td>
+      <td style="padding:.4rem .6rem;font-size:.68rem;color:var(--tx3);white-space:nowrap">${r.gerente||'—'}</td>
+      <td style="padding:.4rem .6rem;font-size:.78rem;font-weight:600;color:${corN};white-space:nowrap">${r.postoAlvo||'—'}</td>
+      <td style="padding:.4rem .6rem;font-size:.65rem;font-family:var(--mono);color:${supC};white-space:nowrap">${r.supervisor||'—'}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.ET)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.GC)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.GA)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.S10)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.S500)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${fotoCell}</td>
+    </tr>`;
+  });
+  tbody.innerHTML=html;
+}
+
+// ── Override de renderComparar para incluir filtro de faixa de preço ──
+// Substitui a função original do app.js adicionando o filtro G_CMP_FAIXA_PRECO
+// na lista de competidores de cada posto.
+const _renderCompararOriginal = window.renderComparar;
+function renderComparar() {
+  // Chama o original primeiro para montar o DOM completo
+  if (typeof _renderCompararOriginal === 'function') {
+    _renderCompararOriginal();
+  }
+
+  // Se não há filtro de faixa, nada mais a fazer
+  if (G_CMP_FAIXA_PRECO === 'todos') return;
+  if (!G_DADOS) return;
+
+  const fuel = G_CMP_FUEL || 'GC';
+
+  // Re-processa cada card de posto já renderizado
+  const regioes = document.getElementById('cmp-regions');
+  if (!regioes) return;
+
+  const cards = regioes.querySelectorAll('.region-card');
+  cards.forEach(card => {
+    const linhas = card.querySelectorAll('.complist-row');
+    linhas.forEach(linha => {
+      const precoEl = linha.querySelector('.complist-preco');
+      const diffEl  = linha.querySelector('.complist-diff');
+      if (!precoEl || !diffEl) return;
+
+      const diffTxt = diffEl.textContent.trim();
+      // diff positivo = concorrente mais caro; negativo = mais barato
+      const diffNum = parseFloat(diffTxt.replace(/[^0-9,.-]/g,'').replace(',','.'));
+
+      if (G_CMP_FAIXA_PRECO === 'abaixo') {
+        // Mostrar só concorrentes mais baratos (diff negativo = concorrente < nosso)
+        linha.style.display = diffNum < 0 ? '' : 'none';
+      } else if (G_CMP_FAIXA_PRECO === 'acima') {
+        // Mostrar só concorrentes mais caros (diff positivo = concorrente > nosso)
+        linha.style.display = diffNum > 0 ? '' : 'none';
+      }
+    });
+  });
+}
