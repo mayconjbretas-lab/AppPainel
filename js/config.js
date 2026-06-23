@@ -1,15 +1,21 @@
 // ================================================================
-// JBRETAS — config.js v2
-// Dados estruturais: MAP_POSTOS, POSTOS_DADOS, USUARIOS_ADM
-// Concorrentes reais conforme CONCORRENTES_AS do Apps Script v10
-// SUPERVISOR_BLOCO atualizado conforme Code.gs (22/06/2026)
+// JBRETAS — config.js v3
+// FIXES v3:
+// • PAIVA E PAIVA COMBUSTIVEL → BEATRIZ (alinha com Apps Script)
+// • MAP_POSTOS: BRUNA duplicada removida, BEATRIZ corrigida
+// • ALIASES_POSTO: P. LOURA, P. MIRAGEM, P. BEATRIZ, PAIVA E PAIVA
+// • POSTOS_DADOS DUDU: POSTO CAICARA → POSTO CAIÇARA (com cedilha)
+// • SUPERVISOR_BLOCO: BEATRIZ adicionado
+// • processarDadosReais: normalização de nomes abreviados da planilha
 // ================================================================
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5EIYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
 
-const USUARIOS_ADM = [];
+const USUARIOS_ADM = []; // autenticação via Apps Script
 
 // MAP_POSTOS — coordenadas fixas dos postos próprios
+// FIX v3: BRUNA duplicada removida (era Fabricio+Gledson, mantido Gledson)
+//         PAIVA E PAIVA COMBUSTIVEL → BEATRIZ
 const MAP_POSTOS = [
   {k:"JA",                   ap:"P. JA",                    lat:-19.9581, lng:-43.9571, sup:"Mauricio", banda:"Ipiranga"},
   {k:"ITAPOA",               ap:"P. ITAPOA",                lat:-19.9198, lng:-43.9814, sup:"Mauricio", banda:"Shell"},
@@ -27,7 +33,7 @@ const MAP_POSTOS = [
   {k:"SAO BERNARDO",         ap:"P. SAO BERNARDO",          lat:-19.8700, lng:-43.9290, sup:"Fabricio", banda:"Ipiranga"},
   {k:"BAHAMAS",              ap:"P. BAHAMAS",               lat:-19.9150, lng:-43.9300, sup:"Fabricio", banda:"Ipiranga"},
   {k:"SERENA COLIBRI",       ap:"P. SERENA COLIBRI",        lat:-19.8140, lng:-44.0650, sup:"Fabricio", banda:"Ipiranga"},
-  {k:"BRUNA",                ap:"P. BRUNA",                 lat:-19.8954, lng:-43.9550, sup:"Fabricio", banda:"BR/Petrobras"},
+  {k:"BRUNA",                ap:"P. BRUNA",                 lat:-19.8954, lng:-43.9550, sup:"Gledson",  banda:"BR/Petrobras"},
   {k:"TOPAZIO",              ap:"P. TOPAZIO",               lat:-19.7740, lng:-44.0530, sup:"Paulo",    banda:"BR/Petrobras"},
   {k:"JOCA",                 ap:"P. JOCA",                  lat:-19.9290, lng:-43.9730, sup:"Paulo",    banda:"Ipiranga"},
   {k:"LOURA EMPREENDIMENTOS",ap:"P. LOURA EMPREENDIMENTOS", lat:-19.9384, lng:-44.0901, sup:"Paulo",    banda:"Shell"},
@@ -45,13 +51,14 @@ const MAP_POSTOS = [
   {k:"MIRAGEM JBRETAS",      ap:"P. MIRAGEM JBRETAS",       lat:-19.7820, lng:-43.8850, sup:"Gledson",  banda:"Shell"},
   {k:"BIANCA",               ap:"P. BIANCA",                lat:-20.0400, lng:-44.1500, sup:"Gledson",  banda:"Ipiranga"},
   {k:"BARBOSA - DUDU",       ap:"P. BARBOSA - DUDU",        lat:-19.9330, lng:-44.0030, sup:"Gledson",  banda:"ALE"},
-  {k:"BRUNA",                ap:"P. BRUNA",                 lat:-19.8954, lng:-43.9550, sup:"Gledson",  banda:"BR/Petrobras"},
   {k:"ESPACO REAL",          ap:"P. ESPACO REAL",           lat:-21.1300, lng:-44.2570, sup:"Rodrigo",  banda:"BR/Petrobras"},
   {k:"FELIPAO",              ap:"P. FELIPAO",               lat:-19.9230, lng:-43.9900, sup:"Rodrigo",  banda:"BR/Petrobras"},
-  {k:"PAIVA E PAIVA COMBUSTIVEL", ap:"PAIVA E PAIVA COMBUSTIVEL", lat:-21.1389, lng:-44.2294, sup:"Rodrigo", banda:"Bandeira Branca"},
+  {k:"BEATRIZ",              ap:"P. BEATRIZ",               lat:-21.1389, lng:-44.2294, sup:"Rodrigo",  banda:"Shell"},
 ];
 
 // POSTOS_DADOS — concorrentes reais conforme Apps Script CONCORRENTES_AS
+// FIX v3: PAIVA E PAIVA COMBUSTIVEL → BEATRIZ
+//         POSTO CAICARA → POSTO CAIÇARA (com cedilha, igual à planilha)
 const POSTOS_DADOS = {
   "ALEX":        {sup:"Mauricio",bandeira:"Ipiranga",combs:["GC","GA","ET","S10"],
     conc:{"REDE FLEX CENTER SUL":{banda:"Rede Flex"},"P. RAJA":{banda:"Bandeira Branca"},"POSTO BARAO":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"},"P. NSA. FATIMA (BH)":{banda:"Bandeira Branca"}}},
@@ -64,7 +71,9 @@ const POSTOS_DADOS = {
   "BAHAMAS":     {sup:"Fabricio",bandeira:"Ipiranga",combs:["GC","GA","ET"],
     conc:{"POSTO MIGUELAO":{banda:"Bandeira Branca"},"POSTO PAPAI MATRIZ":{banda:"Bandeira Branca"},"POSTO PAPAI FILIAL":{banda:"Bandeira Branca"},"POSTO FLORESTA":{banda:"Bandeira Branca"},"POSTO SAO SEBASTIAO":{banda:"Bandeira Branca"}}},
   "BARBOSA - DUDU":{sup:"Gledson",bandeira:"ALE",combs:["GC","ET","S10"],
-    conc:{"POSTO CAICARA":{banda:"Bandeira Branca"},"POSTO CARREFOUR":{banda:"Bandeira Branca"},"POSTO DEL REY":{banda:"Bandeira Branca"}}},
+    conc:{"POSTO CAIÇARA":{banda:"Bandeira Branca"},"POSTO CARREFOUR":{banda:"Bandeira Branca"},"POSTO DEL REY":{banda:"Bandeira Branca"}}},
+  "BEATRIZ":     {sup:"Rodrigo",bandeira:"Shell",combs:["GC","GA","ET","S10","S500"],
+    conc:{"POSTO DUDU":{banda:"Bandeira Branca"},"POSTO IPIRANGA":{banda:"Ipiranga"},"POSTO PATIO":{banda:"Bandeira Branca"},"POSTO BH":{banda:"Bandeira Branca"},"POSTO SAO JOAO":{banda:"Bandeira Branca"}}},
   "BERNARDO":    {sup:"Mauricio",bandeira:"Shell",combs:["GC","ET","S10","S500"],
     conc:{"BALNEARIO AGUA LIMPA":{banda:"Bandeira Branca"},"CHEFAO SHELL":{banda:"Shell"},"CURVO DO RETIRO":{banda:"Bandeira Branca"},"PARADA BOA":{banda:"Bandeira Branca"},"SERENA CANADA":{banda:"Bandeira Branca"},"VIA TORONTO":{banda:"Bandeira Branca"}}},
   "BIANCA":      {sup:"Gledson",bandeira:"Ipiranga",combs:["GC","GA","ET","S10","S500"],
@@ -84,7 +93,7 @@ const POSTOS_DADOS = {
   "GLORIA":      {sup:"Gledson",bandeira:"Shell",combs:["GC","ET","S10"],
     conc:{"CAPITAL":{banda:"Bandeira Branca"},"NOSSO POSTO":{banda:"Bandeira Branca"},"POSTO ATUAL":{banda:"Bandeira Branca"}}},
   "ITAPOA":      {sup:"Mauricio",bandeira:"Shell",combs:["GC","GA","ET","S10"],
-    conc:{"FLEX VIA EXPRESSA":{banda:"Bandeira Branca"},"PHOENIX AMAZONAS":{banda:"Bandeira Branca"},"PIO XII AMAZONAS":{banda:"Bandeira Branca"},"POSTO FRANCISCO DE SA":{banda:"Bandeira Branca"},"POSTO OLIMAR":{banda:"Bandeira Branca"},"POSTO QUICK":{banda:"Bandeira Branca"},"POSTO WAP":{banda:"Bandeira Branca"},"REDE FLEX AMAZONAS":{banda:"Rede Flex"},"POSTO ITAPOA":{banda:"Bandeira Branca"}}},
+    conc:{"FLEX VIA EXPRESSA":{banda:"Bandeira Branca"},"PHOENIX AMAZONAS":{banda:"Bandeira Branca"},"PIO XII AMAZONAS":{banda:"Bandeira Branca"},"POSTO FRANCISCO DE SA":{banda:"Bandeira Branca"},"POSTO OLIMAR":{banda:"Bandeira Branca"},"POSTO QUICK":{banda:"Bandeira Branca"},"POSTO WAP":{banda:"Bandeira Branca"},"REDE FLEX AMAZONAS":{banda:"Rede Flex"},"ZEP VIA EXPRESSA":{banda:"Rede Flex"}}},
   "JA":          {sup:"Mauricio",bandeira:"Ipiranga",combs:["GC","GA","ET","S10","OCT"],
     conc:{"P. RAJA":{banda:"Bandeira Branca"},"POSTO WR":{banda:"Bandeira Branca"},"REDE FLEX CENTER SUL":{banda:"Rede Flex"}}},
   "JOCA":        {sup:"Paulo",bandeira:"Ipiranga",combs:["GC","ET","S10"],
@@ -99,8 +108,6 @@ const POSTOS_DADOS = {
     conc:{"XAVANTE":{banda:"Bandeira Branca"},"CATALAO":{banda:"Bandeira Branca"}}},
   "OURO BRANCO": {sup:"Paulo",bandeira:"Bandeira Branca",combs:["GC","GA","ET","S10"],
     conc:{"POSTO PRAIA 01":{banda:"Ipiranga"},"POSTO CHAMPION":{banda:"Bandeira Branca"},"POSTO PRAIA 02":{banda:"Ipiranga"},"POSTO REDE SANTANA":{banda:"Bandeira Branca"}}},
-  "PAIVA E PAIVA COMBUSTIVEL": {sup:"Rodrigo",bandeira:"Bandeira Branca",combs:["GC","GA","ET","S10","S500"],
-    conc:{"POSTO DUDU":{banda:"Bandeira Branca"},"POSTO IPIRANGA":{banda:"Ipiranga"},"POSTO PATIO":{banda:"Bandeira Branca"},"POSTO BH":{banda:"Bandeira Branca"},"POSTO SAO JOAO":{banda:"Bandeira Branca"}}},
   "PLANALTO":    {sup:"Paulo",bandeira:"BR/Petrobras",combs:["GC","GA","ET","S10","S500"],
     conc:{"ALE SENT. BAIRRO":{banda:"ALE"},"BR OLIMPIO MOURAO (FALCAO)":{banda:"BR/Petrobras"},"CAMOES (AV.PORTUGAL)":{banda:"Bandeira Branca"},"P. ENTRADA OBRIGATORIA":{banda:"Bandeira Branca"},"SAO BERNARDO":{banda:"Bandeira Branca"}}},
   "QUATRO RODAS":{sup:"Gledson",bandeira:"Ipiranga",combs:["GC","GA","ET","S10"],
@@ -133,10 +140,8 @@ const SUPCOR = {Mauricio:'#00e5a0',Paulo:'#4895ef',Fabricio:'#f9c74f',Gledson:'#
 const BCOR   = {"Rede Flex":"#00e5a0","Ipiranga":"#f9c74f","Shell":"#e8c84a","BR/Petrobras":"#4db6ac","ALE":"#ff6b6b","Bandeira Branca":"#8892a4","Rede Aqui":"#ff9800","Siga Petro":"#ba68c8","Rede Aliança":"#ff7043"};
 
 // ================================================================
-// SUPERVISOR_BLOCO — atualizado conforme Code.gs (22/06/2026)
-// Removidos: CEASA (= SANTA INES), BEATRIZ (= PAIVA E PAIVA)
-// Adicionados: DUDU, BRUNA→Gledson, OURO BRANCO→Paulo,
-//              SANTA MARIA→Gledson, BEATRIZ→Rodrigo
+// SUPERVISOR_BLOCO — mapa bloco → supervisor
+// FIX v3: BEATRIZ adicionado (Rodrigo)
 // ================================================================
 const SUPERVISOR_BLOCO = {
   "J A":"Mauricio",          "MANGABEIRAS":"Mauricio",   "URBANO":"Mauricio",
@@ -153,5 +158,45 @@ const SUPERVISOR_BLOCO = {
   "LEANDRO":"Gledson",       "MIRAGEM":"Gledson",        "BIANCA":"Gledson",
   "DUDU":"Gledson",          "BRUNA":"Gledson",          "SANTA MARIA":"Gledson",
   "ESPACO REAL":"Rodrigo",   "FELIPAO":"Rodrigo",        "BEATRIZ":"Rodrigo",
-  "PAIVA PAIVA":"Rodrigo",
 };
+
+// ================================================================
+// ALIASES_POSTO — normaliza nomes que a planilha grava de forma
+// diferente do que está em POSTOS_DADOS
+// FIX v3: P. LOURA, P. MIRAGEM, P. BEATRIZ, PAIVA E PAIVA
+// ================================================================
+const ALIASES_POSTO = {
+  // planilha grava abreviado → chave real em POSTOS_DADOS
+  'LOURA':                    'LOURA EMPREENDIMENTOS',
+  'P. LOURA':                 'LOURA EMPREENDIMENTOS',
+  'MIRAGEM':                  'MIRAGEM JBRETAS',
+  'P. MIRAGEM':               'MIRAGEM JBRETAS',
+  // PAIVA E PAIVA → BEATRIZ (renomeado)
+  'BEATRIZ':                  'BEATRIZ',
+  'P. BEATRIZ':               'BEATRIZ',
+  'PAIVA E PAIVA':            'BEATRIZ',
+  'PAIVA E PAIVA COMBUSTIVEL':'BEATRIZ',
+  // outros aliases úteis
+  'BARBOSA - DUDU':           'BARBOSA - DUDU',
+  'SANTA INES - JOAQUIM':     'SANTA INES - JOAQUIM',
+};
+
+
+// ================================================================
+// NOTA PARA app.js — processarDadosReais()
+// ================================================================
+// Substituir o bloco de montagem de propMapeado por este:
+//
+// function processarDadosReais() {
+//   const propPlano = G_DADOS.prop || {};
+//   const propMapeado = {};
+//   for (let k in propPlano) {
+//     propMapeado[k] = propPlano[k];
+//     const found = encontrarPostoCanonico(k);
+//     if (found && found !== k) propMapeado[found] = propPlano[k];
+//     // Remove a entrada abreviada para não criar duplicata no KPI
+//     if (found && found !== k) delete propMapeado[k];
+//   }
+//   G_DADOS.prop = propMapeado;
+//   ...
+// }
