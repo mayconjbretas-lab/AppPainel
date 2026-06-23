@@ -1385,14 +1385,18 @@ function logMontarCabecalho(grupos, vendaCols) {
   if (table) table.id = 'log-matrix-table';
 
   // ── Estilos base reutilizados ─────────────────────────────
+  // ATENÇÃO: backgrounds SÓLIDOS (sem transparência) para o sticky
+  // não deixar células do corpo aparecerem por trás ao rolar.
+  // Cor = mix do rgba sobre o fundo base #0d1120.
   const STICKY_BASE = 'position:sticky;z-index:18;';
-  const TH_BASE     = 'text-align:center;white-space:nowrap;padding:.4rem .5rem;';
+  const TH_BASE     = 'text-align:center;white-space:nowrap;padding:.4rem .6rem;';
   const BG_MAP = {
-    medicao:   { bg: 'rgba(72,149,239,.13)',  borda: '#4895ef' },
-    venda:     { bg: 'rgba(212,175,55,.12)',   borda: '#d4af37' },
-    carga:     { bg: 'rgba(199,125,255,.11)',  borda: '#c77dff' },
-    prePedido: { bg: 'rgba(249,199,79,.10)',   borda: '#f9c74f' },
-    pedido:    { bg: 'rgba(255,158,0,.10)',    borda: '#ff9e00' },
+    //              linha-1 (grupo)   linha-2 (comb)   borda
+    medicao:   { g1: '#101e30', g2: '#0e1b2c', borda: '#4895ef' },
+    venda:     { g1: '#181508', g2: '#151307', borda: '#d4af37' },
+    carga:     { g1: '#160d22', g2: '#130b1e', borda: '#c77dff' },
+    prePedido: { g1: '#1a1608', g2: '#171407', borda: '#f9c74f' },
+    pedido:    { g1: '#1a1105', g2: '#171005', borda: '#ff9e00' },
   };
 
   // ── Coluna DIA: rowspan=2, sticky left+top ────────────────
@@ -1402,7 +1406,7 @@ function logMontarCabecalho(grupos, vendaCols) {
     'min-width:62px;padding:.4rem .5rem;' +
     'font-size:.68rem;font-weight:700;' +
     'color:#5a6478;text-align:center;' +
-    'border-bottom:2px solid #2a3550;' +
+    'border-bottom:1px solid #1e2845;' +
     'border-right:2px solid #1e2845;';
 
   // ── LINHA 1 — grupos (MEDIÇÃO, VENDA, CARGA, PRÉ-PEDIDO, PEDIDO FINAL) ──
@@ -1410,49 +1414,47 @@ function logMontarCabecalho(grupos, vendaCols) {
   r1 += '<th rowspan="2" style="' + DIA_STYLE + '">DIA</th>';
 
   LOG_CATEGORIAS.forEach((cat, ci) => {
-    const cols   = logColsDaCategoria(cat.chave, grupos, vendaCols);
-    const span   = cols.length;
-    const m      = BG_MAP[cat.chave] || { bg: 'transparent', borda: '#2a3550' };
-    // Separador visual entre grupos
+    const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
+    const span = cols.length;
+    const m    = BG_MAP[cat.chave] || { g1: '#0d1120', g2: '#0d1120', borda: '#2a3550' };
+    // Separador sólido entre grupos
     if (ci > 0) {
       r1 += '<th rowspan="2" style="' +
         'position:sticky;top:0;z-index:20;' +
-        'background:#060810;width:8px;min-width:8px;' +
-        'border:none;padding:0;border-bottom:2px solid #060810' +
+        'background:#07090f;width:8px;min-width:8px;' +
+        'border:none;padding:0' +
         '"></th>';
     }
     r1 += '<th colspan="' + span + '" style="' +
       STICKY_BASE + 'top:0;z-index:20;' +
-      'background:' + m.bg + ';' +
+      'background:' + m.g1 + ';' +
       TH_BASE +
-      'font-family:var(--mono,monospace);font-size:.65rem;font-weight:700;' +
+      'font-family:var(--mono,monospace);font-size:.62rem;font-weight:700;' +
       'color:' + cat.cor + ';' +
-      'letter-spacing:.03em;text-transform:uppercase;' +
+      'letter-spacing:.05em;text-transform:uppercase;' +
       'border-bottom:2px solid ' + m.borda + ';' +
-      'border-left:1px solid ' + m.borda + '33;' +
+      'border-left:1px solid ' + m.borda + '55;' +
       '">' + cat.titulo + '</th>';
   });
   r1 += '</tr>';
 
   // ── LINHA 2 — combustíveis (G.C, G.A, ET, DS10 …) ───────
   let r2 = '<tr>';
-  // (sem DIA — já tem rowspan=2)
 
   LOG_CATEGORIAS.forEach((cat, ci) => {
     const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
-    const m    = BG_MAP[cat.chave] || { bg: 'transparent', borda: '#2a3550' };
-    // Separador (já foi emitido no r1 com rowspan=2)
+    const m    = BG_MAP[cat.chave] || { g1: '#0d1120', g2: '#0d1120', borda: '#2a3550' };
     cols.forEach((col, gi) => {
       const isFirst = gi === 0;
       r2 += '<th style="' +
-        STICKY_BASE + 'top:var(--log-thead-h,38px);z-index:19;' +
-        'background:' + m.bg + ';' +
+        STICKY_BASE + 'top:var(--log-thead-h,36px);z-index:19;' +
+        'background:' + m.g2 + ';' +
         TH_BASE +
-        'font-family:var(--mono,monospace);font-size:.68rem;font-weight:700;' +
+        'font-family:var(--mono,monospace);font-size:.7rem;font-weight:700;' +
         'color:' + cat.cor + ';' +
         'min-width:72px;' +
         'border-bottom:2px solid ' + m.borda + ';' +
-        (isFirst ? 'border-left:1px solid ' + m.borda + '33;' : '') +
+        (isFirst ? 'border-left:1px solid ' + m.borda + '55;' : '') +
         '">' + col.abv + '</th>';
     });
   });
