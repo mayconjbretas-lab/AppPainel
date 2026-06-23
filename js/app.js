@@ -1874,33 +1874,79 @@ function lcShowPhoto(event, url, label) {
 }
 function lcHidePhoto() { const p = document.getElementById('lc-popover'); if (p) p.style.display = 'none'; }
 
+function lcAbreviarPosto(nome) {
+  if (!nome) return '—';
+  // Remove prefixos comuns para caber em coluna estreita
+  return nome.replace(/^P\.\s*/i,'').substring(0,14);
+}
+
+// Renderização compacta mobile: 4 colunas + linha de detalhe expansível por toque
 function lcRenderLinhas(registros) {
   const tbody = document.getElementById('lc-tbody'); if (!tbody) return;
-  if (!registros.length) { tbody.innerHTML = '<tr><td colspan="11" style="padding:1.2rem;text-align:center;color:var(--tx3)">Nenhum registro.</td></tr>'; return; }
-  const SC = { Mauricio: 'var(--ac)', Paulo: '#4895ef', Fabricio: '#f9c74f', Gledson: '#c77dff', Rodrigo: '#ff6b6b' };
+  if (!registros.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:1.2rem;text-align:center;color:var(--tx3)">Nenhum registro.</td></tr>';
+    return;
+  }
+  const SC = { Mauricio: 'var(--ac)', Paulo: '#58a6e8', Fabricio: '#f0a444', Gledson: '#a78bfa', Rodrigo: '#ff6b6b' };
   let html = '';
-  registros.forEach(r => {
-    const isProp = r.tipo === 'Próprio', corN = isProp ? 'var(--ac)' : 'var(--tx)', supC = SC[r.supervisor] || 'var(--tx3)';
+  registros.forEach((r, idx) => {
+    const isProp = r.tipo === 'Próprio';
+    const corN   = isProp ? 'var(--ac)' : 'var(--tx)';
+    const supC   = SC[r.supervisor] || 'var(--tx3)';
     const temFoto = r.foto && String(r.foto).startsWith('http');
-    const fS = temFoto ? r.foto.replace(/'/g, '') : '', lS = (r.postoAlvo || '').replace(/'/g, '');
-    const fotoCell = temFoto
-      ? `<span style="cursor:pointer;color:#4895ef;font-family:var(--mono);font-size:.65rem;text-decoration:underline" onmouseenter="lcShowPhoto(event,'${fS}','${lS}')" onmouseleave="lcHidePhoto()" onclick="lcShowPhoto(event,'${fS}','${lS}')">📷 Ver</span>`
-      : '<span style="color:var(--tx3)">—</span>';
-    html += `<tr style="border-bottom:1px solid var(--bd)">
-      <td style="padding:.4rem .6rem;font-family:var(--mono);font-size:.65rem;color:var(--tx3);white-space:nowrap">${r.data || '—'}</td>
-      <td style="padding:.4rem .6rem;font-size:.72rem;color:var(--tx2);white-space:nowrap">${r.posto || '—'}</td>
-      <td style="padding:.4rem .6rem;font-size:.68rem;color:var(--tx3);white-space:nowrap">${r.gerente || '—'}</td>
-      <td style="padding:.4rem .6rem;font-size:.78rem;font-weight:600;color:${corN};white-space:nowrap">${r.postoAlvo || '—'}</td>
-      <td style="padding:.4rem .6rem;font-size:.65rem;font-family:var(--mono);color:${supC};white-space:nowrap">${r.supervisor || '—'}</td>
-      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.ET)}</td>
-      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.GC)}</td>
-      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.GA)}</td>
-      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.S10)}</td>
-      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.S500)}</td>
-      <td style="padding:.4rem .6rem;text-align:center">${fotoCell}</td>
+    const fS = temFoto ? r.foto.replace(/'/g, '\'') : '';
+    const lS = (r.postoAlvo || '').replace(/'/g, '\'');
+    const detailId = 'lc-det-' + idx;
+
+    // Pills de preço compactos (só combustíveis com valor)
+    let pills = '';
+    if (r.GC)  pills += `<span class="lc-preco-pill gc">GC ${Number(r.GC).toFixed(2)}</span>`;
+    if (r.ET)  pills += `<span class="lc-preco-pill et">ET ${Number(r.ET).toFixed(2)}</span>`;
+    if (r.GA)  pills += `<span class="lc-preco-pill ga">GA ${Number(r.GA).toFixed(2)}</span>`;
+    if (r.S10) pills += `<span class="lc-preco-pill s10">S10 ${Number(r.S10).toFixed(2)}</span>`;
+    if (temFoto) pills += `<span class="lc-foto-btn" onmouseenter="lcShowPhoto(event,'${fS}','${lS}')" onmouseleave="lcHidePhoto()" onclick="lcShowPhoto(event,'${fS}','${lS}')">📷</span>`;
+
+    // Linha principal (4 colunas)
+    html += `<tr class="lc-row${isProp ? ' proprio' : ''}" onclick="lcToggleDetail('${detailId}')">
+      <td class="lc-td lc-td-data">${(r.data||'—').replace(/(\d+)\/(\d+)\/\d+/,'$1/$2')}</td>
+      <td class="lc-td lc-td-posto" title="${r.posto||''}">${lcAbreviarPosto(r.posto)}</td>
+      <td class="lc-td lc-td-alvo" style="color:${corN}" title="${r.postoAlvo||''}">${lcAbreviarPosto(r.postoAlvo)}</td>
+      <td class="lc-td"><div class="lc-td-precos">${pills||'<span style="color:var(--tx3);font-size:.62rem">—</span>'}</div></td>
+    </tr>`;
+
+    // Linha de detalhe expansível
+    html += `<tr class="lc-row-detail" id="${detailId}">
+      <td colspan="4">
+        <div class="lc-detail-inner">
+          <div class="lc-detail-pill"><div class="lc-detail-lbl">Posto coletou</div><div class="lc-detail-val" style="font-size:.7rem">${r.posto||'—'}</div></div>
+          <div class="lc-detail-pill"><div class="lc-detail-lbl">Gerente</div><div class="lc-detail-val" style="font-size:.7rem">${r.gerente||'—'}</div></div>
+          <div class="lc-detail-pill"><div class="lc-detail-lbl">Supervisor</div><div class="lc-detail-val" style="color:${supC};font-size:.7rem">${r.supervisor||'—'}</div></div>
+          ${r.GC  ? `<div class="lc-detail-pill"><div class="lc-detail-lbl">G. Comum</div><div class="lc-detail-val" style="color:var(--ac)">R$ ${Number(r.GC).toFixed(3).replace('.',',')}</div></div>` : ''}
+          ${r.ET  ? `<div class="lc-detail-pill"><div class="lc-detail-lbl">Etanol</div><div class="lc-detail-val" style="color:#f0a444">R$ ${Number(r.ET).toFixed(3).replace('.',',')}</div></div>` : ''}
+          ${r.GA  ? `<div class="lc-detail-pill"><div class="lc-detail-lbl">G. Aditivada</div><div class="lc-detail-val" style="color:#58a6e8">R$ ${Number(r.GA).toFixed(3).replace('.',',')}</div></div>` : ''}
+          ${r.S10 ? `<div class="lc-detail-pill"><div class="lc-detail-lbl">Diesel S10</div><div class="lc-detail-val" style="color:#a78bfa">R$ ${Number(r.S10).toFixed(3).replace('.',',')}</div></div>` : ''}
+          ${r.S500? `<div class="lc-detail-pill"><div class="lc-detail-lbl">Diesel S500</div><div class="lc-detail-val" style="color:#a78bfa">R$ ${Number(r.S500).toFixed(3).replace('.',',')}</div></div>` : ''}
+          ${temFoto ? `<div class="lc-detail-pill" style="grid-column:1/-1"><div class="lc-detail-lbl">Foto</div><div style="margin-top:.25rem"><a href="${fS}" target="_blank" style="color:var(--ac);font-size:.65rem;text-decoration:underline;font-family:var(--mono)">📷 Abrir no Drive</a></div></div>` : ''}
+        </div>
+        <div class="lc-detail-meta">
+          <span>📅 ${r.data||'—'}</span>
+          <span style="color:${isProp?'var(--ac)':'var(--tx3)'}">● ${r.tipo||'—'}</span>
+          ${r.hora ? `<span>🕐 ${r.hora.substring(0,5)}</span>` : ''}
+          ${r.bandeira ? `<span>🏷 ${r.bandeira}</span>` : ''}
+        </div>
+      </td>
     </tr>`;
   });
   tbody.innerHTML = html;
+}
+
+function lcToggleDetail(id) {
+  const row = document.getElementById(id);
+  if (!row) return;
+  const isOpen = row.classList.contains('open');
+  // Fecha todos antes de abrir outro
+  document.querySelectorAll('.lc-row-detail.open').forEach(r => r.classList.remove('open'));
+  if (!isOpen) row.classList.add('open');
 }
 
 // ════════════════════════════════════════════════════════════
