@@ -87,6 +87,17 @@
           <label style="display:flex;align-items:center;gap:.4rem;font-size:.76rem;color:var(--tx2);margin:.5rem 0">
             <input type="checkbox" id="cmp-so-mudou" onchange="cmpToggleSoMudou(this)"> Só quem mudou desde ontem
           </label>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">
+            <button class="ftag" id="flt-abaixo" onclick="cmpSetFaixaPreco(this,'abaixo')" title="Mostrar só concorrentes mais baratos que o nosso preço">
+              🔵 Abaixo do nosso
+            </button>
+            <button class="ftag" id="flt-acima" onclick="cmpSetFaixaPreco(this,'acima')" title="Mostrar só concorrentes mais caros que o nosso preço">
+              🔴 Acima do nosso
+            </button>
+            <button class="ftag" id="flt-todos-preco" onclick="cmpSetFaixaPreco(this,'todos')" style="display:none">
+              ✕ Limpar filtro
+            </button>
+          </div>
           <div class="strat-box">
             <div class="csub" style="margin-bottom:.45rem">Estratégia de preço sugerido</div>
             <div class="strat-row" id="cmp-strat-tabs"></div>
@@ -186,10 +197,10 @@
           <!-- Sub-abas: Medição / Coleta -->
           <div style="display:flex;gap:.4rem">
             <button class="log-subtab active" id="lsubt-medicao" onclick="logSwitchSub('medicao')">
-              <i class="fa-solid fa-calculator"></i> Medição
+              <i class="fa-solid fa-calculator" aria-hidden="true"></i> Medição
             </button>
             <button class="log-subtab" id="lsubt-coleta" onclick="logSwitchSub('coleta')">
-              <i class="fa-solid fa-tags"></i> Coleta de Preços
+              <i class="fa-solid fa-tags" aria-hidden="true"></i> Coleta
             </button>
           </div>
           <span class="log-matrix-sub" id="log-matrix-sub" style="font-size:.6rem">• Selecione um posto</span>
@@ -199,7 +210,6 @@
             <i class="fa-solid fa-rotate" id="btn-log-refresh-icon"></i>
           </button>
           <span id="log-ultima-atualizacao" style="font-size:.56rem;color:var(--tx3);font-family:var(--mono)">—</span>
-          <!-- Botões só aparecem na sub-aba Medição -->
           <button class="btn-log-action" id="btn-log-salvar" disabled onclick="logSalvarMatriz()" style="display:none">
             <i class="fa-solid fa-floppy-disk"></i> Salvar
           </button>
@@ -209,10 +219,47 @@
         </div>
       </div>
 
-      <!-- Select de posto (compartilhado entre as duas sub-abas) -->
+      <!-- Select de posto — opções com "P. " para bater com o Apps Script -->
       <select class="sel" id="log-sel-posto" onchange="logOnPostoChange(this.value)"
         style="margin-bottom:0;border-radius:0;border-top:none">
         <option value="">— Selecione um posto —</option>
+        <option value="P. ALEX">P. ALEX</option>
+        <option value="P. ANA LÚCIA">P. ANA LÚCIA</option>
+        <option value="P. ARAPONGA">P. ARAPONGA</option>
+        <option value="P. AVIVA">P. AVIVA</option>
+        <option value="P. BAHAMAS">P. BAHAMAS</option>
+        <option value="P. BARBOSA - DUDU">P. BARBOSA - DUDU</option>
+        <option value="P. BERNARDO">P. BERNARDO</option>
+        <option value="P. BIANCA">P. BIANCA</option>
+        <option value="P. BOMBOM FILIAL">P. BOMBOM FILIAL</option>
+        <option value="P. BOMBOM MATRIZ">P. BOMBOM MATRIZ</option>
+        <option value="P. BRUNA">P. BRUNA</option>
+        <option value="P. DIFERENCIAL">P. DIFERENCIAL</option>
+        <option value="P. ESPAÇO REAL">P. ESPAÇO REAL</option>
+        <option value="P. FELIPAO">P. FELIPAO</option>
+        <option value="P. GLÓRIA">P. GLÓRIA</option>
+        <option value="P. ITAPOA">P. ITAPOA</option>
+        <option value="P. JA">P. JA</option>
+        <option value="P. JOCA">P. JOCA</option>
+        <option value="P. LEANDRO">P. LEANDRO</option>
+        <option value="P. LOURA EMPREENDIMENTOS">P. LOURA EMPREENDIMENTOS</option>
+        <option value="P. MANGABEIRAS">P. MANGABEIRAS</option>
+        <option value="P. MIRAGEM JBRETAS">P. MIRAGEM JBRETAS</option>
+        <option value="P. OURO BRANCO">P. OURO BRANCO</option>
+        <option value="P. PLANALTO">P. PLANALTO</option>
+        <option value="P. QUATRO RODAS">P. QUATRO RODAS</option>
+        <option value="P. RODRIGO">P. RODRIGO</option>
+        <option value="P. SANTA INES - JOAQUIM">P. SANTA INES - JOAQUIM</option>
+        <option value="P. SANTA INES MINAS">P. SANTA INES MINAS</option>
+        <option value="P. SANTA MARIA">P. SANTA MARIA</option>
+        <option value="P. SAO BERNARDO">P. SAO BERNARDO</option>
+        <option value="P. SAO LUIZ RL">P. SAO LUIZ RL</option>
+        <option value="P. SERENA COLIBRI">P. SERENA COLIBRI</option>
+        <option value="P. TOPAZIO">P. TOPAZIO</option>
+        <option value="P. TRANCOSO">P. TRANCOSO</option>
+        <option value="P. TUNEL">P. TUNEL</option>
+        <option value="P. URBANO FERRAZ">P. URBANO FERRAZ</option>
+        <option value="PAIVA E PAIVA COMBUSTIVEL">PAIVA E PAIVA COMBUSTIVEL</option>
       </select>
 
       <!-- ── SUB-ABA MEDIÇÃO ── -->
@@ -346,7 +393,6 @@
       <div class="mitem" onclick="irPara('simulador')"><span class="mic"><i class="fa-solid fa-calculator"></i></span><div class="mlbl">Simulador</div><div class="mbadge">ativo</div></div>
       <div class="mitem" onclick="irPara('lancamento')"><span class="mic"><i class="fa-solid fa-pen-to-square"></i></span><div class="mlbl">Lançar Preço</div><div class="mbadge">ativo</div></div>
       <div class="mitem" onclick="irPara('logistica')"><span class="mic"><i class="fa-solid fa-truck-fast"></i></span><div class="mlbl">Logística</div><div class="mbadge">novo</div></div>
-      <div class="mitem" onclick="irPara('coleta-simples')"><span class="mic"><i class="fa-solid fa-tags"></i></span><div class="mlbl">Coleta de Preços</div><div class="mbadge">novo</div></div>
       <div class="mitem" onclick="irPara('relatorios')"><span class="mic"><i class="fa-solid fa-chart-bar"></i></span><div class="mlbl">Relatórios</div><div class="mbadge">ativo</div></div>
     </div>
   </div>
