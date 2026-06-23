@@ -327,23 +327,6 @@ function processarDadosReais() {
 
 function povoarSelects() {
   const lista = Object.keys(POSTOS_DADOS).sort();
-  const selLog = document.getElementById('log-sel-posto');
-  if (selLog) {
-    const valSalvoLog = selLog.value;
-    selLog.innerHTML = '<option value="">Selecione um posto...</option>';
-    lista.forEach(p => {
-      const opt = document.createElement('option');
-      // value com "P. " para bater com NOMES_POSTOS do Apps Script
-      opt.value = 'P. ' + p;
-      opt.textContent = 'P. ' + p;
-      selLog.appendChild(opt);
-    });
-    // restaura seleção anterior (tanto "ALEX" quanto "P. ALEX")
-    if (valSalvoLog) {
-      const normSalvo = valSalvoLog.startsWith('P. ') ? valSalvoLog : 'P. ' + valSalvoLog;
-      selLog.value = normSalvo;
-    }
-  }
   const selPosto = document.getElementById('cmp-posto');
   if (selPosto) {
     const valSalvo = selPosto.value;
