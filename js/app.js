@@ -2290,3 +2290,845 @@ function logIniciarAutoRefresh() {
 
 // Inicia o timer assim que o patch carrega
 logIniciarAutoRefresh();
+// ================================================================
+// JBRETAS AppPainel — Patch: Logística Matriz + Coleta Simplificada
+// Cole este bloco NO FINAL do arquivo js/app.js, substituindo
+// a função carregarLogistica() e renderCardsLogistica() existentes.
+// ================================================================
+
+// ── Refresh manual da matriz ─────────────────────────────────────
+// Recarrega o posto atual da planilha sem perder o estado dos botões.
+// Avisa se houver edições pendentes antes de sobrescrever.
+async function logRefresh() {
+  if (!LOG_MAT_POSTO_ATUAL) return;
+
+  const pendentes = Object.keys(LOG_MAT_EDICOES).length;
+  if (pendentes > 0) {
+    const ok = confirm(
+      'Você tem ' + pendentes + ' alteração(ões) não salva(s).\n\n' +
+      'Recarregar vai descartar essas alterações.\nDeseja continuar?'
+    );
+    if (!ok) return;
+  }
+
+  const btn  = document.getElementById('btn-log-refresh');
+  const icon = document.getElementById('btn-log-refresh-icon');
+  if (btn)  btn.disabled = true;
+  if (icon) icon.classList.add('girando');
+
+  try {
+    await carregarLogMatriz(LOG_MAT_POSTO_ATUAL);
+    logRegistrarAtualizacao();
+  } finally {
+    if (btn)  btn.disabled = false;
+    if (icon) icon.classList.remove('girando');
+  }
+}
+
+function logRegistrarAtualizacao() {
+  const el = document.getElementById('log-ultima-atualizacao');
+  if (!el) return;
+  const agora = new Date();
+  const hh = String(agora.getHours()).padStart(2,'0');
+  const mm = String(agora.getMinutes()).padStart(2,'0');
+  el.textContent = 'Atualizado às ' + hh + ':' + mm;
+}
+
+// ── Estado da nova matriz de logística ──────────────────────────
+let LOG_MAT_DADOS       = null;   // resposta de tipo=mesCompleto
+let LOG_MAT_EDICOES     = {};     // "diaIdx|campo|comb" → {dia,campo,comb,valor}
+let LOG_MAT_POSTO_ATUAL = '';
+
+const LOG_CATEGORIAS = [
+  { chave:'medicao',   titulo:'🛢️ MEDIÇÃO (L)',               cls:'lh-med', cor:'#4895ef', edit:true  },
+  { chave:'venda',     titulo:'⛽ VENDA DIÁRIA (L)',           cls:'lh-ven', cor:'#d4af37', edit:true  },
+  { chave:'carga',     titulo:'🚚 CARGA RECEBIDA (L)',         cls:'lh-carg',cor:'#c77dff', edit:true  },
+  { chave:'prePedido', titulo:'📦 PRÉ-PEDIDO (L)',            cls:'lh-pre', cor:'#f9c74f', edit:true  },
+  { chave:'pedido',    titulo:'📋 PEDIDO FINAL (L)',           cls:'lh-ped', cor:'#ff9e00', edit:true  },
+  { chave:'previsao',  titulo:'📐 PREVISÃO MED. (L)',          cls:'lh-prev',cor:'#4cc9f0', edit:false },
+  { chave:'diferenca', titulo:'Δ DIFERENÇA',                   cls:'lh-dif', cor:'#ff4d6d', edit:false },
+];
+
+function logColsDaCategoria(chave, grupos, vendaCols) {
+  return chave === 'venda' ? vendaCols : grupos;
+}
+
+// ── Carregar a matriz do mês completo ───────────────────────────
+async function carregarLogMatriz(posto) {
+  const sub   = document.getElementById('log-matrix-sub');
+  const tbody = document.getElementById('log-matrix-tbody');
+  const thead = document.getElementById('log-matrix-thead');
+
+  // Preenche selects de posto se ainda não preenchidos
+  logPopularSelects();
+
+  if (!posto) {
+    sub.textContent = '• Selecione um posto';
+    tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--tx3);text-align:center">Selecione um posto para carregar a matriz.</td></tr>';
+    thead.innerHTML = '';
+    LOG_MAT_DADOS = null;
+    LOG_MAT_EDICOES = {};
+    logAtualizarBotoes();
+    return;
+  }
+
+  LOG_MAT_POSTO_ATUAL = posto;
+  LOG_MAT_EDICOES = {};
+  sub.textContent = '• Carregando ' + posto + '...';
+  tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--tx3);text-align:center"><div class="loading-spin" style="margin:0 auto"></div></td></tr>';
+  logAtualizarBotoes();
+
+  try {
+    const url = API_URL + '?tipo=mesCompleto&posto=' + encodeURIComponent(posto);
+    const res = await fetch(url);
+    const json = await res.json();
+
+    if (json.erro || !json.success) {
+      sub.textContent = '• Erro: ' + (json.erro || 'Falha ao carregar');
+      tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--dg);text-align:center">' + (json.erro || 'Erro') + '</td></tr>';
+      return;
+    }
+
+    LOG_MAT_DADOS = json;
+    sub.textContent = '• ' + json.posto + ' — ' + json.mes + '/' + json.ano;
+    logMontarCabecalho(json.grupos, json.combustiveisVenda);
+    logMontarLinhas(json);
+    logRegistrarAtualizacao();
+    // Registra o mês carregado para detecção de virada
+    const MESES_ABV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+    const idxMes = MESES_ABV.indexOf(json.mes);
+    LOG_MES_CARREGADO = json.mes + '/' + String(json.ano).slice(2);
+  } catch(e) {
+    sub.textContent = '• Falha de conexão';
+    tbody.innerHTML = '<tr><td style="padding:1.5rem;color:var(--dg);text-align:center">Erro: ' + e.message + '</td></tr>';
+  }
+}
+
+function logPopularSelects() {
+  const sel = document.getElementById('log-sel-posto');
+  if (!sel || sel.options.length > 1) return;
+  Object.keys(POSTOS_DADOS).sort().forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = 'P. ' + p;
+    sel.appendChild(opt);
+  });
+}
+function logMontarCabecalho(grupos, vendaCols) {
+  const thead = document.getElementById('log-matrix-thead');
+  const n = LOG_CATEGORIAS.length;
+
+  let r1 = '<tr><th rowspan="2" class="log-sticky-col" style="background:var(--sf2)">DIA</th>';
+  LOG_CATEGORIAS.forEach((cat, ci) => {
+    const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
+    const grpEnd = ci < n - 1 ? ' log-grp-end' : '';
+    const grpSt  = ci > 0     ? ' log-grp-st'  : '';
+    r1 += `<th colspan="${cols.length}" class="${cat.cls}${grpEnd}${grpSt}">${cat.titulo}</th>`;
+  });
+  r1 += '</tr>';
+
+  let r2 = '<tr>';
+  LOG_CATEGORIAS.forEach((cat, ci) => {
+    const cols = logColsDaCategoria(cat.chave, grupos, vendaCols);
+    cols.forEach((col, gi) => {
+      let cls = '';
+      if (gi === cols.length - 1) cls += ' log-grp-end';
+      if (ci > 0 && gi === 0)     cls += ' log-grp-st';
+      r2 += `<th${cls ? ' class="' + cls.trim() + '"' : ''} style="color:${cat.cor};font-size:.65rem">${col.abv}</th>`;
+    });
+  });
+  r2 += '</tr>';
+
+  thead.innerHTML = r1 + r2;
+
+  // Calcula altura da 1ª linha para sticky da 2ª
+  requestAnimationFrame(() => {
+    const th1 = thead.querySelector('tr:first-child th:not(.log-sticky-col)');
+    if (th1) document.documentElement.style.setProperty('--log-thead-h', th1.getBoundingClientRect().height + 'px');
+  });
+}
+
+function logFmtL(v) {
+  if (v === null || v === undefined || v === '') return '—';
+  return Math.round(Number(v)).toLocaleString('pt-BR');
+}
+function logParseNum(str) {
+  if (str === null || str === undefined) return null;
+  const s = String(str).replace(/\./g,'').replace(',','.').replace('—','').trim();
+  if (!s) return null;
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function logMontarLinhas(dados) {
+  const tbody = document.getElementById('log-matrix-tbody');
+  const grupos    = dados.grupos;
+  const vendaCols = dados.combustiveisVenda;
+  let html = '';
+
+  dados.dias.forEach((d, diaIdx) => {
+    html += `<tr><td class="log-sticky-col">${String(d.dia).padStart(2,'0')}/${dados.mes}</td>`;
+    LOG_CATEGORIAS.forEach((cat, ci) => {
+      const cols   = logColsDaCategoria(cat.chave, grupos, vendaCols);
+      const valores = d[cat.chave] || [];
+      cols.forEach((col, i) => {
+        const val    = valores[i];
+        const isLast = i === cols.length - 1;
+        const isFirst = ci > 0 && i === 0;
+        const tdCls  = isLast ? 'log-grp-end' : (isFirst ? 'log-grp-st' : '');
+        const tdAttr = tdCls ? ` class="${tdCls}"` : '';
+
+        if (cat.chave === 'previsao') {
+          html += `<td${tdAttr}><span id="lp_${diaIdx}_${i}">${logFmtL(val)}</span></td>`;
+        } else if (cat.chave === 'diferenca') {
+          const cor = val > 0 ? 'var(--ac)' : (val < 0 ? 'var(--dg)' : 'var(--tx3)');
+          html += `<td${tdAttr}><span id="ld_${diaIdx}_${i}" style="color:${cor};font-weight:700">${val === null || val === undefined ? '—' : (val > 0 ? '+' : '') + logFmtL(val)}</span></td>`;
+        } else {
+          const combAttr = String(col.comb).replace(/"/g,'&quot;');
+          html += `<td${tdAttr}><input type="text" inputmode="numeric" class="log-cell-in"
+            data-dia="${diaIdx}" data-campo="${cat.chave}" data-comb="${combAttr}"
+            value="${logFmtL(val).replace('—','')}"
+            oninput="logCelulaEditada(this)" onblur="logCelulaBlur(this)"></td>`;
+        }
+      });
+    });
+    html += '</tr>';
+  });
+
+  tbody.innerHTML = html || '<tr><td style="padding:1.5rem;color:var(--tx3);text-align:center">Sem dados para este posto.</td></tr>';
+}
+
+function logRecalcPrev(diaIdx) {
+  if (!LOG_MAT_DADOS) return;
+  const dias     = LOG_MAT_DADOS.dias;
+  const dia      = dias[diaIdx];
+  const diaOntem = dias[diaIdx - 1];
+  const grupos   = LOG_MAT_DADOS.grupos;
+  const vendaCols = LOG_MAT_DADOS.combustiveisVenda;
+  if (!dia) return;
+
+  grupos.forEach((g, i) => {
+    let prev = null;
+    if (diaOntem) {
+      const medOntem = diaOntem.medicao[i];
+      if (medOntem !== null && medOntem !== undefined) {
+        const carga = Number(dia.carga[i]) || 0;
+        const iV = vendaCols.findIndex(c => c.comb === g.comb);
+        const venda = (iV === -1 || dia.venda[iV] === null) ? 0 : Number(dia.venda[iV]);
+        prev = Number(medOntem) + carga - venda;
+      }
+    }
+    dia.previsao[i] = prev;
+    const medHoje = dia.medicao[i];
+    const diff = (prev !== null && medHoje !== null && medHoje !== undefined) ? Number(medHoje) - prev : null;
+    dia.diferenca[i] = diff;
+
+    const elP = document.getElementById('lp_' + diaIdx + '_' + i);
+    if (elP) elP.textContent = logFmtL(prev);
+    const elD = document.getElementById('ld_' + diaIdx + '_' + i);
+    if (elD) {
+      elD.style.color = diff > 0 ? 'var(--ac)' : (diff < 0 ? 'var(--dg)' : 'var(--tx3)');
+      elD.textContent = diff === null ? '—' : (diff > 0 ? '+' : '') + logFmtL(diff);
+    }
+  });
+}
+
+function logCelulaEditada(inp) {
+  if (!LOG_MAT_DADOS) return;
+  const diaIdx = parseInt(inp.dataset.dia);
+  const campo  = inp.dataset.campo;
+  const comb   = inp.dataset.comb;
+  const valor  = logParseNum(inp.value);
+
+  inp.classList.add('log-cell-dirty');
+
+  const diaObj = LOG_MAT_DADOS.dias[diaIdx];
+  const cols   = campo === 'venda' ? LOG_MAT_DADOS.combustiveisVenda : LOG_MAT_DADOS.grupos;
+  const idx    = cols.findIndex(c => c.comb === comb);
+  if (idx === -1) return;
+  diaObj[campo][idx] = valor;
+
+  LOG_MAT_EDICOES[diaIdx + '|' + campo + '|' + comb] = { dia: diaIdx, campo, comb, valor };
+
+  if (campo === 'medicao')              logRecalcPrev(diaIdx + 1);
+  else if (campo === 'carga' || campo === 'venda') logRecalcPrev(diaIdx);
+
+  logAtualizarBotoes();
+}
+
+function logCelulaBlur(inp) {
+  const v = logParseNum(inp.value);
+  inp.value = logFmtL(v).replace('—','');
+}
+
+function logAtualizarBotoes() {
+  const pend = Object.values(LOG_MAT_EDICOES);
+  // Todos os campos agora salvam direto na aba mensal via editar_matriz
+  // prePedido incluído — sem rota separada, sem aprovação
+  const total  = pend.length;
+  const preQtd = pend.filter(e => e.campo === 'prePedido').length;
+  const matQtd = total - preQtd;
+
+  const btnS = document.getElementById('btn-log-salvar');
+  const btnP = document.getElementById('btn-log-pre');
+  if (btnS) {
+    btnS.disabled = matQtd === 0;
+    btnS.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Salvar${matQtd ? ' ('+matQtd+')' : ''}`;
+  }
+  if (btnP) {
+    btnP.disabled = preQtd === 0;
+    btnP.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Pré-Pedido${preQtd ? ' ('+preQtd+')' : ''}`;
+  }
+}
+
+function logLimparDirty() {
+  document.querySelectorAll('#log-matrix-tbody .log-cell-dirty').forEach(el => el.classList.remove('log-cell-dirty'));
+}
+
+async function logSalvarMatriz() {
+  if (!LOG_MAT_DADOS) return;
+  const posto = LOG_MAT_POSTO_ATUAL;
+  // Salva tudo EXCETO prePedido (que tem botão dedicado)
+  const itens = Object.values(LOG_MAT_EDICOES)
+    .filter(e => e.campo !== 'prePedido')
+    .map(e => ({ data: LOG_MAT_DADOS.dias[e.dia].data, campo: e.campo, combustivel: e.comb, valor: e.valor }));
+  if (!itens.length) return;
+
+  const btn = document.getElementById('btn-log-salvar');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+  try {
+    await fetch(API_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo:'editar_matriz', posto, itens, user: (G_USER && G_USER.email) || 'ADM' })
+    });
+    Object.keys(LOG_MAT_EDICOES).forEach(k => {
+      if (LOG_MAT_EDICOES[k].campo !== 'prePedido') delete LOG_MAT_EDICOES[k];
+    });
+    logLimparDirty();
+    logAtualizarBotoes();
+    showToast('Salvo ✅', itens.length + ' alteração(ões) gravadas na planilha.');
+    await carregarLogMatriz(posto);
+  } catch(e) {
+    showToast('Erro', 'Não foi possível salvar: ' + e.message);
+    btn.disabled = false;
+    logAtualizarBotoes();
+  }
+}
+
+async function logEnviarPrePedido() {
+  if (!LOG_MAT_DADOS) return;
+  const posto = LOG_MAT_POSTO_ATUAL;
+  const itens = Object.values(LOG_MAT_EDICOES)
+    .filter(e => e.campo === 'prePedido')
+    .map(e => ({ data: LOG_MAT_DADOS.dias[e.dia].data, campo: 'prePedido', combustivel: e.comb, valor: e.valor }));
+  if (!itens.length) return;
+
+  const btn = document.getElementById('btn-log-pre');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+  try {
+    // Salva direto na coluna 📦 PRÉ-PEDIDO da aba mensal — sem passar por aprovação
+    await fetch(API_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo:'editar_matriz', posto, itens, user: (G_USER && G_USER.email) || 'ADM' })
+    });
+    Object.keys(LOG_MAT_EDICOES).forEach(k => {
+      if (LOG_MAT_EDICOES[k].campo === 'prePedido') delete LOG_MAT_EDICOES[k];
+    });
+    logLimparDirty();
+    logAtualizarBotoes();
+    showToast('Pré-Pedido salvo ✅', itens.length + ' sugestão(ões) gravadas direto na planilha.');
+    await carregarLogMatriz(posto);
+  } catch(e) {
+    showToast('Erro', 'Não foi possível salvar: ' + e.message);
+    logAtualizarBotoes();
+  }
+}
+
+// ================================================================
+// COLETA SIMPLIFICADA — modal/aba dentro de Mais+
+// ================================================================
+let COLETA_SIMPLES_TODAS = [];
+
+async function renderColetaSimples(ctx) {
+  ctx.innerHTML = `
+    <div class="sdiv">Coleta de Preços — Visão Auditora</div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">
+      <input type="text" id="cs-flt-posto" class="map-sel" placeholder="Posto alvo..." style="flex:1;min-width:120px" oninput="csAplicarFiltros()">
+      <select id="cs-flt-sup" class="map-sel" onchange="csAplicarFiltros()">
+        <option value="">Todos supervisores</option>
+        <option>Mauricio</option><option>Fabricio</option><option>Paulo</option>
+        <option>Gledson</option><option>Rodrigo</option>
+      </select>
+      <select id="cs-flt-dias" class="map-sel" onchange="csCarregar()">
+        <option value="7">7 dias</option>
+        <option value="15" selected>15 dias</option>
+        <option value="30">30 dias</option>
+      </select>
+    </div>
+    <div id="cs-status" style="font-size:.65rem;color:var(--tx3);font-family:var(--mono);margin-bottom:.4rem">Carregando...</div>
+    <div style="overflow-x:auto;border:1px solid var(--bd);border-radius:var(--r)">
+      <table style="border-collapse:collapse;width:100%;min-width:700px;font-size:.75rem">
+        <thead>
+          <tr style="background:var(--sf2)">
+            <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">DATA</th>
+            <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">POSTO</th>
+            <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">GERENTE</th>
+            <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">POSTO ALVO</th>
+            <th style="padding:.5rem .65rem;text-align:left;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">SUPERVISOR</th>
+            <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:#f9c74f;border-bottom:1px solid var(--bd)">ET</th>
+            <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:#d4af37;border-bottom:1px solid var(--bd)">GC</th>
+            <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:#4895ef;border-bottom:1px solid var(--bd)">GA</th>
+            <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:#ff4d6d;border-bottom:1px solid var(--bd)">S10</th>
+            <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:#c77dff;border-bottom:1px solid var(--bd)">S500</th>
+            <th style="padding:.5rem .65rem;text-align:center;font-family:var(--mono);font-size:.6rem;color:var(--tx3);border-bottom:1px solid var(--bd)">FOTO</th>
+          </tr>
+        </thead>
+        <tbody id="cs-tbody">
+          <tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--tx3)"><div class="loading-spin" style="margin:0 auto"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Popover foto -->
+    <div id="cs-popover" style="display:none;position:fixed;z-index:500;background:var(--sf);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);width:260px;pointer-events:none">
+      <div style="background:var(--sf2);padding:.5rem .75rem;border-bottom:1px solid var(--bd);font-size:.7rem;font-family:var(--mono);color:var(--tx2)" id="cs-pop-label">Foto</div>
+      <div style="padding:.5rem;background:#0a0c10"><img id="cs-pop-img" src="" style="width:100%;border-radius:6px"></div>
+      <div style="padding:.4rem .75rem;background:var(--sf2);border-top:1px solid var(--bd)">
+        <a id="cs-pop-link" href="#" target="_blank" style="font-size:.65rem;color:var(--ac);text-decoration:underline">Abrir foto no Drive</a>
+      </div>
+    </div>
+  `;
+
+  csCarregar();
+}
+
+async function csCarregar() {
+  const dias = document.getElementById('cs-flt-dias') ? document.getElementById('cs-flt-dias').value : '15';
+  const statusEl = document.getElementById('cs-status');
+  const tbody    = document.getElementById('cs-tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '<tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--tx3)"><div class="loading-spin" style="margin:0 auto"></div></td></tr>';
+  if (statusEl) statusEl.textContent = 'Carregando...';
+
+  try {
+    const url = API_URL + '?tipo=coletaRecentes&dias=' + dias;
+    const res  = await fetch(url);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.registros)) {
+      COLETA_SIMPLES_TODAS = json.registros;
+      csAplicarFiltros();
+    } else {
+      tbody.innerHTML = '<tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--dg)">Erro ao carregar coletas.</td></tr>';
+    }
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--dg)">Falha de conexão: ' + e.message + '</td></tr>';
+  }
+}
+
+function csAplicarFiltros() {
+  const fPosto = document.getElementById('cs-flt-posto') ? document.getElementById('cs-flt-posto').value.trim().toUpperCase() : '';
+  const fSup   = document.getElementById('cs-flt-sup')   ? document.getElementById('cs-flt-sup').value   : '';
+  const statusEl = document.getElementById('cs-status');
+
+  const filtrados = COLETA_SIMPLES_TODAS.filter(r => {
+    if (fPosto && !String(r.postoAlvo||'').toUpperCase().includes(fPosto)) return false;
+    if (fSup   && r.supervisor !== fSup)                                   return false;
+    return true;
+  });
+
+  if (statusEl) statusEl.textContent = filtrados.length + ' de ' + COLETA_SIMPLES_TODAS.length + ' registros';
+
+  csRenderLinhas(filtrados);
+}
+
+function csP(v) {
+  if (v === null || v === undefined || isNaN(v)) return '<span style="color:var(--tx3)">—</span>';
+  return '<span style="font-family:var(--mono);font-weight:700">' + Number(v).toFixed(2).replace('.',',') + '</span>';
+}
+
+function csDriveThumb(url) {
+  const m = url && url.match(/[-\w]{25,}/);
+  return m ? 'https://lh3.googleusercontent.com/d/' + m[0] + '=w300' : '';
+}
+
+function csShowPhoto(event, url, label) {
+  const pop   = document.getElementById('cs-popover');
+  const img   = document.getElementById('cs-pop-img');
+  const lbl   = document.getElementById('cs-pop-label');
+  const link  = document.getElementById('cs-pop-link');
+  if (!pop) return;
+  lbl.textContent  = label || 'Foto';
+  img.src          = csDriveThumb(url);
+  link.href        = url;
+  pop.style.display = 'block';
+  const x = Math.min(event.clientX - 130, window.innerWidth - 270);
+  const y = Math.min(event.clientY - 80,  window.innerHeight - 300);
+  pop.style.left = Math.max(4, x) + 'px';
+  pop.style.top  = Math.max(4, y) + 'px';
+}
+function csHidePhoto() {
+  const pop = document.getElementById('cs-popover');
+  if (pop) pop.style.display = 'none';
+}
+
+function csRenderLinhas(registros) {
+  const tbody = document.getElementById('cs-tbody');
+  if (!tbody) return;
+
+  if (!registros.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--tx3)">Nenhum registro encontrado.</td></tr>';
+    return;
+  }
+
+  const SUPCOR_CS = {Mauricio:'#00e5a0',Paulo:'#4895ef',Fabricio:'#f9c74f',Gledson:'#c77dff',Rodrigo:'#ff6b6b'};
+  const isProp = r => r.tipo === 'Próprio';
+
+  let html = '';
+  registros.forEach(r => {
+    const corNome = isProp(r) ? 'var(--ac)' : 'var(--tx)';
+    const supCor  = SUPCOR_CS[r.supervisor] || 'var(--tx3)';
+    const temFoto = r.foto && String(r.foto).startsWith('http');
+
+    const fotoCell = temFoto
+      ? `<span style="cursor:pointer;color:#4895ef;font-family:var(--mono);font-size:.7rem;text-decoration:underline"
+           onmouseenter="csShowPhoto(event,'${r.foto.replace(/'/g,'')}','${(r.postoAlvo||'').replace(/'/g,'')}' )"
+           onmouseleave="csHidePhoto()"
+           onclick="csShowPhoto(event,'${r.foto.replace(/'/g,'')}','${(r.postoAlvo||'').replace(/'/g,'')}')">
+           📷 Ver
+         </span>`
+      : '<span style="color:var(--tx3)">—</span>';
+
+    html += `<tr style="border-bottom:1px solid var(--bd)">
+      <td style="padding:.45rem .65rem;font-family:var(--mono);font-size:.7rem;white-space:nowrap;color:var(--tx3)">${r.data||'—'}</td>
+      <td style="padding:.45rem .65rem;font-size:.78rem;color:var(--tx2)">${r.posto||'—'}</td>
+      <td style="padding:.45rem .65rem;font-size:.75rem;color:var(--tx3)">${r.gerente||'—'}</td>
+      <td style="padding:.45rem .65rem;font-size:.82rem;font-weight:600;color:${corNome}">${r.postoAlvo||'—'}</td>
+      <td style="padding:.45rem .65rem;font-size:.72rem;font-family:var(--mono);color:${supCor}">${r.supervisor||'—'}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.ET)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.GC)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.GA)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.S10)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${csP(r.S500)}</td>
+      <td style="padding:.45rem .65rem;text-align:center">${fotoCell}</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+}
+
+// ================================================================
+// PATCH: substituir irPara() no app.js — adiciona 'coleta-simples'
+// e redireciona 'logistica' para a seção da matriz em vez de s-mais
+// ================================================================
+// INSTRUÇÃO: substitua a função irPara() existente no app.js por esta:
+
+function irPara(modulo) {
+  fecharMaisBtn();
+
+  // Módulos com seção própria (não renderizam dentro de s-mais)
+  if (modulo === 'logistica') {
+    document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.scr').forEach(x => x.classList.remove('active'));
+    const sec = document.getElementById('s-logistica');
+    sec.classList.add('active');
+    sec.style.display = 'flex';
+    logPopularSelects();
+    // Garante que começa sempre na sub-aba Medição
+    logSwitchSub('medicao');
+    return;
+  }
+
+  document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.scr').forEach(x => x.classList.remove('active'));
+  document.getElementById('s-mais').classList.add('active');
+
+  const ctx = document.getElementById('mais-conteudo');
+  if      (modulo === 'amostra')        renderAmostra(ctx);
+  else if (modulo === 'notif')          renderNotif(ctx);
+  else if (modulo === 'distribuidor')   renderDist(ctx);
+  else if (modulo === 'simulador')      renderSim(ctx);
+  else if (modulo === 'lancamento')     renderLanc(ctx);
+  else if (modulo === 'coleta-simples') renderColetaSimples(ctx);
+  else if (modulo === 'relatorios')     renderRel(ctx);
+}
+
+// PATCH: substituir setTab() para resetar s-logistica quando sair dela
+function setTab(btn, tab) {
+  document.querySelectorAll('.nbtn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.scr').forEach(x => {
+    x.classList.remove('active');
+    if (x.id === 's-logistica') x.style.display = 'none';
+  });
+  btn.classList.add('active');
+  const sec = document.getElementById('s-' + tab);
+  sec.classList.add('active');
+  if (tab === 's-logistica') sec.style.display = 'flex';
+  if (tab === 'mapa') setTimeout(() => { initLeafletInstance(); }, 150);
+  if (tab === 'hist') { povoarHistPosto(); }
+}
+
+// ================================================================
+// VIRADA DE MÊS — detecção automática
+// O app guarda o mês/ano que estava carregado. A cada refresh ou
+// carregamento de posto, compara com o mês atual do sistema.
+// Se mudou (ex: era JUN, agora é JUL), recarrega o posto na nova
+// aba automaticamente e avisa com um toast.
+// ================================================================
+let LOG_MES_CARREGADO = ''; // formato "JUN/26"
+
+function logMesAtual() {
+  const MESES_ABV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  const agora = new Date();
+  return MESES_ABV[agora.getMonth()] + '/' + String(agora.getFullYear()).slice(2);
+}
+
+// Chama isso após cada carregamento bem-sucedido de posto
+function logAtualizarMesCarregado(mesDados) {
+  // mesDados vem do json.mes (ex: "JUN") + json.ano (ex: 2026)
+  if (!mesDados) return;
+  LOG_MES_CARREGADO = mesDados;
+}
+
+// Verifica se o mês virou desde o último carregamento
+// Chamado pelo auto-refresh (abaixo) e pelo botão manual
+function logVerificarViradadeMes() {
+  if (!LOG_MAT_POSTO_ATUAL || !LOG_MES_CARREGADO) return false;
+  const MESES_ABV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  const agora   = new Date();
+  const mesHoje = MESES_ABV[agora.getMonth()] + '/' + String(agora.getFullYear()).slice(2);
+  return mesHoje !== LOG_MES_CARREGADO;
+}
+
+// Auto-refresh inteligente:
+// • A cada 3 min verifica se a aba de logística está ativa
+// • Se estiver, compara o mês atual com o carregado
+// • Se virou o mês, recarrega o posto na nova aba e avisa
+// • Se não virou, faz refresh silencioso dos dados
+let _logAutoRefreshTimer = null;
+
+function logIniciarAutoRefresh() {
+  if (_logAutoRefreshTimer) clearInterval(_logAutoRefreshTimer);
+  _logAutoRefreshTimer = setInterval(async () => {
+    // Só age se a aba Logística estiver visível
+    const sec = document.getElementById('s-logistica');
+    if (!sec || !sec.classList.contains('active')) return;
+    if (!LOG_MAT_POSTO_ATUAL) return;
+
+    if (logVerificarViradadeMes()) {
+      // Mês virou — recarrega na nova aba
+      const MESES_ABV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+      const agora = new Date();
+      const novoMes = MESES_ABV[agora.getMonth()] + '/' + String(agora.getFullYear()).slice(2);
+      showToast('📅 Novo mês detectado!', 'Recarregando ' + LOG_MAT_POSTO_ATUAL + ' na aba ' + novoMes);
+      await carregarLogMatriz(LOG_MAT_POSTO_ATUAL);
+    }
+    // Se não virou, não faz nada (usuário usa o botão ↻ pra refresh manual)
+  }, 3 * 60 * 1000); // verifica a cada 3 minutos
+}
+
+// Inicia o timer assim que o patch carrega
+logIniciarAutoRefresh();
+
+// ================================================================
+// SUB-ABAS DA LOGÍSTICA: Medição / Coleta de Preços
+// ================================================================
+let LOG_SUB_ATIVA = 'medicao'; // 'medicao' | 'coleta'
+let LC_TODAS = [];             // cache das coletas carregadas
+
+function logSwitchSub(sub) {
+  LOG_SUB_ATIVA = sub;
+
+  // Sub-tabs visuais
+  document.querySelectorAll('.log-subtab').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('lsubt-' + sub);
+  if (btn) btn.classList.add('active');
+
+  // Painéis
+  const medEl    = document.getElementById('log-sub-medicao');
+  const coletaEl = document.getElementById('log-sub-coleta');
+  if (medEl)    medEl.style.display    = sub === 'medicao' ? 'flex' : 'none';
+  if (coletaEl) coletaEl.style.display = sub === 'coleta'  ? 'flex' : 'none';
+
+  // Botões Salvar/Pré-Pedido só na medição
+  ['btn-log-salvar','btn-log-pre'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = sub === 'medicao' ? '' : 'none';
+  });
+
+  // Se coleta ainda não foi carregada, carrega agora
+  if (sub === 'coleta' && !LC_TODAS.length) lcCarregar();
+}
+
+// Quando muda o posto: recarrega medição E invalida cache da coleta
+function logOnPostoChange(posto) {
+  LC_TODAS = []; // força reload da coleta no próximo acesso
+  carregarLogMatriz(posto);
+  if (LOG_SUB_ATIVA === 'coleta') lcCarregar();
+}
+
+// ── REFRESH geral: recarrega a sub-aba ativa ──────────────────
+async function logRefresh() {
+  const btn  = document.getElementById('btn-log-refresh');
+  const icon = document.getElementById('btn-log-refresh-icon');
+  if (btn)  btn.disabled = true;
+  if (icon) icon.classList.add('girando');
+
+  try {
+    if (LOG_SUB_ATIVA === 'medicao') {
+      if (!LOG_MAT_POSTO_ATUAL) return;
+      const pendentes = Object.keys(LOG_MAT_EDICOES).length;
+      if (pendentes > 0) {
+        const ok = confirm(pendentes + ' alteração(ões) não salva(s).\nRecarregar vai descartá-las. Continuar?');
+        if (!ok) return;
+      }
+      await carregarLogMatriz(LOG_MAT_POSTO_ATUAL);
+    } else {
+      LC_TODAS = [];
+      await lcCarregar();
+    }
+    logRegistrarAtualizacao();
+  } finally {
+    if (btn)  btn.disabled = false;
+    if (icon) icon.classList.remove('girando');
+  }
+}
+
+// ── COLETA DE PREÇOS integrada na aba Logística ───────────────
+async function lcCarregar() {
+  const dias    = document.getElementById('lc-flt-dias') ? document.getElementById('lc-flt-dias').value : '15';
+  const statusEl = document.getElementById('lc-status');
+  const tbody    = document.getElementById('lc-tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '<tr><td colspan="11" style="padding:1.2rem;text-align:center;color:var(--tx3)"><div class="loading-spin" style="margin:0 auto;width:24px;height:24px"></div></td></tr>';
+  if (statusEl) statusEl.textContent = 'Carregando coletas...';
+
+  try {
+    const url  = API_URL + '?tipo=coletaRecentes&dias=' + dias;
+    const res  = await fetch(url);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.registros)) {
+      LC_TODAS = json.registros;
+      lcAplicarFiltros();
+    } else {
+      tbody.innerHTML = '<tr><td colspan="11" style="padding:1.2rem;text-align:center;color:var(--dg)">Erro ao carregar coletas.</td></tr>';
+    }
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="11" style="padding:1.2rem;text-align:center;color:var(--dg)">Falha: ' + e.message + '</td></tr>';
+  }
+}
+
+function lcAplicarFiltros() {
+  const fPosto   = (document.getElementById('lc-flt-posto')   || {value:''}).value.trim().toUpperCase();
+  const fGerente = (document.getElementById('lc-flt-gerente') || {value:''}).value.trim().toUpperCase();
+  const fTipo    = (document.getElementById('lc-flt-tipo')    || {value:''}).value;
+  const fSup     = (document.getElementById('lc-flt-sup')     || {value:''}).value;
+  const fDe      = (document.getElementById('lc-flt-de')      || {value:''}).value;
+  const fAte     = (document.getElementById('lc-flt-ate')     || {value:''}).value;
+  const statusEl = document.getElementById('lc-status');
+
+  const dataDe  = fDe  ? new Date(fDe  + 'T00:00:00') : null;
+  const dataAte = fAte ? new Date(fAte + 'T23:59:59') : null;
+
+  const filtrados = LC_TODAS.filter(r => {
+    if (fPosto   && !String(r.postoAlvo||'').toUpperCase().includes(fPosto))   return false;
+    if (fGerente && !String(r.gerente||'').toUpperCase().includes(fGerente))   return false;
+    if (fTipo    && r.tipo !== fTipo)                                          return false;
+    if (fSup     && r.supervisor !== fSup)                                     return false;
+    if (dataDe || dataAte) {
+      const p = String(r.data||'').split('/');
+      if (p.length !== 3) return false;
+      const d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+      if (dataDe  && d < dataDe)  return false;
+      if (dataAte && d > dataAte) return false;
+    }
+    return true;
+  });
+
+  const ativos = !!(fPosto || fGerente || fTipo || fSup || fDe || fAte);
+  if (statusEl) statusEl.textContent = ativos
+    ? filtrados.length + ' de ' + LC_TODAS.length + ' registros (filtro ativo)'
+    : filtrados.length + ' registros';
+  lcRenderLinhas(filtrados);
+}
+
+function lcLimparFiltros() {
+  ['lc-flt-de','lc-flt-ate','lc-flt-posto','lc-flt-gerente','lc-flt-tipo','lc-flt-sup'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  lcAplicarFiltros();
+}
+
+function lcP(v) {
+  if (v === null || v === undefined || isNaN(v)) return '<span style="color:var(--tx3)">—</span>';
+  return '<span style="font-family:var(--mono);font-weight:700">' + Number(v).toFixed(2).replace('.',',') + '</span>';
+}
+function lcDriveThumb(url) {
+  const m = url && url.match(/[-\w]{25,}/);
+  return m ? 'https://lh3.googleusercontent.com/d/' + m[0] + '=w280' : '';
+}
+function lcShowPhoto(event, url, label) {
+  const pop  = document.getElementById('lc-popover');
+  if (!pop) return;
+  document.getElementById('lc-pop-label').textContent = label || 'Foto';
+  document.getElementById('lc-pop-img').src  = lcDriveThumb(url);
+  document.getElementById('lc-pop-link').href = url;
+  pop.style.display = 'block';
+  const x = Math.min(event.clientX - 120, window.innerWidth - 250);
+  const y = Math.min(event.clientY - 70,  window.innerHeight - 280);
+  pop.style.left = Math.max(4, x) + 'px';
+  pop.style.top  = Math.max(4, y) + 'px';
+}
+function lcHidePhoto() {
+  const pop = document.getElementById('lc-popover');
+  if (pop) pop.style.display = 'none';
+}
+
+function lcRenderLinhas(registros) {
+  const tbody = document.getElementById('lc-tbody');
+  if (!tbody) return;
+  if (!registros.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="padding:1.2rem;text-align:center;color:var(--tx3)">Nenhum registro encontrado.</td></tr>';
+    return;
+  }
+
+  const SUPCOR = {Mauricio:'#00e5a0',Paulo:'#4895ef',Fabricio:'#f9c74f',Gledson:'#c77dff',Rodrigo:'#ff6b6b'};
+  let html = '';
+  registros.forEach(r => {
+    const isProp = r.tipo === 'Próprio';
+    const corNome = isProp ? 'var(--ac)' : 'var(--tx)';
+    const supCor  = SUPCOR[r.supervisor] || 'var(--tx3)';
+    const temFoto = r.foto && String(r.foto).startsWith('http');
+    const fotoSafe = temFoto ? r.foto.replace(/'/g,'') : '';
+    const labelSafe = (r.postoAlvo||'').replace(/'/g,'');
+
+    const fotoCell = temFoto
+      ? `<span style="cursor:pointer;color:#4895ef;font-family:var(--mono);font-size:.65rem;text-decoration:underline"
+           onmouseenter="lcShowPhoto(event,'${fotoSafe}','${labelSafe}')"
+           onmouseleave="lcHidePhoto()"
+           onclick="lcShowPhoto(event,'${fotoSafe}','${labelSafe}')">📷 Ver</span>`
+      : '<span style="color:var(--tx3)">—</span>';
+
+    html += `<tr style="border-bottom:1px solid var(--bd)">
+      <td style="padding:.4rem .6rem;font-family:var(--mono);font-size:.65rem;color:var(--tx3);white-space:nowrap">${r.data||'—'}</td>
+      <td style="padding:.4rem .6rem;font-size:.72rem;color:var(--tx2);white-space:nowrap">${r.posto||'—'}</td>
+      <td style="padding:.4rem .6rem;font-size:.68rem;color:var(--tx3);white-space:nowrap">${r.gerente||'—'}</td>
+      <td style="padding:.4rem .6rem;font-size:.78rem;font-weight:600;color:${corNome};white-space:nowrap">${r.postoAlvo||'—'}</td>
+      <td style="padding:.4rem .6rem;font-size:.65rem;font-family:var(--mono);color:${supCor};white-space:nowrap">${r.supervisor||'—'}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.ET)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.GC)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.GA)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.S10)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${lcP(r.S500)}</td>
+      <td style="padding:.4rem .6rem;text-align:center">${fotoCell}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
