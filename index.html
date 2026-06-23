@@ -176,51 +176,146 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
-         ABA LOGÍSTICA — Matriz Integrada de Suprimentos (NOVA)
+         ABA LOGÍSTICA — Matriz + Coleta integradas (AppPainel ADM)
          ═══════════════════════════════════════════════════════════ -->
     <section class="scr" id="s-logistica" style="padding:0;display:none;flex-direction:column;height:calc(100vh - 54px - 62px)">
 
-      <!-- Cabeçalho da matriz -->
+      <!-- Topbar da seção: posto + sub-abas + ações -->
       <div class="log-matrix-header">
-        <div class="log-matrix-title">
-          <i class="fa-solid fa-calculator" style="color:var(--ac)"></i>
-          Matriz Integrada de Suprimentos
-          <span class="log-matrix-sub" id="log-matrix-sub">• Selecione um posto</span>
+        <div style="display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:0">
+          <!-- Sub-abas: Medição / Coleta -->
+          <div style="display:flex;gap:.4rem">
+            <button class="log-subtab active" id="lsubt-medicao" onclick="logSwitchSub('medicao')">
+              <i class="fa-solid fa-calculator"></i> Medição
+            </button>
+            <button class="log-subtab" id="lsubt-coleta" onclick="logSwitchSub('coleta')">
+              <i class="fa-solid fa-tags"></i> Coleta de Preços
+            </button>
+          </div>
+          <span class="log-matrix-sub" id="log-matrix-sub" style="font-size:.6rem">• Selecione um posto</span>
         </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-          <button class="btn-log-refresh" id="btn-log-refresh" onclick="logRefresh()" title="Recarregar dados da planilha">
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
+          <button class="btn-log-refresh" id="btn-log-refresh" onclick="logRefresh()" title="Atualizar dados">
             <i class="fa-solid fa-rotate" id="btn-log-refresh-icon"></i>
           </button>
-          <span id="log-ultima-atualizacao" style="font-size:.58rem;color:var(--tx3);font-family:var(--mono)">—</span>
-          <button class="btn-log-action" id="btn-log-salvar" disabled onclick="logSalvarMatriz()">
+          <span id="log-ultima-atualizacao" style="font-size:.56rem;color:var(--tx3);font-family:var(--mono)">—</span>
+          <!-- Botões só aparecem na sub-aba Medição -->
+          <button class="btn-log-action" id="btn-log-salvar" disabled onclick="logSalvarMatriz()" style="display:none">
             <i class="fa-solid fa-floppy-disk"></i> Salvar
           </button>
-          <button class="btn-log-action btn-log-pre" id="btn-log-pre" disabled onclick="logEnviarPrePedido()">
+          <button class="btn-log-action btn-log-pre" id="btn-log-pre" disabled onclick="logEnviarPrePedido()" style="display:none">
             <i class="fa-solid fa-cloud-arrow-up"></i> Pré-Pedido
           </button>
         </div>
       </div>
 
-      <!-- Select de posto -->
-      <select class="sel" id="log-sel-posto" onchange="carregarLogMatriz(this.value)"
-        style="margin-bottom:0;border-radius:0;border-top:none;border-left:1px solid var(--bd);border-right:1px solid var(--bd)">
+      <!-- Select de posto (compartilhado entre as duas sub-abas) -->
+      <select class="sel" id="log-sel-posto" onchange="logOnPostoChange(this.value)"
+        style="margin-bottom:0;border-radius:0;border-top:none">
         <option value="">— Selecione um posto —</option>
       </select>
 
-      <!-- Scroll hint -->
-      <div style="font-size:.58rem;color:var(--tx3);font-family:var(--mono);text-align:right;padding:3px 8px;background:var(--sf);border:1px solid var(--bd);border-top:none">
-        <i class="fa-solid fa-left-right"></i> SCROLL HORIZONTAL PARA VER TUDO
+      <!-- ── SUB-ABA MEDIÇÃO ── -->
+      <div id="log-sub-medicao" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+        <div style="font-size:.56rem;color:var(--tx3);font-family:var(--mono);text-align:right;padding:3px 8px;background:var(--sf);border:1px solid var(--bd);border-top:none">
+          <i class="fa-solid fa-left-right"></i> SCROLL HORIZONTAL PARA VER TUDO
+        </div>
+        <div class="log-matrix-frame">
+          <table class="log-matrix-table">
+            <thead id="log-matrix-thead"></thead>
+            <tbody id="log-matrix-tbody">
+              <tr><td style="padding:1.5rem;color:var(--tx3);text-align:center">Selecione um posto para carregar a matriz do mês.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <!-- Tabela com scroll -->
-      <div class="log-matrix-frame">
-        <table class="log-matrix-table">
-          <thead id="log-matrix-thead"></thead>
-          <tbody id="log-matrix-tbody">
-            <tr><td style="padding:1.5rem;color:var(--tx3);text-align:center">Selecione um posto para carregar a matriz do mês.</td></tr>
-          </tbody>
-        </table>
+      <!-- ── SUB-ABA COLETA DE PREÇOS ── -->
+      <div id="log-sub-coleta" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+        <!-- Filtros completos igual ao Logistica.html -->
+        <div style="display:flex;flex-wrap:wrap;gap:5px;padding:6px 8px;background:var(--sf);border:1px solid var(--bd);border-top:none">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">De</label>
+            <input type="date" id="lc-flt-de" class="map-sel" style="padding:4px 6px;font-size:.7rem" oninput="lcAplicarFiltros()">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Até</label>
+            <input type="date" id="lc-flt-ate" class="map-sel" style="padding:4px 6px;font-size:.7rem" oninput="lcAplicarFiltros()">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:90px">
+            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Posto Alvo</label>
+            <input type="text" id="lc-flt-posto" class="map-sel" placeholder="Buscar posto..." style="padding:4px 6px;font-size:.7rem;width:100%" oninput="lcAplicarFiltros()">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:90px">
+            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Gerente</label>
+            <input type="text" id="lc-flt-gerente" class="map-sel" placeholder="Buscar gerente..." style="padding:4px 6px;font-size:.7rem;width:100%" oninput="lcAplicarFiltros()">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Tipo</label>
+            <select id="lc-flt-tipo" class="map-sel" style="padding:4px 6px;font-size:.7rem" onchange="lcAplicarFiltros()">
+              <option value="">Todos</option>
+              <option value="Próprio">Próprio</option>
+              <option value="Concorrente">Concorrente</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Supervisor</label>
+            <select id="lc-flt-sup" class="map-sel" style="padding:4px 6px;font-size:.7rem" onchange="lcAplicarFiltros()">
+              <option value="">Todos</option>
+              <option>Mauricio</option><option>Fabricio</option><option>Paulo</option>
+              <option>Gledson</option><option>Rodrigo</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <label style="font-size:.55rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Período</label>
+            <select id="lc-flt-dias" class="map-sel" style="padding:4px 6px;font-size:.7rem" onchange="lcCarregar()">
+              <option value="7">7 dias</option>
+              <option value="15" selected>15 dias</option>
+              <option value="30">30 dias</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button onclick="lcLimparFiltros()" class="map-sel" style="padding:4px 8px;font-size:.7rem;cursor:pointer;display:flex;align-items:center;gap:4px;color:var(--tx3)">
+              <i class="fa-solid fa-filter-circle-xmark"></i> Limpar
+            </button>
+          </div>
+        </div>
+        <div style="font-size:.6rem;color:var(--tx3);font-family:var(--mono);padding:3px 10px;background:var(--sf2);border:1px solid var(--bd);border-top:none" id="lc-status">
+          Selecione um posto para ver as coletas.
+        </div>
+        <!-- Tabela coleta -->
+        <div style="flex:1;overflow:auto;border:1px solid var(--bd);border-top:none">
+          <table style="border-collapse:collapse;width:100%;min-width:620px;font-size:.76rem">
+            <thead>
+              <tr style="background:var(--sf2);position:sticky;top:0;z-index:5">
+                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd);white-space:nowrap">DATA</th>
+                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">POSTO</th>
+                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">GERENTE</th>
+                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">POSTO ALVO</th>
+                <th style="padding:.45rem .6rem;text-align:left;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">SUP.</th>
+                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:#f9c74f;border-bottom:1px solid var(--bd)">ET</th>
+                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:var(--ac);border-bottom:1px solid var(--bd)">GC</th>
+                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:#4895ef;border-bottom:1px solid var(--bd)">GA</th>
+                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:#ff4d6d;border-bottom:1px solid var(--bd)">S10</th>
+                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:#c77dff;border-bottom:1px solid var(--bd)">S500</th>
+                <th style="padding:.45rem .6rem;text-align:center;font-family:var(--mono);font-size:.58rem;color:var(--tx3);border-bottom:1px solid var(--bd)">FOTO</th>
+              </tr>
+            </thead>
+            <tbody id="lc-tbody">
+              <tr><td colspan="11" style="padding:1.5rem;text-align:center;color:var(--tx3)">Selecione um posto no filtro acima.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Popover foto inline -->
+        <div id="lc-popover" style="display:none;position:fixed;z-index:500;background:var(--sf);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);width:240px;pointer-events:none">
+          <div style="background:var(--sf2);padding:.4rem .7rem;border-bottom:1px solid var(--bd);font-size:.65rem;font-family:var(--mono);color:var(--tx2)" id="lc-pop-label">Foto</div>
+          <div style="padding:.4rem;background:#0a0c10"><img id="lc-pop-img" src="" style="width:100%;border-radius:5px"></div>
+          <div style="padding:.35rem .7rem;background:var(--sf2);border-top:1px solid var(--bd)">
+            <a id="lc-pop-link" href="#" target="_blank" style="font-size:.62rem;color:var(--ac);text-decoration:underline">Abrir no Drive</a>
+          </div>
+        </div>
       </div>
+
     </section>
 
     <section class="scr" id="s-mais">
