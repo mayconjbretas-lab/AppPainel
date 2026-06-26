@@ -2040,8 +2040,10 @@ async function csCarregar() {
     const concorrentes = CS_REGISTROS.filter(r => !(r.Tipo === 'Próprio' || r.Tipo === 'Proprio'));
 
     CS_POSTOS = Object.keys(POSTOS_DADOS).sort().map(postoKey => {
-      const meu   = CS_MEU_HOJE[postoKey] || {};
-      const concs = concorrentes.filter(r => csChave(r.Posto) === postoKey || csChave(r.Posto).includes(postoKey));
+      // postoKey vem do config sem acento ("ANA LUCIA"), csChave tb remove acento — bate dos dois lados
+      const postoKeyN = postoKey.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const meu   = CS_MEU_HOJE[postoKeyN] || CS_MEU_HOJE[postoKey] || {};
+      const concs = concorrentes.filter(r => csChave(r.Posto) === postoKeyN || csChave(r.Posto).includes(postoKeyN));
       const pdInfo = POSTOS_DADOS[postoKey] || {};
       return {
         key:       postoKey,
