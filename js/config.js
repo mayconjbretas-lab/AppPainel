@@ -1,5 +1,10 @@
 // ================================================================
-// JBRETAS — config.js v3
+// JBRETAS — config.js v4
+// FIXES v4 (segurança):
+// • CUSTO_POSTOS e MARGEM_MINIMA removidos do código público
+//   → carregados do backend via ?tipo=dadosSensiveis após login
+// • DISTRIBUIDORAS_DADOS removido do código público (idem)
+// ================================================================
 // FIXES v3:
 // • PAIVA E PAIVA COMBUSTIVEL → BEATRIZ (alinha com Apps Script)
 // • MAP_POSTOS: BRUNA duplicada removida, BEATRIZ corrigida
@@ -12,6 +17,12 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbwoJ3-g48frwYtMlnpVj5EIYapInPP11OJXrkOPUzCULrbIZWMQW51xFe-Ot4cox00r/exec';
 
 const USUARIOS_ADM = []; // autenticação via Apps Script
+
+// ── Dados sensíveis — preenchidos após login via carregarDadosSensiveis() ──
+// NÃO edite estes valores aqui. Altere no Code.gs (CUSTOS_AS / MARGENS_AS).
+let CUSTO_POSTOS     = { 'DEFAULT': { GC: 0, ET: 0, GA: 0, S10: 0, S500: 0 } };
+let MARGEM_MINIMA    = { GC: 0, ET: 0, GA: 0, S10: 0, S500: 0 };
+let DISTRIBUIDORAS_DADOS = []; // preenchido após login
 
 // MAP_POSTOS — coordenadas fixas dos postos próprios
 // FIX v3: BRUNA duplicada removida (era Fabricio+Gledson, mantido Gledson)
