@@ -286,19 +286,18 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
-         ABA LOGÍSTICA — Matriz + Coleta integradas (AppPainel ADM)
+         ABA LOGÍSTICA — Apenas Medição (aba Coleta removida v4)
+         A coleta de preços está em Mais+ > Coleta de Preços
          ═══════════════════════════════════════════════════════════ -->
     <section class="scr" id="s-logistica" style="padding:0;display:none;flex-direction:column;height:calc(100vh - 52px - 60px)">
 
-      <!-- Topbar da seção: sub-abas + ações -->
+      <!-- Topbar da seção: sub-aba única (Medição) + ações -->
       <div class="log-matrix-header">
         <div style="display:flex;flex-direction:column;gap:.28rem;flex:1;min-width:0">
           <div style="display:flex;gap:.35rem">
+            <!-- PATCH v4: botão Coleta removido — só Medição permanece -->
             <button class="log-subtab active" id="lsubt-medicao" onclick="logSwitchSub('medicao')">
               <i class="fa-solid fa-calculator" aria-hidden="true"></i> Medição
-            </button>
-            <button class="log-subtab" id="lsubt-coleta" onclick="logSwitchSub('coleta')">
-              <i class="fa-solid fa-tags" aria-hidden="true"></i> Coleta
             </button>
           </div>
           <span class="log-matrix-sub" id="log-matrix-sub" style="font-size:.58rem">• Selecione um posto</span>
@@ -308,10 +307,10 @@
             <i class="fa-solid fa-rotate" id="btn-log-refresh-icon"></i>
           </button>
           <span id="log-ultima-atualizacao" style="font-size:.54rem;color:var(--tx3);font-family:var(--mono)">—</span>
-          <button class="btn-log-action" id="btn-log-salvar" disabled onclick="logSalvarMatriz()" style="display:none">
+          <button class="btn-log-action" id="btn-log-salvar" disabled onclick="logSalvarMatriz()">
             <i class="fa-solid fa-floppy-disk"></i> Salvar
           </button>
-          <button class="btn-log-action btn-log-pre" id="btn-log-pre" disabled onclick="logEnviarPrePedido()" style="display:none">
+          <button class="btn-log-action btn-log-pre" id="btn-log-pre" disabled onclick="logEnviarPrePedido()">
             <i class="fa-solid fa-cloud-arrow-up"></i> Pré-Pedido
           </button>
         </div>
@@ -360,7 +359,7 @@
         <option value="PAIVA E PAIVA COMBUSTIVEL">PAIVA E PAIVA COMBUSTIVEL</option>
       </select>
 
-      <!-- ── SUB-ABA: MEDIÇÃO ── -->
+      <!-- ── SUB-ABA: MEDIÇÃO (única sub-aba restante) ── -->
       <div id="log-sub-medicao" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
         <div style="font-size:.54rem;color:var(--tx3);font-family:var(--mono);text-align:right;padding:3px 8px;background:var(--sf);border:1px solid var(--bd);border-top:none">
           <i class="fa-solid fa-left-right"></i> SCROLL HORIZONTAL PARA VER TUDO
@@ -374,90 +373,7 @@
           </table>
         </div>
       </div>
-
-      <!-- ── SUB-ABA: COLETA DE PREÇOS (mobile-first, 4 colunas) ── -->
-      <div id="log-sub-coleta" style="display:none;flex-direction:column;flex:1;overflow:hidden">
-        <!-- Filtros compactos -->
-        <div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 7px;background:var(--sf);border:1px solid var(--bd);border-top:none">
-          <div style="display:flex;flex-direction:column;gap:1px">
-            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">De</label>
-            <input type="date" id="lc-flt-de" class="map-sel" style="padding:3px 5px;font-size:.65rem" oninput="lcAplicarFiltros()">
-          </div>
-          <div style="display:flex;flex-direction:column;gap:1px">
-            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Até</label>
-            <input type="date" id="lc-flt-ate" class="map-sel" style="padding:3px 5px;font-size:.65rem" oninput="lcAplicarFiltros()">
-          </div>
-          <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:80px">
-            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Posto Alvo</label>
-            <input type="text" id="lc-flt-posto" class="map-sel" placeholder="Buscar..." style="padding:3px 5px;font-size:.65rem;width:100%" oninput="lcAplicarFiltros()">
-          </div>
-          <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:80px">
-            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Gerente</label>
-            <input type="text" id="lc-flt-gerente" class="map-sel" placeholder="Gerente..." style="padding:3px 5px;font-size:.65rem;width:100%" oninput="lcAplicarFiltros()">
-          </div>
-          <div style="display:flex;flex-direction:column;gap:1px">
-            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Tipo</label>
-            <select id="lc-flt-tipo" class="map-sel" style="padding:3px 5px;font-size:.65rem" onchange="lcAplicarFiltros()">
-              <option value="">Todos</option>
-              <option value="Próprio">Próprio</option>
-              <option value="Concorrente">Concorrente</option>
-            </select>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:1px">
-            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Supervisor</label>
-            <select id="lc-flt-sup" class="map-sel" style="padding:3px 5px;font-size:.65rem" onchange="lcAplicarFiltros()">
-              <option value="">Todos</option>
-              <option>Mauricio</option><option>Fabricio</option><option>Paulo</option>
-              <option>Gledson</option><option>Rodrigo</option>
-            </select>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:1px">
-            <label style="font-size:.5rem;color:var(--tx3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em">Período</label>
-            <select id="lc-flt-dias" class="map-sel" style="padding:3px 5px;font-size:.65rem" onchange="lcCarregar()">
-              <option value="7">7 dias</option>
-              <option value="15" selected>15 dias</option>
-              <option value="30">30 dias</option>
-            </select>
-          </div>
-          <div style="display:flex;align-items:flex-end">
-            <button onclick="lcLimparFiltros()" class="map-sel" style="padding:3px 7px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;gap:3px;color:var(--tx3)">
-              <i class="fa-solid fa-filter-circle-xmark"></i>
-            </button>
-          </div>
-        </div>
-        <!-- Status bar -->
-        <div style="font-size:.58rem;color:var(--tx3);font-family:var(--mono);padding:3px 8px;background:var(--sf2);border:1px solid var(--bd);border-top:none" id="lc-status">
-          Selecione um posto para ver as coletas.
-        </div>
-        <!-- Tabela compacta mobile (4 colunas + expansão por toque) -->
-        <div style="flex:1;overflow:auto;border:1px solid var(--bd);border-top:none">
-          <table class="lc-compact-table" id="lc-compact-table">
-            <thead>
-              <tr>
-                <th class="lc-th" style="width:46px">DATA</th>
-                <th class="lc-th" style="width:70px">POSTO</th>
-                <th class="lc-th">ALVO</th>
-                <th class="lc-th">PREÇOS</th>
-              </tr>
-            </thead>
-            <tbody id="lc-tbody">
-              <tr>
-                <td colspan="4" style="padding:1.5rem;text-align:center;color:var(--tx3)">
-                  Selecione um posto no filtro acima.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <!-- Popover foto inline -->
-        <div id="lc-popover" style="display:none;position:fixed;z-index:500;background:var(--sf);border:1px solid var(--bd2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.6);width:240px;pointer-events:none">
-          <div style="background:var(--sf2);padding:.38rem .65rem;border-bottom:1px solid var(--bd);font-size:.62rem;font-family:var(--mono);color:var(--tx2)" id="lc-pop-label">Foto</div>
-          <div style="padding:.38rem;background:#0a0c10"><img id="lc-pop-img" src="" style="width:100%;border-radius:5px"></div>
-          <div style="padding:.32rem .65rem;background:var(--sf2);border-top:1px solid var(--bd)">
-            <a id="lc-pop-link" href="#" target="_blank" style="font-size:.6rem;color:var(--ac);text-decoration:underline">Abrir no Drive</a>
-          </div>
-        </div>
-      </div>
+      <!-- PATCH v4: div log-sub-coleta REMOVIDA -->
 
     </section>
 
@@ -532,6 +448,11 @@
         <span class="mic"><i class="fa-solid fa-truck-fast"></i></span>
         <div class="mlbl">Logística</div>
         <div class="mbadge">novo</div>
+      </div>
+      <div class="mitem" onclick="irPara('coleta-simples')">
+        <span class="mic"><i class="fa-solid fa-tags"></i></span>
+        <div class="mlbl">Coleta de Preços</div>
+        <div class="mbadge">ativo</div>
       </div>
       <div class="mitem" onclick="irPara('relatorios')">
         <span class="mic"><i class="fa-solid fa-chart-bar"></i></span>
