@@ -2101,7 +2101,9 @@ function csPf(v) {
   return isNaN(n) ? null : n;
 }
 function csChave(nome) {
-  return (nome||'').trim().toUpperCase().replace(/^P\.\s*/,'').replace(/\s+/g,' ');
+  return (nome||'').trim().toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')  // remove acentos: LÚCIA→LUCIA, Ã→A etc
+    .replace(/^P\.\s*/,'').replace(/\s+/g,' ');
 }
 function csFmt(v) {
   if (v===null||v===undefined) return '—';
